@@ -1,7 +1,13 @@
 <?php
+@session_start();
 error_reporting(E_ALL ^ E_NOTICE);
 require_once('config.php');
 require_once('utils.php');
+if (isset($_REQUEST['known'])){
+	$_SESSION['known'] = $_REQUEST['known'];
+} else {
+	$_SESSION['known'] = "autooff";
+}
 
 $unwanted_hosts = unserialize($_COOKIE['nagdash_unwanted_hosts']);
 if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
@@ -9,6 +15,7 @@ if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
 <html>
 <head>
 <title>Nagios Dashboard</title>
+<meta http-equiv="refresh" content="10; URL=http://nagios1.synyx.coffee/dash/Nagdash/foo.php">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
 <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
@@ -42,6 +49,8 @@ if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
 <body>
   <div id="spinner"><h3><img src="images/ajax-loader.gif" align="absmiddle"> Refreshing...</h3></div>
   <div id="nagioscontainer"></div>
-  <?=build_settings_dialog($nagios_hosts, $unwanted_hosts) ?>
+	<?=build_settings_dialog($nagios_hosts, $unwanted_hosts) ?>
+<a href="?known=on">known on</a> - 
+<a href="?known=off">known off</a>
 </body>
 </html>

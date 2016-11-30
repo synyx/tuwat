@@ -13,8 +13,8 @@ th                  { border: 1px black solid; background-color: #D8D8D8 }
 .status_yellow      { background-color: #FFDE40; color: black; padding: 3px }
 .status_grey        { background-color: #444444; color: white; padding: 3px }
 .status_soft        { opacity: 0.25}
-.known_hosts        { background-color: lightgrey; color: black }
-.known_hosts_desc   { color: #686868 }
+.known_hosts        { background-color: lightgrey; color: black; font-size: 0.5em }
+.known_hosts_desc   { color: #686868; font-size: 0.5em }
 .desc               { font-size: 0.8em }
 #info-window-text   { padding: 30px; vertical-align: middle }
 .tag                { font-size: 0.6em; color: white; padding: 4px; -webkit-border-radius: 5px; }

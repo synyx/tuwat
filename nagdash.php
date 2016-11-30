@@ -1,4 +1,5 @@
 <?php
+@session_start();
 error_reporting(E_ALL ^ E_NOTICE);
 require_once 'config.php';
 require_once 'utils.php';
@@ -26,6 +27,30 @@ $known_hosts = array();
 $known_services = array();
 $broken_services = array();
 $curl_stats = array();
+
+// HAHA,  synyx was here :D
+//
+
+$ignore_service[] = "Debian Updates";
+#$ignore_service[] = "Puppet Agent Check";
+$ignore_service[] = "Redhat Updates";
+$ignore_service[] = "Passive BACKUP check";
+#$ignore_service[] = "Passive Backup";
+
+function ignore($service_name){
+  global $ignore_service;
+  $service_val = $service_name;
+  ## Soll TRUE zurückgeben wenn Service nicht $ignore_service ist.
+  foreach ($ignore_service as $replace){
+    $service_val = str_replace($replace, "", $service_val);
+  }
+  if ($service_val == $service_name){
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
 
 // Function that does the dirty to connect to the Nagios API
 function connectHost($hostname, $port, $protocol) {
@@ -216,7 +241,8 @@ if (count($known_hosts) > 0) {
     if ($sort_by_time) {
         usort($broken_services,'cmp_last_state_change');
     }
-    foreach($broken_services as $service) {
+foreach($broken_services as $service) {
+		if (ignore($service['service_name'])){
         $soft_style = ($service['is_hard']) ? "" : "status_soft";
         $blink_tag = ($service['is_hard'] && $enable_blinking) ? "<blink>" : "";
         $controls = build_controls($service['tag'], $service['hostname'], $service['service_name']);
@@ -226,7 +252,8 @@ if (count($known_hosts) > 0) {
         echo "<td>{$service['duration']}</td>";
         echo "<td>{$service['current_attempt']}/{$service['max_attempts']}</td>";
         echo "</tr>";
-    }
+		}
+}
 ?>
     </table>
 <?php } else { ?>
@@ -236,6 +263,11 @@ if (count($known_hosts) > 0) {
 if ($sort_by_time) {
     usort($known_services,'cmp_last_state_change');
 }
+######### DISABLE KNOWN SERVICE DISPLAY ON REQUEST
+if ($_SESSION['known'] != "on"){
+	unset($known_services);
+}
+
 
 if (count($known_services) > 0) { ?>
     <h4>Known Service Problems</h4>
@@ -318,5 +350,22 @@ function build_controls($tag, $host, $service) {
     $controls .= "</div>";
     return $controls;
 }
+#$ddate = file_get_contents('http://api.ddate.cc/v1/today.txt');
+$ddate = file_get_contents('/var/www/dash/Nagdash/ddate.txt');
+echo "<center><h3>$ddate</h3><br>"; 
+echo "<h3>";
+include("temp.txt");
+echo "°C</h3></center>"; 
+ $biertime = "not sure if its biertime…";
+if (preg_match('/<title>(.+)<\/title>/',file_get_contents('http://bier.synyx.de'),$matches) && isset($matches[1])){ 
+	$biertime =	$matches[1];
+	}
+else{
+	   $biertime = "not sure if its biertime…";
+}
+#echo "<center><h3>$biertime</h3></center><br>".date("R");
+echo "<center><h3>$biertime</h3></center><br>";
+
+include("synyx.html");
 
 ?>
