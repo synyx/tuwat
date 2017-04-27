@@ -1,5 +1,5 @@
 <html><head>
-<meta http-equiv="refresh" content="15; URL=http://nagios1.synyx.coffee/dash/Nagdash/foo.php">
+<meta http-equiv="refresh" content="15; URL=http://contargo-nagdash.synyx.coffee/">
 </head>
 <link rel="stylesheet" href="css/blinkftw.css">
 <link rel="stylesheet" href="css/main.css">
