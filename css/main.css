@@ -63,6 +63,10 @@ body {
 .known_hosts {
   background-color: #141414;
   color: #D8D9DA;
+  font-size: 0.8em;
+}
+.known_hosts_desc {
+  font-size: 0.6em;
 }
 th {
   background: #242222;
@@ -79,3 +83,4 @@ table {
 .status_red         { background-color: #FF4040; color: white; padding: 3px; opacity: 0.75; }
 .status_yellow      { background-color: #FFDE40; color: black; padding: 3px; opacity: 0.75; }
 .status_grey        { background-color: #444444; color: white; padding: 3px; opacity: 0.90; }
+
