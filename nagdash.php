@@ -30,16 +30,11 @@ $curl_stats = array();
 
 // HAHA,  synyx was here :D
 //
-
-$ignore_service[] = "Debian Updates";
-#$ignore_service[] = "Puppet Agent Check";
-$ignore_service[] = "Redhat Updates";
-$ignore_service[] = "Passive BACKUP check";
-$ignore_service[] = "NSClient++ Version";
-#$ignore_service[] = "Passive Backup";
-
-function ignore($service_name){
+isset($ignore_service)  OR $ignore_service = array();
+isset($ignore_attempts) OR $ignore_attempts = 2;
+function ignore($service_name, $detail){
   global $ignore_service;
+  global $ignore_attempts;
   $service_val = $service_name;
   ## Soll TRUE zurückgeben wenn Service nicht $ignore_service ist.
   foreach ($ignore_service as $replace){
@@ -48,8 +43,20 @@ function ignore($service_name){
   if ($service_val == $service_name){
     return TRUE;
   } else {
+    if ($detail['current_state'] != 0 && $detail['current_attempt'] <= $ignore_attempts) {
+      return TRUE;
+    }
     return FALSE;
   }
+}
+
+isset($ignore_host) OR $ignore_host = array();
+function ignore_host($name, $host) {
+  global $ignore_host;
+  foreach ($ignore_host as $pattern) {
+    if (!!preg_match($pattern, $name)) return TRUE;
+  }
+  return FALSE;
 }
 
 
@@ -112,7 +119,8 @@ if (count($errors) > 0) {
 }
 foreach($state as $hostname => $host_detail) {
     // Check if the host matches the filter
-    if (preg_match("/$filter/", $hostname)) {
+    //if (preg_match("/$filter/", $hostname)) {
+    if (!ignore_host($hostname, $host_detail)) {
         // If the host is NOT OK...
         if ($host_detail['current_state'] != 0) {
             // Sort the host into the correct array. It's either a known issue or not. 
@@ -191,7 +199,13 @@ ksort($service_summary);
 <div class="frame">
     <div class="section">
       <div class="header">
-        <h3>Host status</h3>
+        <h3>Host status
+<?php
+setlocale(LC_TIME, "de_DE");
+date_default_timezone_set('Europe/Berlin');
+echo strftime('%H:%M:%S');
+?>
+</h3>
         <p class="totals"><b>Total:</b> <?php foreach($host_summary as $state => $count) { echo "<span class='{$nagios_host_status_colour[$state]}'>{$count}</span> "; } ?></p>
       </div>
 <?php if (count($down_hosts) > 0) { ?>
@@ -243,7 +257,7 @@ if (count($known_hosts) > 0) {
         usort($broken_services,'cmp_last_state_change');
     }
 foreach($broken_services as $service) {
-		if (ignore($service['service_name'])){
+		if (ignore($service['service_name'], $service)){
         $soft_style = ($service['is_hard']) ? "" : "status_soft";
         $blink_tag = ($service['is_hard'] && $enable_blinking) ? "<blink>" : "";
         $controls = build_controls($service['tag'], $service['hostname'], $service['service_name']);

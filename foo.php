@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/main.css">
 
 <?php
+date_default_timezone_set('Europe/Berlin');
 if (date("G") >= 20){
 	echo "<marquee><center><blink><h1>Alles wird gut! &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; echt!</h1></blink></center></marquee>";
 }
