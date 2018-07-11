@@ -87,7 +87,7 @@ function connectIcinga2($url, $username, $password) {
         $hosts[$host['name']]['current_state'] = $host['attrs']['state'];
         $hosts[$host['name']]['problem_has_been_acknowledged'] = $host['attr']['acknowledgement'];
         $hosts[$host['name']]['scheduled_downtime_depth'] = 0; // unsure
-        $hosts[$host['name']]['notifications_enabled'] = $host['attr']['enable_notifications'] ? 0 : 1;
+        $hosts[$host['name']]['notifications_enabled'] = $host['attrs']['enable_notifications'] ? 1 : 0;
     }
 
     $state = icinga2v1Get($url, $username, $password, 'objects/services');
@@ -97,9 +97,9 @@ function connectIcinga2($url, $username, $password) {
         $hosts[$hn]['services'][$sn] = $service['attrs'];
         $hosts[$hn]['services'][$sn]['downtimes'] = array();
         $hosts[$hn]['services'][$sn]['current_state'] = $service['attrs']['state'];
-        $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attr']['acknowledgement'];
+        $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attrs']['acknowledgement'];
         $hosts[$hn]['services'][$sn]['scheduled_downtime_depth'] = 0; // unsure
-        $hosts[$hn]['services'][$sn]['notifications_enabled'] = $service['attr']['enable_notifications'] ? 0 : 1;
+        $hosts[$hn]['services'][$sn]['notifications_enabled'] = $service['attrs']['enable_notifications'] ? 1 : 0;
     }
 
     $state = icinga2v1Get($url, $username, $password, 'objects/downtimes');
