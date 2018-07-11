@@ -1,0 +1,44 @@
+{
+  "attrs": {
+    "__name": "max-pc.synyx.coffee!disk!infra0-1529477715-0",
+    "active": true,
+    "author": "icingaadmin",
+    "comment": "ächtz",
+    "config_owner": "",
+    "duration": 0,
+    "end_time": 1532073304,
+    "entry_time": 1529477715.43452,
+    "fixed": true,
+    "ha_mode": 0,
+    "host_name": "max-pc.synyx.coffee",
+    "legacy_id": 1,
+    "name": "infra0-1529477715-0",
+    "original_attributes": null,
+    "package": "_api",
+    "paused": false,
+    "scheduled_by": "",
+    "service_name": "disk",
+    "source_location": {
+      "first_column": 0,
+      "first_line": 1,
+      "last_column": 52,
+      "last_line": 1,
+      "path": "/var/lib/icinga2/api/packages/_api/infra0-1519939172-1/conf.d/downtimes/max-pc.synyx.coffee!disk!infra0-1529477715-0.conf"
+    },
+    "start_time": 1529477704,
+    "templates": [
+      "infra0-1529477715-0"
+    ],
+    "trigger_time": 1529477715.437116,
+    "triggered_by": "",
+    "triggers": [],
+    "type": "Downtime",
+    "version": 1529477715.434555,
+    "was_cancelled": false,
+    "zone": "max-pc.synyx.coffee"
+  },
+  "joins": {},
+  "meta": {},
+  "name": "max-pc.synyx.coffee!disk!infra0-1529477715-0",
+  "type": "Downtime"
+}
