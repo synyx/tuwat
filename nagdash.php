@@ -53,7 +53,7 @@ function ignore($service_name){
 
 
 // Function that does the dirty to connect to the Nagios API
-function connectHost($hostname, $port, $protocol) {
+function connectNagiosApi($hostname, $port, $protocol) {
 
     global $curl_stats;
 
@@ -74,6 +74,76 @@ function connectHost($hostname, $port, $protocol) {
     return $state['content'];
 }
 
+function connectIcinga2($url, $username, $password) {
+
+    global $curl_stats;
+
+    $state = icinga2v1Get($url, $username, $password, 'objects/hosts');
+    $hosts = array();
+    foreach ($state['results'] as $host) {
+        $hosts[$host['name']] = $host['attrs'];
+        $hosts[$host['name']]['services'] = array();
+        $hosts[$host['name']]['downtimes'] = array(); // unsure
+        $hosts[$host['name']]['current_state'] = $host['attrs']['state'];
+        $hosts[$host['name']]['problem_has_been_acknowledged'] = $host['attr']['acknowledgement'];
+        $hosts[$host['name']]['scheduled_downtime_depth'] = 0; // unsure
+        $hosts[$host['name']]['notifications_enabled'] = $host['attr']['enable_notifications'] ? 0 : 1;
+    }
+
+    $state = icinga2v1Get($url, $username, $password, 'objects/services');
+    foreach ($state['results'] as $service) {
+        $hn = $service['attrs']['host_name'];
+        $sn = $service['name'];
+        $hosts[$hn]['services'][$sn] = $service['attrs'];
+        $hosts[$hn]['services'][$sn]['downtimes'] = array();
+        $hosts[$hn]['services'][$sn]['current_state'] = $service['attrs']['state'];
+        $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attr']['acknowledgement'];
+        $hosts[$hn]['services'][$sn]['scheduled_downtime_depth'] = 0; // unsure
+        $hosts[$hn]['services'][$sn]['notifications_enabled'] = $service['attr']['enable_notifications'] ? 0 : 1;
+    }
+
+    $state = icinga2v1Get($url, $username, $password, 'objects/downtimes');
+    foreach ($state['results'] as $downtime) {
+        $hn = $downtime['attrs']['host_name'];
+        $sn = $downtime['attrs']['service_name'];
+        $hosts[$hn]['services'][$sn][] = $service['downtime'];
+    }
+
+    return $hosts;
+}
+function icinga2v1Get($url, $username, $password, $endpoint) {
+    $request_url = "$url/v1/{$endpoint}";
+    $headers = array(
+            'Accept: application/json',
+            'X-HTTP-Method-Override: GET'
+    );
+    $ch = curl_init();
+    curl_setopt_array($ch, array(
+        CURLOPT_URL => $request_url,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_USERPWD => $username . ":" . $password,
+        CURLOPT_RETURNTRANSFER => true,
+        #CURLOPT_CAINFO => "icinga.synyx.coffee.ca.crt", //re-use the icinga2 master ca.crt
+        #CURLOPT_SSL_VERIFYHOST => 2,
+        #CURLOPT_SSL_VERIFYPEER => 1
+        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_SSL_VERIFYPEER => 0
+    ));
+    if (!$json = curl_exec($ch)) {
+        return "<pre>Attempt to hit API failed, sorry. Curl said: " . curl_error($ch) . "</pre>";
+    } else {
+        $curl_stats["$hostname:$port"] = curl_getinfo($ch);
+    }
+    curl_close($ch);
+
+    if (!$state = json_decode($json, true)) {
+        return "Attempt to hit API failed, sorry (JSON decode failed)";
+    }
+    $curl_stats["$hostname:$port"]['objects'] += count($state['results']);
+
+    return $state;
+}
+
 // Check to see if the user has a cookie that disables some hosts
 $unwanted_hosts = unserialize($_COOKIE['nagdash_unwanted_hosts']);
 if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
@@ -82,7 +152,11 @@ if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
 foreach ($nagios_hosts as $host) {
     // Check if the host has been disabled locally
     if (!in_array($host['tag'], $unwanted_hosts)) {
-        $host_state = connectHost($host['hostname'], $host['port'], $host['protocol']);
+        if ($host['type'] == 'icinga2') {
+            $host_state = connectIcinga2($host['url'], $host['username'], $host['password']);
+        } else {
+            $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
+        }
         if (is_string($host_state)) {
             $errors[] = "Could not connect to API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
         } else {
