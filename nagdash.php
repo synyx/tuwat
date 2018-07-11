@@ -100,6 +100,7 @@ function connectIcinga2($url, $username, $password) {
         $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attrs']['acknowledgement'];
         $hosts[$hn]['services'][$sn]['scheduled_downtime_depth'] = 0; // unsure
         $hosts[$hn]['services'][$sn]['notifications_enabled'] = $service['attrs']['enable_notifications'] ? 1 : 0;
+        $hosts[$hn]['services'][$sn]['plugin_output'] = $service['attrs']['last_check_result']['output'];
     }
 
     $state = icinga2v1Get($url, $username, $password, 'objects/downtimes');
