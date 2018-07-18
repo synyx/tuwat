@@ -1,11 +1,12 @@
 <html><head>
-<meta http-equiv="refresh" content="15; URL=http://nagios1.synyx.coffee/dash/Nagdash/foo.php">
+<meta http-equiv="refresh" content="15; URL=foo.php">
 </head>
 <link rel="stylesheet" href="css/blinkftw.css">
 <link rel="stylesheet" href="css/main.css">
 <body>
 
 <?php
+exit();
 $of = "done.json";
 $op = "progress.json";
 $open = fopen($of, "r");

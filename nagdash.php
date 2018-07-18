@@ -34,6 +34,7 @@ $curl_stats = array();
 $ignore_service[] = "Debian Updates";
 #$ignore_service[] = "Puppet Agent Check";
 $ignore_service[] = "Redhat Updates";
+$ignore_service[] = "updates";
 $ignore_service[] = "Passive BACKUP check";
 #$ignore_service[] = "Passive Backup";
 
@@ -113,6 +114,8 @@ function connectIcinga2($url, $username, $password) {
     return $hosts;
 }
 function icinga2v1Get($url, $username, $password, $endpoint) {
+    $hostname = parse_url($url, PHP_URL_HOST);
+    $port = parse_url($url, PHP_URL_PORT);
     $request_url = "$url/v1/{$endpoint}";
     $headers = array(
             'Accept: application/json',
@@ -152,7 +155,7 @@ if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
 // Collect the API data from each Nagios host. 
 foreach ($nagios_hosts as $host) {
     // Check if the host has been disabled locally
-    if (!in_array($host['tag'], $unwanted_hosts)) {
+    if (!in_array($host['tag'][0], $unwanted_hosts)) {
         if ($host['type'] == 'icinga2') {
             $host_state = connectIcinga2($host['url'], $host['username'], $host['password']);
         } else {
@@ -162,9 +165,28 @@ foreach ($nagios_hosts as $host) {
             $errors[] = "Could not connect to API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
         } else {
             foreach ($host_state as $this_host => $null) {
-                $host_state[$this_host]['tag'] = $host['tag'];
+
+                if (isset($state[$this_host])) {
+                  $state[$this_host]['tag'][] = $host['tag'];
+                  # Jo: mostly trust what's there.. aechtz.
+                  foreach ($null['services'] as $svcname => $svc) {
+                    if (!isset($state[$this_host]['services'][$svcname])) {
+                      $state[$this_host]['services'][$svcname] = $svc;
+                      $state[$this_host]['services'][$svcname]['tag'] = array($host['tag']);
+                    } else {
+                      $state[$this_host]['services'][$svcname]['tag'][] = $host['tag'];
+                    }
+                  }
+                } else {
+                  $state[$this_host] = $null;
+
+                  foreach ($state[$this_host]['services'] as $svcname => $scv) {
+                    $state[$this_host]['services'][$svcname]['tag'] = array($host['tag']);
+                  }
+                  $state[$this_host]['tag'] = array($host['tag']);
+                }
+
             }
-            $state += (array) $host_state;
         }
     }
 }
@@ -243,13 +265,14 @@ foreach($state as $hostname => $host_detail) {
                     "detail" => $service_detail['plugin_output'],
                     "current_attempt" => $service_detail['current_attempt'],
                     "max_attempts" => $service_detail['max_attempts'],
-                    "tag" => $host_detail['tag'],
+                    "tag" => $service_detail['tag'],
                     "is_hard" => ($service_detail['current_attempt'] >= $service_detail['max_attempts']) ? true : false,
                     "is_downtime" => ($service_detail['scheduled_downtime_depth'] > 0 || $host_detail['scheduled_downtime_depth'] > 0) ? true : false,
                     "downtime_remaining" => $downtime_remaining,
                     "is_ack" => ($service_detail['problem_has_been_acknowledged'] > 0) ? true : false,
                     "is_enabled" => ($service_detail['notifications_enabled'] > 0) ? true : false,
                 ));
+
             } 
             if ($host_detail['current_state'] == 0) {
                 $service_summary[$service_detail['current_state']]++;
@@ -398,6 +421,7 @@ function cmp_last_state_change($a,$b) {
 }
 
 function build_controls($tag, $host, $service) {
+    $tag = $tag[0];
     $controls = '<div class="btn-group">';
     $controls .= "<a href='#' onClick=\"$.post('do_action.php', { 
         nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', action: 'ack' }, function(data) { showInfo(data) } ); return false;\" class='btn btn-mini'>
