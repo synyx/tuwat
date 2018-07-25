@@ -114,7 +114,13 @@ function connectIcinga2($url, $username, $password) {
     foreach ($state['results'] as $downtime) {
         $hn = $downtime['attrs']['host_name'];
         $sn = $downtime['attrs']['service_name'];
-        $hosts[$hn]['services'][$sn][] = $service['downtime'];
+        if ($sn == "") {
+            // host downtime
+            $hosts[$hn]['downtimes'][] = $downtime;
+        } else {
+            // service downtime
+            $hosts[$hn]['services'][$sn][] = $downtime;
+        }
     }
 
     return $hosts;

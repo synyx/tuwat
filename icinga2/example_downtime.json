@@ -1,44 +1,92 @@
 {
-  "attrs": {
-    "__name": "max-pc.synyx.coffee!disk!infra0-1529477715-0",
-    "active": true,
-    "author": "icingaadmin",
-    "comment": "ächtz",
-    "config_owner": "",
-    "duration": 0,
-    "end_time": 1532073304,
-    "entry_time": 1529477715.43452,
-    "fixed": true,
-    "ha_mode": 0,
-    "host_name": "max-pc.synyx.coffee",
-    "legacy_id": 1,
-    "name": "infra0-1529477715-0",
-    "original_attributes": null,
-    "package": "_api",
-    "paused": false,
-    "scheduled_by": "",
-    "service_name": "disk",
-    "source_location": {
-      "first_column": 0,
-      "first_line": 1,
-      "last_column": 52,
-      "last_line": 1,
-      "path": "/var/lib/icinga2/api/packages/_api/infra0-1519939172-1/conf.d/downtimes/max-pc.synyx.coffee!disk!infra0-1529477715-0.conf"
+  "results": [
+    {
+      "attrs": {
+        "__name": "anemoi.synyx.coffee!puppet-duply-internal!169b2dcb-afbe-405d-bee1-df86a478a762",
+        "active": true,
+        "author": "ferstl",
+        "comment": "Angestoßen, kiste ist gross, dauert daher ein wenig.",
+        "config_owner": "",
+        "duration": 0,
+        "end_time": 1532603835,
+        "entry_time": 1532427454.464241,
+        "fixed": true,
+        "ha_mode": 0,
+        "host_name": "anemoi.synyx.coffee",
+        "legacy_id": 1,
+        "name": "169b2dcb-afbe-405d-bee1-df86a478a762",
+        "original_attributes": null,
+        "package": "_api",
+        "paused": false,
+        "scheduled_by": "",
+        "service_name": "puppet-duply-internal",
+        "source_location": {
+          "first_column": 0,
+          "first_line": 1,
+          "last_column": 69,
+          "last_line": 1,
+          "path": "/var/lib/icinga2/api/packages/_api/infra0-1519939172-1/conf.d/downtimes/anemoi.synyx.coffee!puppet-duply-internal!169b2dcb-afbe-405d-bee1-df86a478a762.conf"
+        },
+        "start_time": 1532427435,
+        "templates": [
+          "169b2dcb-afbe-405d-bee1-df86a478a762"
+        ],
+        "trigger_time": 1532427454.466795,
+        "triggered_by": "",
+        "triggers": [],
+        "type": "Downtime",
+        "version": 1532427454.464267,
+        "was_cancelled": false,
+        "zone": "anemoi.synyx.coffee"
+      },
+      "joins": {},
+      "meta": {},
+      "name": "anemoi.synyx.coffee!puppet-duply-internal!169b2dcb-afbe-405d-bee1-df86a478a762",
+      "type": "Downtime"
     },
-    "start_time": 1529477704,
-    "templates": [
-      "infra0-1529477715-0"
-    ],
-    "trigger_time": 1529477715.437116,
-    "triggered_by": "",
-    "triggers": [],
-    "type": "Downtime",
-    "version": 1529477715.434555,
-    "was_cancelled": false,
-    "zone": "max-pc.synyx.coffee"
-  },
-  "joins": {},
-  "meta": {},
-  "name": "max-pc.synyx.coffee!disk!infra0-1529477715-0",
-  "type": "Downtime"
+    {
+      "attrs": {
+        "__name": "ffka-synyx-bridge.synyx.coffee!c3a222f5-3fb5-48b7-b81e-3f47113f2c95",
+        "active": true,
+        "author": "jbuch",
+        "comment": "Jo: testing api",
+        "config_owner": "",
+        "duration": 0,
+        "end_time": 1532502028,
+        "entry_time": 1532501517.364269,
+        "fixed": true,
+        "ha_mode": 0,
+        "host_name": "ffka-synyx-bridge.synyx.coffee",
+        "legacy_id": 2,
+        "name": "c3a222f5-3fb5-48b7-b81e-3f47113f2c95",
+        "original_attributes": null,
+        "package": "_api",
+        "paused": true,
+        "scheduled_by": "",
+        "service_name": "",
+        "source_location": {
+          "first_column": 0,
+          "first_line": 1,
+          "last_column": 69,
+          "last_line": 1,
+          "path": "/var/lib/icinga2/api/packages/_api/infra0-1519939172-1/conf.d/downtimes/ffka-synyx-bridge.synyx.coffee!c3a222f5-3fb5-48b7-b81e-3f47113f2c95.conf"
+        },
+        "start_time": 1532501488,
+        "templates": [
+          "c3a222f5-3fb5-48b7-b81e-3f47113f2c95"
+        ],
+        "trigger_time": 1532501517.366644,
+        "triggered_by": "",
+        "triggers": [],
+        "type": "Downtime",
+        "version": 1532501517.364291,
+        "was_cancelled": false,
+        "zone": "synyx.coffee"
+      },
+      "joins": {},
+      "meta": {},
+      "name": "ffka-synyx-bridge.synyx.coffee!c3a222f5-3fb5-48b7-b81e-3f47113f2c95",
+      "type": "Downtime"
+    }
+  ]
 }
