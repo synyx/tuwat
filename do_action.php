@@ -130,7 +130,7 @@ if (!isset($_POST['nag_host'])) {
 
     $author = function_exists("nagdash_get_user") ? nagdash_get_user() : "Nagdash";
 
-    $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration));
+    $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration);
 
     foreach ($nagios_hosts as $host) {
         if (in_array($host['tag'], $nagios_instances)) {
