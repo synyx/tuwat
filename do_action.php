@@ -116,7 +116,11 @@ function connectIcinga2($url, $action, $payload) {
         return "Attempt to hit API failed, sorry (JSON decode failed)";
     }
 
-    return $error;
+    if ($state['results']['code'] >= 400) {
+        return $state['results']['status'];
+    }
+
+    return;
 }
 
 
