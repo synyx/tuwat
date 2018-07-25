@@ -83,7 +83,7 @@ function connectIcinga2($url, $action, $payload) {
 
     $type = $payload['service'] ? 'Service' : 'Host';
     if ($type == 'Service') {
-        $filter = ["servie.name==\"{$payload['host']}!{$payload['service']}\""];
+        $filter = ["host.name==\"{$payload['host']} && service.name=={$payload['service']}\""];
     } else {
         $filter = ["host.name==\"{$payload['host']}\""];
     }
