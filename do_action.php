@@ -47,7 +47,61 @@ function connectNagiosApi($url, $action, $payload) {
 }
 function connectIcinga2($url, $action, $payload) {
 
-    $error = "not implemented";
+    switch ($action) {
+    case "ack":
+        return "Not implemented";
+    case "downtime":
+        break;
+    case "enable":
+        return "Not implemented";
+    case "disable":
+        return "Not implemented";
+    }
+
+    $username = parse_url($url, PHP_URL_USER);
+    $password = parse_url($url, PHP_URL_PASS);
+
+    $type = $payload['service'] ? 'Service' : 'Host';
+    if ($type == 'Service') {
+        $filter = ["servie.name==\"{$payload['host']}!{$payload['service']}\""];
+    } else {
+        $filter = ["host.name==\"{$payload['host']}\""];
+    }
+    $filter = implode('&', array_walk($filter, 'urlencode'));
+    $request_url = "$url/v1/schedule-downtime?type={$type}&filter=$filter";
+
+    $data = array(
+        'author' => $payload['author'],
+        'comment' => $payload['comment'],
+        'start_time' =>  time(),
+        'end_time' =>  time() + (60 * $_POST['duration'])
+    );
+
+    $ch = curl_init();
+    curl_setopt_array($ch, array(
+        CURLOPT_URL => $request_url,
+        CURLOPT_HTTPHEADER => array(
+            'Accept: application/json',
+            'Content-Type: application/json'
+        ),
+        CURLOPT_USERPWD => $username . ":" . $password,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => json_encode($data),
+        CURLOPT_RETURNTRANSFER => true,
+        #CURLOPT_CAINFO => "icinga.synyx.coffee.ca.crt", //re-use the icinga2 master ca.crt
+        #CURLOPT_SSL_VERIFYHOST => 2,
+        #CURLOPT_SSL_VERIFYPEER => 1
+        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_SSL_VERIFYPEER => 0
+    ));
+    if (!$json = curl_exec($ch)) {
+        return "<pre>Attempt to hit API failed, sorry. Curl said: " . curl_error($ch) . "</pre>";
+    }
+    curl_close($ch);
+
+    if (!$state = json_decode($json, true)) {
+        return "Attempt to hit API failed, sorry (JSON decode failed)";
+    }
 
     return $error;
 }
