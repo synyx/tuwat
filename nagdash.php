@@ -75,11 +75,11 @@ function connectNagiosApi($hostname, $port, $protocol) {
     return $state['content'];
 }
 
-function connectIcinga2($url, $username, $password) {
+function connectIcinga2($url) {
 
     global $curl_stats;
 
-    $state = icinga2v1Get($url, $username, $password, 'objects/hosts');
+    $state = icinga2v1Get($url, 'objects/hosts');
     $hosts = array();
     foreach ($state['results'] as $host) {
         $hosts[$host['name']] = $host['attrs'];
@@ -95,7 +95,7 @@ function connectIcinga2($url, $username, $password) {
         $hosts[$host['name']]['max_attempts'] = $host['attrs']['max_check_attempts'];
     }
 
-    $state = icinga2v1Get($url, $username, $password, 'objects/services');
+    $state = icinga2v1Get($url, 'objects/services');
     foreach ($state['results'] as $service) {
         $hn = $service['attrs']['host_name'];
         $sn = $service['attrs']['name'];
@@ -110,7 +110,7 @@ function connectIcinga2($url, $username, $password) {
         $hosts[$hn]['services'][$sn]['current_attempt'] = $service['attrs']['check_attempt'];
     }
 
-    $state = icinga2v1Get($url, $username, $password, 'objects/downtimes');
+    $state = icinga2v1Get($url, 'objects/downtimes');
     foreach ($state['results'] as $downtime) {
         $hn = $downtime['attrs']['host_name'];
         $sn = $downtime['attrs']['service_name'];
@@ -125,9 +125,11 @@ function connectIcinga2($url, $username, $password) {
 
     return $hosts;
 }
-function icinga2v1Get($url, $username, $password, $endpoint) {
+function icinga2v1Get($url, $endpoint) {
     $hostname = parse_url($url, PHP_URL_HOST);
     $port = parse_url($url, PHP_URL_PORT);
+    $username = parse_url($url, PHP_URL_USER);
+    $password = parse_url($url, PHP_URL_PASS);
     $request_url = "$url/v1/{$endpoint}";
     $headers = array(
             'Accept: application/json',
@@ -169,7 +171,7 @@ foreach ($nagios_hosts as $host) {
     // Check if the host has been disabled locally
     if (!in_array($host['tag'][0], $unwanted_hosts)) {
         if ($host['type'] == 'icinga2') {
-            $host_state = connectIcinga2($host['url'], $host['username'], $host['password']);
+            $host_state = connectIcinga2($host['url']);
         } else {
             $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
         }
