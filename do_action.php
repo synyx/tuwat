@@ -30,7 +30,7 @@ function connectNagiosApi($url, $action, $payload) {
         )
     );
     $context = stream_context_create($params);
-    if(!$result = file_get_contents($nagios_url, false, $context)) {
+    if(!$result = file_get_contents($url, false, $context)) {
         $error = error_get_last();
         $error = "Command {$method} failed! <pre>{$error}</pre>";
     } else {
