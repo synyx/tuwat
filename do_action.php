@@ -47,10 +47,28 @@ function connectNagiosApi($url, $action, $payload) {
 }
 function connectIcinga2($url, $action, $payload) {
 
+    $username = parse_url($url, PHP_URL_USER);
+    $password = parse_url($url, PHP_URL_PASS);
+
     switch ($action) {
     case "ack":
         return "Not implemented";
     case "downtime":
+        $type = $payload['service'] ? 'Service' : 'Host';
+        if ($type == 'Service') {
+            $filter = ["servie.name==\"{$payload['host']}!{$payload['service']}\""];
+        } else {
+            $filter = ["host.name==\"{$payload['host']}\""];
+        }
+        $filter = implode('&', array_walk($filter, 'urlencode'));
+        $request_url = "$url/v1/schedule-downtime?type={$type}&filter=$filter";
+
+        $data = array(
+            'author' => $payload['author'],
+            'comment' => $payload['comment'],
+            'start_time' =>  time(),
+            'end_time' =>  time() + (60 * $_POST['duration'])
+        );
         break;
     case "enable":
         return "Not implemented";
@@ -58,24 +76,6 @@ function connectIcinga2($url, $action, $payload) {
         return "Not implemented";
     }
 
-    $username = parse_url($url, PHP_URL_USER);
-    $password = parse_url($url, PHP_URL_PASS);
-
-    $type = $payload['service'] ? 'Service' : 'Host';
-    if ($type == 'Service') {
-        $filter = ["servie.name==\"{$payload['host']}!{$payload['service']}\""];
-    } else {
-        $filter = ["host.name==\"{$payload['host']}\""];
-    }
-    $filter = implode('&', array_walk($filter, 'urlencode'));
-    $request_url = "$url/v1/schedule-downtime?type={$type}&filter=$filter";
-
-    $data = array(
-        'author' => $payload['author'],
-        'comment' => $payload['comment'],
-        'start_time' =>  time(),
-        'end_time' =>  time() + (60 * $_POST['duration'])
-    );
 
     $ch = curl_init();
     curl_setopt_array($ch, array(
