@@ -86,7 +86,7 @@ function connectIcinga2($url, $action, $payload) {
     } else {
         $filter = ["host.name==\"{$payload['host']}\""];
     }
-    $filter = implode('&', array_walk($filter, 'urlencode'));
+    $filter = implode('&', array_map('urlencode', $filter));
     $request_url = "$url/v1/{$endpoint}?type={$type}&filter=$filter";
 
     $ch = curl_init();
@@ -135,10 +135,10 @@ if (!isset($_POST['nag_host'])) {
     foreach ($nagios_hosts as $host) {
         if (in_array($host['tag'], $nagios_instances)) {
             if ($host['type'] == 'icinga2') {
+                $error = connectIcinga2($host['url'], $action, $payload);
+            } else {
                 $url = $host['protocol'] . "://" . $host['hostname'] . ":" . $host['port'];
                 $error = connectNagiosApi($url, $action, $payload);
-            } else {
-                $error = connectIcinga2($host['url'], $action, $payload);
             }
         }
 
