@@ -118,7 +118,7 @@ function connectIcinga2($url, $action, $payload) {
 if (!isset($_POST['nag_host'])) {
     echo "Are you calling this manually? This should be called by Nagdash only.";
 } else {
-    $nagios_instance = $_POST['nag_host'];
+    $nagios_instances = explode(',', $_POST['nag_host']);
     $hostname = $_POST['hostname'];
     # Service is optional
     $service = ($_POST['service']) ? $_POST['service'] : null;
@@ -132,19 +132,19 @@ if (!isset($_POST['nag_host'])) {
        $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration));
 
         foreach ($nagios_hosts as $host) {
-            if ($host['tag'] == $nagios_instance) {
+            if (in_array($host['tag'], $nagios_instances)) {
                 if ($host['type'] == 'icinga2') {
                     $url = $host['protocol'] . "://" . $host['hostname'] . ":" . $host['port'];
                     $error = connectNagiosApi($url, $action, $payload);
                 } else {
                     $error = connectIcinga2($host['url'], $action, $payload);
                 }
-                break;
+            }
+
+            if ($error) {
+                echo "$error";
             }
         }
 
-        if ($error) {
-            echo "$error";
-        }
     }
 }

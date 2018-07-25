@@ -435,7 +435,7 @@ function cmp_last_state_change($a,$b) {
 }
 
 function build_controls($tag, $host, $service) {
-    $tag = $tag[0];
+    $tag = implode(',', $tag);
     $controls = '<div class="btn-group">';
     $controls .= "<a href='#' onClick=\"$.post('do_action.php', { 
         nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', action: 'ack' }, function(data) { showInfo(data) } ); return false;\" class='btn btn-mini'>
