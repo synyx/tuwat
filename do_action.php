@@ -87,7 +87,7 @@ function connectIcinga2($url, $action, $payload) {
         $filter = ["host.name==\"{$payload['host']}\""];
     }
     $filter = implode('&', array_map('urlencode', $filter));
-    $request_url = "$url/v1/{$endpoint}?type={$type}&filter=$filter";
+    $request_url = "$url/v1/actions/{$endpoint}?type={$type}&filter=$filter";
 
     $ch = curl_init();
     curl_setopt_array($ch, array(
