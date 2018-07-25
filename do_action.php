@@ -83,11 +83,11 @@ function connectIcinga2($url, $action, $payload) {
 
     $type = $payload['service'] ? 'Service' : 'Host';
     if ($type == 'Service') {
-        $filter = ["host.name==\"{$payload['host']}\" && service.name==\"{$payload['service']}\""];
+        $filter = "host.name==\"{$payload['host']}\" && service.name==\"{$payload['service']}\"";
     } else {
-        $filter = ["host.name==\"{$payload['host']}\""];
+        $filter = "host.name==\"{$payload['host']}\"";
     }
-    $filter = implode('&', array_map('urlencode', $filter));
+    $filter = rawurlencode($filter);
     $request_url = "$url/v1/actions/{$endpoint}?type={$type}&filter=$filter";
 
     $ch = curl_init();
