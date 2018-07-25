@@ -84,11 +84,15 @@ function connectIcinga2($url, $username, $password) {
     foreach ($state['results'] as $host) {
         $hosts[$host['name']] = $host['attrs'];
         $hosts[$host['name']]['services'] = array();
-        $hosts[$host['name']]['downtimes'] = array(); // unsure
+        $hosts[$host['name']]['downtimes'] = array();
         $hosts[$host['name']]['current_state'] = $host['attrs']['state'];
+        $hosts[$host['name']]['last_state_change'] = $host['attrs']['last_state_change'];
         $hosts[$host['name']]['problem_has_been_acknowledged'] = $host['attr']['acknowledgement'];
-        $hosts[$host['name']]['scheduled_downtime_depth'] = 0; // unsure
+        $hosts[$host['name']]['scheduled_downtime_depth'] = $host['attrs']['downtime_depth'];
         $hosts[$host['name']]['notifications_enabled'] = $host['attrs']['enable_notifications'] ? 1 : 0;
+        $hosts[$host['name']]['plugin_output'] = $host['attrs']['output'];
+        $hosts[$host['name']]['current_attempt'] = $host['attrs']['check_attempt'];
+        $hosts[$host['name']]['max_attempts'] = $host['attrs']['max_check_attempts'];
     }
 
     $state = icinga2v1Get($url, $username, $password, 'objects/services');
@@ -99,9 +103,11 @@ function connectIcinga2($url, $username, $password) {
         $hosts[$hn]['services'][$sn]['downtimes'] = array();
         $hosts[$hn]['services'][$sn]['current_state'] = $service['attrs']['state'];
         $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attrs']['acknowledgement'];
-        $hosts[$hn]['services'][$sn]['scheduled_downtime_depth'] = 0; // unsure
+        $hosts[$hn]['services'][$sn]['scheduled_downtime_depth'] = $service['attrs']['downtime_depth'];
         $hosts[$hn]['services'][$sn]['notifications_enabled'] = $service['attrs']['enable_notifications'] ? 1 : 0;
         $hosts[$hn]['services'][$sn]['plugin_output'] = $service['attrs']['last_check_result']['output'];
+        $hosts[$hn]['services'][$sn]['max_attempts'] = $service['attrs']['max_check_attempts'];
+        $hosts[$hn]['services'][$sn]['current_attempt'] = $service['attrs']['check_attempt'];
     }
 
     $state = icinga2v1Get($url, $username, $password, 'objects/downtimes');
