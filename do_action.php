@@ -45,6 +45,13 @@ function connectNagiosApi($url, $action, $payload) {
 
     return $error;
 }
+function connectIcinga2($url, $action, $payload) {
+
+    $error = "not implemented";
+
+    return $error;
+}
+
 
 if (!isset($_POST['nag_host'])) {
     echo "Are you calling this manually? This should be called by Nagdash only.";
@@ -60,12 +67,22 @@ if (!isset($_POST['nag_host'])) {
     if (!$method) {
         echo "Nagios-api does not support this action ({$action}) yet. ";
     } else {
+       $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration));
+
         foreach ($nagios_hosts as $host) {
             if ($host['tag'] == $nagios_instance) {
-                $url = $host['protocol'] . "://" . $host['hostname'] . ":" . $host['port'];
+                if ($host['type'] == 'icinga2') {
+                    $url = $host['protocol'] . "://" . $host['hostname'] . ":" . $host['port'];
+                    $error = connectNagiosApi($url, $action, $payload);
+                } else {
+                    $error = connectIcinga2($host['url'], $action, $payload);
+                }
+                break;
             }
         }
-        $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration));
-        connectNagiosApi($url, $action, $payload);
+
+        if ($error) {
+            echo "$error";
+        }
     }
 }
