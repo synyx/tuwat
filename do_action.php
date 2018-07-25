@@ -128,9 +128,9 @@ if (!isset($_POST['nag_host'])) {
     $service = ($_POST['service']) ? $_POST['service'] : null;
     $action = $_POST['action'];
 
-    $author = function_exists("nagdash_get_user") ? nagdash_get_user() : "Nagdash";
+    $author = function_exists("nagdash_get_user") ? nagdash_get_user() : "Nudash";
 
-    $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration);
+    $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nudash", "author" => $author, "duration" => $duration);
 
     foreach ($nagios_hosts as $host) {
         if (in_array($host['tag'], $nagios_instances)) {
