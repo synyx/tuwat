@@ -70,6 +70,7 @@ function connectIcinga2($url, $action, $payload) {
         $data = array(
             'author' => $payload['author'],
             'comment' => $payload['comment'],
+            'child_options' => 1,
             'start_time' =>  time(),
             'end_time' =>  time() + (60 * $_POST['duration'])
         );
