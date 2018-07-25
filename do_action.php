@@ -52,16 +52,16 @@ function connectIcinga2($url, $action, $payload) {
 
     switch ($action) {
     case "ack":
-        return "Not implemented";
+        $endpoint = 'acknowledge-problem';
+
+        $data = array(
+            'author' => $payload['author'],
+            'comment' => $payload['comment'],
+            'notify' => true,
+        );
+        break;
     case "downtime":
-        $type = $payload['service'] ? 'Service' : 'Host';
-        if ($type == 'Service') {
-            $filter = ["servie.name==\"{$payload['host']}!{$payload['service']}\""];
-        } else {
-            $filter = ["host.name==\"{$payload['host']}\""];
-        }
-        $filter = implode('&', array_walk($filter, 'urlencode'));
-        $request_url = "$url/v1/schedule-downtime?type={$type}&filter=$filter";
+        $endpoint = 'schedule-downtime';
 
         $data = array(
             'author' => $payload['author'],
@@ -76,6 +76,14 @@ function connectIcinga2($url, $action, $payload) {
         return "Not implemented";
     }
 
+    $type = $payload['service'] ? 'Service' : 'Host';
+    if ($type == 'Service') {
+        $filter = ["servie.name==\"{$payload['host']}!{$payload['service']}\""];
+    } else {
+        $filter = ["host.name==\"{$payload['host']}\""];
+    }
+    $filter = implode('&', array_walk($filter, 'urlencode'));
+    $request_url = "$url/v1/{$endpoint}?type={$type}&filter=$filter";
 
     $ch = curl_init();
     curl_setopt_array($ch, array(
