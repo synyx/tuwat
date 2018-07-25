@@ -24,7 +24,7 @@ function connectNagiosApi($url, $action, $payload) {
         return "Nagios-api does not support this action ({$action}) yet. ";
     }
 
-    $url .= "/" + $method;
+    $url .= "/" . $method;
 
     $params = array('http' =>
         array(
