@@ -13,6 +13,7 @@ $nagios_host_status = array(0 => "UP", 1 => "DOWN", 2 => "UNREACHABLE");
 $nagios_service_status = array(0 => "OK", 1 => "WARNING", 2 => "CRITICAL", 3 => "UNKNOWN");
 $nagios_host_status_colour = array(0 => "status_green", 1 => "status_red", 2 => "status_yellow");
 $nagios_service_status_colour = array(0 => "status_green", 1 => "status_yellow", 2 => "status_red", 3 => "status_grey");
+$nagios_state_type = array(0 => "SOFT", 1 => "HARD");
 
 $nagios_toggle_status = array(0 => "disabled", 1 => "enabled");
 
@@ -93,6 +94,7 @@ function connectIcinga2($url) {
         $hosts[$host['name']]['plugin_output'] = $host['attrs']['output'];
         $hosts[$host['name']]['current_attempt'] = $host['attrs']['check_attempt'];
         $hosts[$host['name']]['max_attempts'] = $host['attrs']['max_check_attempts'];
+        $hosts[$host['name']]['state_type'] = $host['attrs']['state_type'];
     }
 
     $state = icinga2v1Get($url, 'objects/services');
@@ -108,6 +110,7 @@ function connectIcinga2($url) {
         $hosts[$hn]['services'][$sn]['plugin_output'] = $service['attrs']['last_check_result']['output'];
         $hosts[$hn]['services'][$sn]['max_attempts'] = $service['attrs']['max_check_attempts'];
         $hosts[$hn]['services'][$sn]['current_attempt'] = $service['attrs']['check_attempt'];
+        $hosts[$hn]['services'][$sn]['state_type'] = $service['attrs']['state_type'];
     }
 
     $state = icinga2v1Get($url, 'objects/downtimes');
@@ -241,7 +244,7 @@ foreach($state as $hostname => $host_detail) {
                 "current_attempt" => $host_detail['current_attempt'],
                 "max_attempts" => $host_detail['max_attempts'],
                 "tag" => $host_detail['tag'],
-                "is_hard" => ($host_detail['current_attempt'] >= $host_detail['max_attempts']) ? true : false,
+                "is_hard" => ($host_detail['current_attempt'] >= $host_detail['max_attempts'] || $host_detail['state_type'] == 1) ? true : false,
                 "is_downtime" => ($host_detail['scheduled_downtime_depth'] > 0) ? true : false,
                 "is_ack" => ($host_detail['problem_has_been_acknowledged'] > 0) ? true : false,
                 "is_enabled" => ($host_detail['notifications_enabled'] > 0) ? true : false,
@@ -280,7 +283,7 @@ foreach($state as $hostname => $host_detail) {
                     "current_attempt" => $service_detail['current_attempt'],
                     "max_attempts" => $service_detail['max_attempts'],
                     "tag" => $service_detail['tag'],
-                    "is_hard" => ($service_detail['current_attempt'] >= $service_detail['max_attempts']) ? true : false,
+                    "is_hard" => ($service_detail['current_attempt'] >= $service_detail['max_attempts'] || $service_detail['state_type'] == 1) ? true : false,
                     "is_downtime" => ($service_detail['scheduled_downtime_depth'] > 0 || $host_detail['scheduled_downtime_depth'] > 0) ? true : false,
                     "downtime_remaining" => $downtime_remaining,
                     "is_ack" => ($service_detail['problem_has_been_acknowledged'] > 0) ? true : false,
@@ -358,11 +361,12 @@ foreach($broken_services as $service) {
         $soft_style = ($service['is_hard']) ? "" : "status_soft";
         $blink_tag = ($service['is_hard'] && $enable_blinking) ? "<blink>" : "";
         $controls = build_controls($service['tag'], $service['hostname'], $service['service_name']);
+        $attempts = $service['is_hard'] ? "HARD" : "{$service['current_attempt']}/{$service['max_attempts']}";
         echo "<tr>";
         echo "<td>{$service['hostname']} " . print_tag($service['tag']) . " <span class='controls'>{$controls}</span></td>";
         echo "<td class='bold {$nagios_service_status_colour[$service['service_state']]} {$soft_style}'>{$blink_tag}{$service['service_name']}<span class='detail'>{$service['detail']}</span></td>";
         echo "<td>{$service['duration']}</td>";
-        echo "<td>{$service['current_attempt']}/{$service['max_attempts']}</td>";
+        echo "<td>{$attempts}</td>";
         echo "</tr>";
 		}
 }
