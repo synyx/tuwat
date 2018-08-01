@@ -1,1 +1,8 @@
+# let the config alone
 config.php
+# let generated files alone
+ddate.txt
+done.json
+progress.json
+temp.txt
+
