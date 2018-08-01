@@ -6,7 +6,6 @@
 <body>
 
 <?php
-exit();
 $of = "done.json";
 $op = "progress.json";
 $open = fopen($of, "r");
@@ -22,6 +21,7 @@ $data = "<table align=\"left\"><tr><td colspan=2><b>Done!</b></td></tr>\r\n";
 
 foreach($d as &$gu){
 
+	if (!is_array($gu)) { continue ; }
 #echo ">>>>".var_dump($gu)."<<<<";
 	#var_dump($gu);
 	foreach ($gu as $lala){
@@ -49,6 +49,7 @@ foreach($p as &$gu){
 
 #echo ">>>>".var_dump($gu)."<<<<";
 	#var_dump($gu);
+	if (!is_array($gu)) { continue ; }
 	foreach ($gu as $lala){
 #var_dump($lala);
 
