@@ -33,7 +33,8 @@ my $contargo_mail = 'ferstl@synyx.de';
                 my $uri = "https://project.synyx.de/issues.json?project_id=a&status_id=2&limit=100&sort=updated_on:desc";               
 								my $req = HTTP::Request->new( 'GET', $uri );
 								$req->header( 'Content-Type' => 'application/json' );
-								$req->header( 'X-ChiliProject-API-Key' => $redmine_key );
+#								$req->header( 'X-ChiliProject-API-Key' => $redmine_key );
+								$req->header( 'X-Redmine-API-Key' => $redmine_key );
 #								$req->content( $json_text );
 
 								my $lwp = LWP::UserAgent->new;
@@ -59,7 +60,8 @@ my $today = "$year-$mon-$mday";
                 my $uri = "https://project.synyx.de/issues.json?project_id=a&status_id=5&sort=updated_on:desc&limit=10";               
 								my $req = HTTP::Request->new( 'GET', $uri );
 								$req->header( 'Content-Type' => 'application/json' );
-								$req->header( 'X-ChiliProject-API-Key' => $redmine_key );
+#								$req->header( 'X-ChiliProject-API-Key' => $redmine_key );
+								$req->header( 'X-Redmine-API-Key' => $redmine_key );
 #								$req->content( $json_text );
 
 								my $lwp = LWP::UserAgent->new;
