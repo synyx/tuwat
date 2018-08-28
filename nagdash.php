@@ -100,7 +100,7 @@ function connectIcinga2($url) {
     $state = icinga2v1Get($url, 'objects/services');
     foreach ($state['results'] as $service) {
         $hn = $service['attrs']['host_name'];
-        $sn = $service['attrs']['name'];
+        $sn = $service['attrs']['display_name'];
         $hosts[$hn]['services'][$sn] = $service['attrs'];
         $hosts[$hn]['services'][$sn]['downtimes'] = array();
         $hosts[$hn]['services'][$sn]['current_state'] = $service['attrs']['state'];
