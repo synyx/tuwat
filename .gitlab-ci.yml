@@ -1,0 +1,25 @@
+# Declare build stages
+stages:
+  - build
+  - release
+
+before_script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+
+build:
+  stage: build
+  script:
+    - docker build --no-cache --pull -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+  tags:
+    - shell
+
+# Non-master branches and tags will be released with :<ref_name> as the tag
+release-by-name:
+  stage: release
+  script:
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+  only:
+    - tags
+  tags:
+    - shell
