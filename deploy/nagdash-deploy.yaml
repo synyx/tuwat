@@ -1,0 +1,59 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: infra
+  name: nagdash
+  labels:
+    app: nagdash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nagdash
+  template:
+    metadata:
+      labels:
+        app: nagdash
+    spec:
+      imagePullSecrets:
+        - name: nagdash-docker-registry
+      containers:
+        - name: nagdash
+          imagePullPolicy: Always
+          image: container-registry.synyx.de/infrastructure/nagdash:v0.0.1
+          ports:
+          - containerPort: 80
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: infra
+  name: nagdash
+spec:
+  selector:
+    app: nagdash
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: infra
+  name: nagdash
+spec:
+  rules:
+  - host: k8s-nagdash.synyx.coffee
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nagdash
+          servicePort: 80
