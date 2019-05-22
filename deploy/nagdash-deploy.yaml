@@ -57,3 +57,10 @@ spec:
         backend:
           serviceName: nagdash
           servicePort: 80
+  - host: nagdash.synyx.coffee
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nagdash
+          servicePort: 80
