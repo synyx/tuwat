@@ -22,7 +22,7 @@ spec:
       containers:
         - name: nagdash
           imagePullPolicy: Always
-          image: container-registry.synyx.de/infrastructure/nagdash:v0.0.1
+          image: container-registry.synyx.de/infrastructure/nagdash:v0.0.2
           ports:
           - containerPort: 80
 
