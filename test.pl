@@ -9,7 +9,11 @@ use JSON; #libjson-perl
 use LWP;  # sollte: libwww-perl
 use utf8;
 use Sys::Syslog; #libsys-syslog-perl
+use LockFile::Simple qw(lock trylock unlock);# liblockfile-simple-perl
 
+# Simple locking using default settings
+lock("/var/lock/test.pl.pid") || die "can't lock /var/lock/test.pl.pid\n";
+warn "already locked\n" unless trylock("/var/lock/test.pl.pid");
 
 my $redmine_user	= "AdminBot";
 my $redmine_key 	= "20eb22c240dad7b38e6a1b9721d9292ab96a61f5";
@@ -74,5 +78,4 @@ my $today = "$year-$mon-$mday";
 open(my $fh, '>', 'done.json');
 print $fh $ret->{_content};
 close $fh;
-
-
+unlock("/var/lock/test.pl.pid");
