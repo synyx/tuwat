@@ -32,10 +32,23 @@ $curl_stats = array();
 //
 isset($ignore_service)  OR $ignore_service = array();
 isset($ignore_attempts) OR $ignore_attempts = 2;
+isset($ignore_unknown) OR $ignore_unknown = array();
 function ignore($service_name, $detail){
   global $ignore_service;
   global $ignore_attempts;
+  global $ignore_unknown;
   $service_val = $service_name;
+
+  foreach ($ignore_unknown as $f) {
+    ##echo "### ".$detail['service_state']."---".$service_name."---".!!strstr($service_name, $f);
+    if ($detail['service_state'] == 3 && !!strstr($service_name, $f)) {
+      return FALSE;
+    }
+  }
+  #if ($detail['service_state'] != 0 && $detail['current_attempt'] <= $ignore_attempts) {
+  #  return TRUE;
+  #}
+
   ## Soll TRUE zurückgeben wenn Service nicht $ignore_service ist.
   foreach ($ignore_service as $replace){
     $service_val = str_replace($replace, "", $service_val);
@@ -43,9 +56,6 @@ function ignore($service_name, $detail){
   if ($service_val == $service_name){
     return TRUE;
   } else {
-    if ($detail['current_state'] != 0 && $detail['current_attempt'] <= $ignore_attempts) {
-      return TRUE;
-    }
     return FALSE;
   }
 }
