@@ -37,7 +37,7 @@ if (!isset($_POST['nag_host'])) {
                 $nagios_url = $host['protocol'] . "://" . $host['hostname'] . ":" . $host['port'] . "/" . $method;
             }
         }
-        $payload = json_encode(array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nagdash", "author" => $author, "duration" => $duration));
+        $payload = json_encode(array("host" => $hostname, "service" => $service, "comment" => "{$method} by Team Ops", "author" => $author, "duration" => $duration));
         $params = array('http' =>
             array(
                 'method' => 'POST',
