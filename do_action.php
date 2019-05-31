@@ -7,10 +7,11 @@ function connectNagiosApi($url, $action, $payload) {
     switch ($action) {
     case "ack":
         $method = "acknowledge_problem";
+        $payload['expire'] = 0 + $_POST['expire'];
         break;
     case "downtime":
         $method = "schedule_downtime";
-        $duration = 60 * $_POST['duration'];
+        $payload['duration'] = 60 * $_POST['duration'];
         break;
     case "enable":
         $method = "enable_notifications";
@@ -34,6 +35,7 @@ function connectNagiosApi($url, $action, $payload) {
         )
     );
     $context = stream_context_create($params);
+    $error = null;
     if(!$result = file_get_contents($url, false, $context)) {
         $error = error_get_last();
         $error = "Command {$method} failed! <pre>{$error}</pre>";
@@ -76,9 +78,10 @@ function connectIcinga2($url, $action, $payload) {
         );
         break;
     case "enable":
-        return "Not implemented";
     case "disable":
-        return "Not implemented";
+        return "{$action} not implemented";
+    default:
+        return "Invalid action {$action}";
     }
 
     $type = $payload['service'] ? 'Service' : 'Host';
@@ -101,9 +104,6 @@ function connectIcinga2($url, $action, $payload) {
         CURLOPT_CUSTOMREQUEST => "POST",
         CURLOPT_POSTFIELDS => json_encode($data),
         CURLOPT_RETURNTRANSFER => true,
-        #CURLOPT_CAINFO => "icinga.synyx.coffee.ca.crt", //re-use the icinga2 master ca.crt
-        #CURLOPT_SSL_VERIFYHOST => 2,
-        #CURLOPT_SSL_VERIFYPEER => 1
         CURLOPT_SSL_VERIFYHOST => 0,
         CURLOPT_SSL_VERIFYPEER => 0
     ));
@@ -120,7 +120,7 @@ function connectIcinga2($url, $action, $payload) {
         return $state['results']['status'];
     }
 
-    return;
+    return null;
 }
 
 
@@ -134,8 +134,7 @@ if (!isset($_POST['nag_host'])) {
     $action = $_POST['action'];
 
     $author = function_exists("nagdash_get_user") ? nagdash_get_user() : "Nudash";
-
-    $payload = array("host" => $hostname, "service" => $service, "comment" => "{$method} from Nudash", "author" => $author, "duration" => $duration);
+    $payload = array("host" => $hostname, "service" => $service, "comment" => "{$action} by {$author}", "author" => $author);
 
     foreach ($nagios_hosts as $host) {
         if (in_array($host['tag'], $nagios_instances)) {

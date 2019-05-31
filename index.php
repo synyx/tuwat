@@ -1,17 +1,3 @@
-<?php
-@session_start();
-error_reporting(E_ALL ^ E_NOTICE);
-require_once('config.php');
-require_once('utils.php');
-if (isset($_REQUEST['known'])){
-	$_SESSION['known'] = $_REQUEST['known'];
-} else {
-	$_SESSION['known'] = "autooff";
-}
-
-$unwanted_hosts = unserialize($_COOKIE['nagdash_unwanted_hosts']);
-if (!is_array($unwanted_hosts)) $unwanted_hosts = array();
-?>
 <html>
 <head>
 <title>Nagios Dashboard</title>
