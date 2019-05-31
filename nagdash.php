@@ -358,6 +358,19 @@ function cmp_last_state_change($a,$b) {
 function build_controls($tag, $host, $service) {
     $controls = '<div class="btn-group">';
     if (!isset($service['is_enabled'])) {
+    $controls .= '
+        <div class="btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" id="ackdropdown" href="#">
+        <i class="icon-time"></i> ACK <span class="caret"></span></a>
+        <ul class="dropdown-menu pull-right" aria-labelledby="ackdropdown">';
+        $timespans = array("60 minutes" => 60, "2 hours" => 120, "12 hours" => 720, "1 day" => 1440, "7 days" => 10080);
+        foreach ($timespans as $name => $minutes) {
+            $expire = time() + ($minutes * 60);
+            $controls .= "<li><a onClick=\"$.post('do_action.php', 
+                { nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', expire: {$expire}, action: 'ack' }, function(data) { showInfo(data) } ); return false;\" 
+                href='#'>{$name}</a></li>";
+        }
+        $controls .= "</ul></div>";
         $controls .="<a href='#' onClick=\"$.post('do_action.php', { 
                 nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', action: 'disable' }, function(data) { showInfo(data) } ); return false;\" class='btn btn-mini'>
                     <i class='icon-volume-off'></i> Silence</a>";
@@ -367,16 +380,17 @@ function build_controls($tag, $host, $service) {
                     <i class='icon-volume-up'></i> Unsilence</a>";
     }
     $controls .= '
-        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" href="#">
+        <div class="btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" id="downtimedropdown" href="#">
         <i class="icon-time"></i> Downtime <span class="caret"></span></a>
-        <ul class="dropdown-menu pull-right">';
+        <ul class="dropdown-menu pull-right" aria-labelledby="downtimedropdown">';
         $timespans = array("10 minutes" => 10, "30 minutes" => 30, "60 minutes" => 60, "2 hours" => 120, "12 hours" => 720, "1 day" => 1440, "7 days" => 10080);
         foreach ($timespans as $name => $minutes) {
             $controls .= "<li><a onClick=\"$.post('do_action.php', 
                 { nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', duration: {$minutes}, action: 'downtime' }, function(data) { showInfo(data) } ); return false;\" 
                 href='#'>{$name}</a></li>";
         }
-        $controls .= "</ul>";
+        $controls .= "</ul></div>";
     $controls .= "</div>";
     return $controls;
 }

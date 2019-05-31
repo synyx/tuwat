@@ -16,6 +16,7 @@ if (!isset($_POST['nag_host'])) {
     switch ($action) {
     case "ack":
         $method = "acknowledge_problem";
+        $expire = 0 + $_POST['expire'];
         break;
     case "downtime":
         $method = "schedule_downtime";
@@ -37,7 +38,7 @@ if (!isset($_POST['nag_host'])) {
                 $nagios_url = $host['protocol'] . "://" . $host['hostname'] . ":" . $host['port'] . "/" . $method;
             }
         }
-        $payload = json_encode(array("host" => $hostname, "service" => $service, "comment" => "{$method} by Team Trucking", "author" => $author, "duration" => $duration));
+        $payload = json_encode(array("host" => $hostname, "service" => $service, "comment" => "{$method} by Team TOS", "author" => $author, "duration" => $duration, "expire" => $expire));
         $params = array('http' =>
             array(
                 'method' => 'POST',
