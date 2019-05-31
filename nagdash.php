@@ -35,6 +35,14 @@ isset($ignore_service) OR $ignore_service = [];
 isset($ignore_attempts) OR $ignore_attempts = 2;
 isset($ignore_unknown) OR $ignore_unknown = [];
 
+/**
+ * Check if service should be ignored.
+ *
+ * @param string $service_name
+ * @param array $detail
+ *
+ * @return bool true if it should not be ignored, false if ignored
+ */
 function ignore($service_name, $detail) {
   global $ignore_service;
   global $ignore_attempts;
@@ -63,6 +71,13 @@ function ignore($service_name, $detail) {
   }
 }
 
+/**
+ * Check if service is whitelisted.
+ *
+ * @param string $name of service.
+ *
+ * @return bool|null - true iff service is whitelisted, false otherwise.  null when there is no whitelist.
+ */
 function allow_service($name) {
   global $allow_service;
   if ($allow_service === null) {
@@ -76,7 +91,14 @@ function allow_service($name) {
   return false;
 }
 
-function allow_host($name, $host) {
+/**
+ * Check if host is whitelisted.
+ *
+ * @param string $name of host.
+ *
+ * @return bool|null - true iff host is whitelisted, false otherwise.  null when there is no whitelist.
+ */
+function allow_host($name) {
   global $allow_host;
   if ($allow_host === null) {
     return null;
@@ -90,7 +112,14 @@ function allow_host($name, $host) {
 }
 
 isset($ignore_host) OR $ignore_host = [];
-function ignore_host($name, $host) {
+/**
+ * Check if host should be ignored.
+ *
+ * @param string $name of host.
+ *
+ * @return bool true if host is in blacklist
+ */
+function ignore_host($name) {
   global $ignore_host;
   foreach ($ignore_host as $pattern) {
     if (!!preg_match($pattern, $name)) {
@@ -101,7 +130,14 @@ function ignore_host($name, $host) {
 }
 
 
-// Function that does the dirty to connect to the Nagios API
+/**
+ * Function that does the dirty to connect to the Nagios API
+ *
+ * @param string $hostname to connect to.
+ * @param int $port to connect to.
+ * @param string $protocol for connection.
+ * @return string
+ */
 function connectNagiosApi($hostname, $port, $protocol) {
 
   global $curl_stats;
@@ -123,6 +159,13 @@ function connectNagiosApi($hostname, $port, $protocol) {
   return $state['content'];
 }
 
+/**
+ * Function that does the dirty to connect to the Icinga 2 API
+ *
+ * @param string $url to connect to.
+ *
+ * @return array
+ */
 function connectIcinga2($url) {
 
   global $curl_stats;
@@ -188,6 +231,14 @@ function connectIcinga2($url) {
   return $hosts;
 }
 
+/**
+ * Query Icinga 2 API.
+ *
+ * @param string $url to query.
+ * @param string $endpoint to query data from.
+ *
+ * @return array|mixed
+ */
 function icinga2v1Get($url, $endpoint) {
   $hostname    = parse_url($url, PHP_URL_HOST);
   $port        = parse_url($url, PHP_URL_PORT);
