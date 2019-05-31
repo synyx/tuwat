@@ -54,10 +54,19 @@ function ignore($service_name, $detail){
     $service_val = str_replace($replace, "", $service_val);
   }
   if ($service_val == $service_name){
-    return TRUE;
+    #echo $detail['hostname']."|".$service_name."|h".json_encode(allow_host($detail['hostname'], null))."|s".json_encode(allow_service($service_name))."</br>";
+    return allow_host($detail['hostname'], null) || allow_service($service_name);
   } else {
     return FALSE;
   }
+}
+function allow_service($name) {
+  global $allow_service;
+  if ($allow_service === NULL) { return NULL; }
+  foreach ($allow_service as $pattern) {
+    if (!!preg_match($pattern, $name)) return TRUE;
+  }
+  return FALSE;
 }
 
 function allow_host($name, $host) {
@@ -162,13 +171,15 @@ foreach($state as $hostname => $host_detail) {
                 "is_ack" => ($host_detail['problem_has_been_acknowledged'] > 0) ? true : false,
                 "is_enabled" => ($host_detail['notifications_enabled'] > 0) ? true : false,
             )); 
-        }
+      }
 
         // In any case, increment the overall status counters.
         $host_summary[$host_detail['current_state']]++;
-
+        }
         // Now parse the statuses for this host. 
         foreach($host_detail['services'] as $service_name => $service_detail) {
+          $service_detail['hostname'] = $hostname;
+		      if (ignore($service_name, $service_detail)){
             // If the host is OK, AND the service is NOT OK. 
             if ($service_detail['current_state'] != 0 && $host_detail['current_state'] == 0) {
                 // Sort the service into the correct array. It's either a known issue or not. 
@@ -206,8 +217,8 @@ foreach($state as $hostname => $host_detail) {
             if ($host_detail['current_state'] == 0) {
                 $service_summary[$service_detail['current_state']]++;
             }
+          }
         }
-    } 
 }
 ksort($host_summary);
 ksort($service_summary);
@@ -275,7 +286,6 @@ if (count($known_hosts) > 0) {
         usort($broken_services,'cmp_last_state_change');
     }
 foreach($broken_services as $service) {
-		if (ignore($service['service_name'], $service)){
         $soft_style = ($service['is_hard']) ? "" : "status_soft";
         $blink_tag = ($service['is_hard'] && $enable_blinking) ? "<blink>" : "";
         $controls = build_controls($service['tag'], $service['hostname'], $service['service_name']);
@@ -285,7 +295,6 @@ foreach($broken_services as $service) {
         echo "<td>{$service['duration']}</td>";
         echo "<td>{$service['current_attempt']}/{$service['max_attempts']}</td>";
         echo "</tr>";
-		}
 }
 ?>
     </table>
