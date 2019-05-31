@@ -17,7 +17,6 @@ th                  { border: 1px black solid; background-color: #D8D8D8 }
 .known_hosts_desc   { color: #686868; font-size: 0.5em }
 .desc               { font-size: 0.8em }
 #info-window-text   { padding: 30px; vertical-align: middle }
-#.tag                { font-size: 0.6em; color: white; padding: 4px; -webkit-border-radius: 5px; }
 .tag                {
 	font-size: 0.6em;
 	color: white;
@@ -58,40 +57,3 @@ table#broken_hosts    tr:hover td span.controls { display:inline-block; }
 #spinner    { position: absolute; top: 10px; width: 300px; text-align: center; left: 50%; margin-left: -150px;
                         border: 1px #848484 solid; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px;.
                                           background: #F0F0F0; font-family: "HelveticaNeue-Medium", Helvetica, Arial, sans-serif; }
-
-/* Contargo */
-.tag_prod  { background-color: #f39086; color: #eff0f2; }
-.tag_synyx { background-color: #b1b2b3; color: #58585a; }
-.tag_stage { background-color: #f78b55; color: #eff0f2; }
-body {
-  background-color: #141414;
-  color: #D8D9DA;
-}
-.totals {
-  background-color: #333;
-  color: #fff;
-}
-.known_hosts {
-  background-color: #141414;
-  color: #D8D9DA;
-  font-size: 0.8em;
-}
-.known_hosts_desc {
-  font-size: 0.6em;
-}
-th {
-  background: #242222;
-  border-top: 2px solid #141414;
-  border-bottom: 2px solid #141414;
-  color: #33B5E5;
-}
-table {
-  border-color: transparent;
-  border-spacing: 0;
-  background: #242222;
-} 
-.status_green       { background-color: #269926; color: white; padding: 3px; opacity: 0.75; }
-.status_red         { background-color: #FF4040; color: white; padding: 3px; opacity: 0.75; }
-.status_yellow      { background-color: #FFDE40; color: black; padding: 3px; opacity: 0.75; }
-.status_grey        { background-color: #444444; color: white; padding: 3px; opacity: 0.90; }
-
