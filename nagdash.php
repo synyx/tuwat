@@ -60,6 +60,14 @@ function ignore($service_name, $detail){
   }
 }
 
+function allow_host($name, $host) {
+  global $allow_host;
+  if ($allow_host === NULL) { return NULL; }
+  foreach ($allow_host as $pattern) {
+    if (!!preg_match($pattern, $name)) return TRUE;
+  }
+  return FALSE;
+}
 isset($ignore_host) OR $ignore_host = array();
 function ignore_host($name, $host) {
   global $ignore_host;
@@ -130,7 +138,7 @@ if (count($errors) > 0) {
 foreach($state as $hostname => $host_detail) {
     // Check if the host matches the filter
     //if (preg_match("/$filter/", $hostname)) {
-    if (!ignore_host($hostname, $host_detail)) {
+    if (!ignore_host($hostname, $host_detail) && allow_host($hostname, $host_detail) !== FALSE) {
         // If the host is NOT OK...
         if ($host_detail['current_state'] != 0) {
             // Sort the host into the correct array. It's either a known issue or not. 
@@ -349,9 +357,6 @@ function cmp_last_state_change($a,$b) {
 
 function build_controls($tag, $host, $service) {
     $controls = '<div class="btn-group">';
-    $controls .= "<a href='#' onClick=\"$.post('do_action.php', { 
-        nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', action: 'ack' }, function(data) { showInfo(data) } ); return false;\" class='btn btn-mini'>
-            <i class='icon-check'></i> Ack </a>";
     if (!isset($service['is_enabled'])) {
         $controls .="<a href='#' onClick=\"$.post('do_action.php', { 
                 nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', action: 'disable' }, function(data) { showInfo(data) } ); return false;\" class='btn btn-mini'>
