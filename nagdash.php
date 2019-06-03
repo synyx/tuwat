@@ -43,9 +43,8 @@ isset($ignore_unknown) OR $ignore_unknown = [];
  *
  * @return bool true if it should not be ignored, false if ignored
  */
-function ignore($service_name, $detail) {
+function service_is_allowed($service_name, $detail) {
   global $ignore_service;
-  global $ignore_attempts;
   global $ignore_unknown;
   $service_val = $service_name;
 
@@ -55,17 +54,14 @@ function ignore($service_name, $detail) {
       return false;
     }
   }
-  #if ($detail['service_state'] != 0 && $detail['current_attempt'] <= $ignore_attempts) {
-  #  return TRUE;
-  #}
 
   ## Soll TRUE zurückgeben wenn Service nicht $ignore_service ist.
   foreach ($ignore_service as $replace) {
     $service_val = str_replace($replace, "", $service_val);
   }
   if ($service_val == $service_name) {
-    #echo $detail['hostname']."|".$service_name."|h".json_encode(allow_host($detail['hostname'], null))."|s".json_encode(allow_service($service_name))."</br>";
-    return allow_host($detail['hostname'], null) || allow_service($service_name);
+    #echo $detail['hostname']."|".$service_name."|h".json_encode(host_is_whitelisted($detail['hostname']))."|s".json_encode(service_is_whitelisted($service_name))."|o".json_encode(host_is_whitelisted($detail['hostname']) !== false || service_is_whitelisted($service_name) !== false)."</br>";
+    return host_is_whitelisted($detail['hostname']) !== false || service_is_whitelisted($service_name) !== false;
   } else {
     return false;
   }
@@ -78,7 +74,7 @@ function ignore($service_name, $detail) {
  *
  * @return bool|null - true iff service is whitelisted, false otherwise.  null when there is no whitelist.
  */
-function allow_service($name) {
+function service_is_whitelisted($name) {
   global $allow_service;
   if ($allow_service === null) {
     return null;
@@ -98,7 +94,7 @@ function allow_service($name) {
  *
  * @return bool|null - true iff host is whitelisted, false otherwise.  null when there is no whitelist.
  */
-function allow_host($name) {
+function host_is_whitelisted($name) {
   global $allow_host;
   if ($allow_host === null) {
     return null;
@@ -119,7 +115,7 @@ isset($ignore_host) OR $ignore_host = [];
  *
  * @return bool true if host is in blacklist
  */
-function ignore_host($name) {
+function host_is_blacklisted($name) {
   global $ignore_host;
   foreach ($ignore_host as $pattern) {
     if (!!preg_match($pattern, $name)) {
@@ -340,8 +336,7 @@ if (count($errors) > 0) {
 }
 foreach ($state as $hostname => $host_detail) {
   // Check if the host matches the filter
-  //if (preg_match("/$filter/", $hostname)) {
-  if (!ignore_host($hostname, $host_detail) && allow_host($hostname, $host_detail) !== false) {
+  if (!host_is_blacklisted($hostname, $host_detail) && host_is_whitelisted($hostname, $host_detail) !== false) {
     // If the host is NOT OK...
     if ($host_detail['current_state'] != 0) {
       // Sort the host into the correct array. It's either a known issue or not.
@@ -378,7 +373,7 @@ foreach ($state as $hostname => $host_detail) {
   // Now parse the statuses for this host.
   foreach ($host_detail['services'] as $service_name => $service_detail) {
     $service_detail['hostname'] = $hostname;
-    if (ignore($service_name, $service_detail)) {
+    if (service_is_allowed($service_name, $service_detail)) {
       // If the host is OK, AND the service is NOT OK.
       if ($service_detail['current_state'] != 0 && $host_detail['current_state'] == 0) {
         // Sort the service into the correct array. It's either a known issue or not.
@@ -535,7 +530,7 @@ ksort($service_summary);
             usort($broken_services, 'cmp_last_state_change');
           }
           foreach ($broken_services as $service) {
-            if (ignore($service['service_name'])) {
+            if (service_is_allowed($service['service_name'], $service)) {
               $soft_style = ($service['is_hard']) ? "" : "status_soft";
               $blink_tag  = ($service['is_hard'] && $enable_blinking) ? "<blink>" : "";
               $controls   = build_controls($service['tag'], $service['hostname'], $service['service_name']);
