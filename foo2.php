@@ -54,12 +54,11 @@ if (file_exists('temp.txt')) {
 }
 echo "</h3></center>";
 
-//$biertime = "not sure if its biertime…";
-$beer_url = "http://bier.synyx.coffee";
+$beer_url = "https://bier.synyx.coffee/dashboard";
 $beertime = curl_get_file_contents($beer_url);
 if ($beertime != FALSE) {
-    if (preg_match('/<title>(.+)<\/title>/', file_get_contents($beer_url), $matches) && isset($matches[1])) {
-        $biertime = $matches[1];
+    if (preg_match('/files\/([^\/]+)\//', file_get_contents($beer_url), $matches) && isset($matches[1])) {
+        $biertime = $matches[1] == 'nobeertime' ? 'No Beertime (╯°□°）╯︵ ┻━┻' : 'Beertime ¯\(ツ)/¯';
     } else {
         $biertime = "not sure if its biertime…";
     }
