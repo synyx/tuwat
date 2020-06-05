@@ -288,6 +288,10 @@ function connectAlertmanager($url) {
   $host_state = array_reduce($state, function ($hosts, $alert) {
     $labels = $alert['labels'];
 
+    if (isset($labels['severity']) && $labels['severity'] == 'none') {
+      return $hosts;
+    }
+
     $hn = implode(':', k8slabels($labels, array('cluster', 'namespace')));
     if (!isset($hosts[$hn])) {
       $hosts[$hn] = array(
