@@ -320,20 +320,8 @@ function connectAlertmanager($url) {
   }, array());
 
   return $host_state;
-
-  $hosts[$hn]['services'][$sn]                                  = $service['attrs'];
-  $hosts[$hn]['services'][$sn]['downtimes']                     = [];
-  $hosts[$hn]['services'][$sn]['current_state']                 = $service['attrs']['state'];
-  $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attrs']['acknowledgement'];
-  $hosts[$hn]['services'][$sn]['scheduled_downtime_depth']      = $service['attrs']['downtime_depth'];
-  $hosts[$hn]['services'][$sn]['notifications_enabled']         = $service['attrs']['enable_notifications'] ? 1 : 0;
-  $hosts[$hn]['services'][$sn]['plugin_output']                 = $service['attrs']['last_check_result']['output'];
-  $hosts[$hn]['services'][$sn]['max_attempts']                  = $service['attrs']['max_check_attempts'];
-  $hosts[$hn]['services'][$sn]['current_attempt']               = $service['attrs']['check_attempt'];
-  $hosts[$hn]['services'][$sn]['state_type']                    = $service['attrs']['state_type'];
-
-  return $hosts;
 }
+
 function k8slabels($labels, $keys) {
   $ret = [];
   foreach ($keys as $key) {
