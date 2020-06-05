@@ -307,13 +307,14 @@ function connectAlertmanager($url) {
       'current_state'                 => $state_mapping[$alert['status']['state']],
       'problem_has_been_acknowledged' => $ack_mapping[$alert['status']['state']],
       'scheduled_downtime_depth'      => 0,
-      'notifications_enabled'         => count($alert['receivers']) > 0 ? 1 : 0,
+      'notifications_enabled'         => count($alert['status']['silencedBy']) > 0 ? 0 : 1,
       'plugin_output'                 => $alert['annotations']['description'] . ' ' . $alert['annotations']['runbook'],
       'max_attempts'                  => 1,
       'current_attempt'               => 1,
       'state_type'                    => 1,
       'downtimes'                     => [],
       'last_state_change'             => $startsAt->getTimestamp(),
+      'labels'                        => $labels,
     );
 
     return $hosts;
