@@ -284,11 +284,15 @@ if (!is_array($unwanted_hosts)) {
 foreach ($nagios_hosts as $host) {
   // Check if the host has been disabled locally
   if (!in_array($host['tag'][0], $unwanted_hosts)) {
-    if ($host['type'] == 'icinga2') {
-      $host_state = connectIcinga2($host['url']);
-    } else {
-      $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
+
+    switch ($host['type']) {
+      case "icinga2":
+        $host_state = connectIcinga2($host['url']);
+        break;
+      default:
+        $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
     }
+
     if (is_string($host_state)) {
       $errors[] = "Could not connect to API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
     } else {
@@ -644,8 +648,8 @@ function build_controls($tag, $host, $service) {
     $timespans = ["60 minutes" => 60, "2 hours" => 120, "12 hours" => 720, "1 day" => 1440, "7 days" => 10080];
     foreach ($timespans as $name => $minutes) {
       $expire   = time() + ($minutes * 60);
-      $controls .= "<li><a onClick=\"$.post('do_action.php', 
-                { nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', expire: {$expire}, action: 'ack' }, function(data) { showInfo(data) } ); return false;\" 
+      $controls .= "<li><a onClick=\"$.post('do_action.php',
+                { nag_host: '{$tag}', hostname: '{$host}', service: '{$service}', expire: {$expire}, action: 'ack' }, function(data) { showInfo(data) } ); return false;\"
                 href='#'>{$name}</a></li>";
     }
     $controls .= "</ul></div>";
