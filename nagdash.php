@@ -300,6 +300,8 @@ function connectAlertmanager($url) {
     $state_mapping = array('unprocessed' => 3, 'active' => 1, 'suppressed' => 1);
     $ack_mapping = array('unprocessed' => 0, 'active' => 0, 'suppressed' => 1);
 
+    $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $alert['startsAt'],  new DateTimeZone('Etc/Zulu'));
+
     $sn = implode(':', k8slabels($labels, array('container', 'endpoint', 'pod')));
     $hosts[$hn]['services'][$sn] = array(
       'current_state'                 => $state_mapping[$alert['status']['state']],
@@ -311,6 +313,7 @@ function connectAlertmanager($url) {
       'current_attempt'               => 1,
       'state_type'                    => 1,
       'downtimes'                     => [],
+      'last_state_change'             => $startsAt->getTimestamp(),
     );
 
     return $hosts;
