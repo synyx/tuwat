@@ -274,6 +274,109 @@ function icinga2v1Get($url, $endpoint) {
   return $state;
 }
 
+/**
+ * @param $url
+ * @return string | array Error as string
+ */
+function connectAlertmanager($url) {
+  $state = alertmanagerV2Get($url, "alerts", array());
+
+  if (is_string($state)) {
+    return $state;
+  }
+
+  $host_state = array_reduce($state, function ($hosts, $alert) {
+    $labels = $alert['labels'];
+
+    $hn = implode(':', k8slabels($labels, array('cluster', 'namespace')));
+    if (!isset($hosts[$hn])) {
+      $hosts[$hn] = array(
+        'services' => [],
+        'downtimes' => [],
+        'current_state' => 0, # "host" is always up
+      );
+    }
+
+    $state_mapping = array('unprocessed' => 3, 'active' => 1, 'suppressed' => 1);
+    $ack_mapping = array('unprocessed' => 0, 'active' => 0, 'suppressed' => 1);
+
+    $sn = implode(':', k8slabels($labels, array('container', 'endpoint', 'pod')));
+    $hosts[$hn]['services'][$sn] = array(
+      'current_state'                 => $state_mapping[$alert['status']['state']],
+      'problem_has_been_acknowledged' => $ack_mapping[$alert['status']['state']],
+      'scheduled_downtime_depth'      => 0,
+      'notifications_enabled'         => count($alert['receivers']) > 0 ? 1 : 0,
+      'plugin_output'                 => $alert['annotations']['description'] . ' ' . $alert['annotations']['runbook'],
+      'max_attempts'                  => 1,
+      'current_attempt'               => 1,
+      'state_type'                    => 1,
+      'downtimes'                     => [],
+    );
+
+    return $hosts;
+  }, array());
+
+  return $host_state;
+
+  $hosts[$hn]['services'][$sn]                                  = $service['attrs'];
+  $hosts[$hn]['services'][$sn]['downtimes']                     = [];
+  $hosts[$hn]['services'][$sn]['current_state']                 = $service['attrs']['state'];
+  $hosts[$hn]['services'][$sn]['problem_has_been_acknowledged'] = $service['attrs']['acknowledgement'];
+  $hosts[$hn]['services'][$sn]['scheduled_downtime_depth']      = $service['attrs']['downtime_depth'];
+  $hosts[$hn]['services'][$sn]['notifications_enabled']         = $service['attrs']['enable_notifications'] ? 1 : 0;
+  $hosts[$hn]['services'][$sn]['plugin_output']                 = $service['attrs']['last_check_result']['output'];
+  $hosts[$hn]['services'][$sn]['max_attempts']                  = $service['attrs']['max_check_attempts'];
+  $hosts[$hn]['services'][$sn]['current_attempt']               = $service['attrs']['check_attempt'];
+  $hosts[$hn]['services'][$sn]['state_type']                    = $service['attrs']['state_type'];
+
+  return $hosts;
+}
+function k8slabels($labels, $keys) {
+  $ret = [];
+  foreach ($keys as $key) {
+    if (isset($labels[$key])) {
+      $ret[] = $labels[$key];
+    }
+  }
+  return $ret;
+}
+
+function alertmanagerV2Get($url, $endpoint, $params = array()) {
+  global $curl_stats;
+
+  $hostname    = parse_url($url, PHP_URL_HOST);
+  $port        = parse_url($url, PHP_URL_PORT);
+  $request_url = "$url/v2/{$endpoint}";
+  $headers     = [
+    'Accept: application/json',
+    'X-HTTP-Method-Override: GET',
+  ];
+  $ch          = curl_init();
+  curl_setopt_array(
+    $ch, [
+      CURLOPT_URL            => $request_url,
+      CURLOPT_HTTPHEADER     => $headers,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYHOST => 0,
+      CURLOPT_POSTFIELDS     => http_build_query($params),
+      CURLOPT_CUSTOMREQUEST  => 'GET',
+    ]
+  );
+  if (!$json = curl_exec($ch)) {
+    return "<pre>Attempt to hit Alertmanager API failed, sorry. Curl said: " . curl_error($ch) . "</pre>";
+  } else {
+    $curl_stats["$hostname:$port"] = curl_getinfo($ch);
+  }
+  curl_close($ch);
+
+  if (!$state = json_decode($json, true)) {
+    return "Attempt to parse alertmanager json failed, sorry (JSON decode failed)";
+  }
+  $curl_stats["$hostname:$port"]['objects'] += count($state);
+
+  return $state;
+}
+
 // Check to see if the user has a cookie that disables some hosts
 $unwanted_hosts = unserialize($_COOKIE['nagdash_unwanted_hosts']);
 if (!is_array($unwanted_hosts)) {
@@ -289,12 +392,15 @@ foreach ($nagios_hosts as $host) {
       case "icinga2":
         $host_state = connectIcinga2($host['url']);
         break;
+      case "alertmanager":
+        $host_state = connectAlertmanager($host['url']);
+        break;
       default:
         $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
     }
 
     if (is_string($host_state)) {
-      $errors[] = "Could not connect to API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
+      $errors[] = "Could not connect to {$host['type']} API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
     } else {
       foreach ($host_state as $this_host => $null) {
 
