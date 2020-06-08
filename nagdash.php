@@ -285,6 +285,14 @@ function connectAlertmanager($url) {
     return $state;
   }
 
+  if (count($state) == 0) {
+    return array("url" => array(
+      'services' => [],
+      'downtimes' => [],
+      'current_state' => 1,
+    ));
+  }
+
   $host_state = array_reduce($state, function ($hosts, $alert) {
     $labels = $alert['labels'];
 
