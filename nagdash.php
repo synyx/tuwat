@@ -313,6 +313,9 @@ function connectAlertmanager($url) {
     $ack_mapping = array('unprocessed' => 0, 'active' => 0, 'suppressed' => 1);
 
     $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $alert['startsAt'],  new DateTimeZone('Etc/Zulu'));
+    $description = isset($alert['annotations']['description']) ? $alert['annotations']['description'] : '';
+    $link = isset($alert['annotations']['runbook']) ? '<a href="'.$alert['annotations']['runbook'].'" target="_blank">Runbook</a>' : '';
+
 
     $sn = implode(':', k8slabels($labels, array('container', 'endpoint', 'pod')));
     $hosts[$hn]['services'][$sn] = array(
@@ -320,7 +323,7 @@ function connectAlertmanager($url) {
       'problem_has_been_acknowledged' => $ack_mapping[$alert['status']['state']],
       'scheduled_downtime_depth'      => 0,
       'notifications_enabled'         => count($alert['status']['silencedBy']) > 0 ? 0 : 1,
-      'plugin_output'                 => $alert['annotations']['description'] . ' ' . $alert['annotations']['runbook'],
+      'plugin_output'                 => $description . ' ' . $link,
       'max_attempts'                  => 1,
       'current_attempt'               => 1,
       'state_type'                    => 1,
