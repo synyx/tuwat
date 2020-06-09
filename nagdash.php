@@ -317,7 +317,7 @@ function connectAlertmanager($url) {
     $link = isset($alert['annotations']['runbook']) ? '<a href="'.$alert['annotations']['runbook'].'" target="_blank">Runbook</a>' : '';
 
 
-    $sn = implode(':', k8slabels($labels, array('container', 'endpoint', 'pod')));
+    $sn = implode(' ', k8slabels($labels, array('alertname', 'container', 'endpoint', 'pod')));
     $hosts[$hn]['services'][$sn] = array(
       'current_state'                 => $state_mapping[$alert['status']['state']],
       'problem_has_been_acknowledged' => $ack_mapping[$alert['status']['state']],
