@@ -5,7 +5,7 @@
  * @return string | array Error as string
  */
 function connectGitlabMRs($url) {
-  $state = gitlabV4Get($url.'/merge_requests', array('wip'=>'no', 'state'=>'opened', 'order_by', 'updated_at', 'sort'=>'desc', 'scope'=>'all'));
+  $state = gitlabV4Get($url.'/merge_requests', array('wip'=>'no', 'state'=>'opened', 'order_by', 'updated_at', 'sort'=>'desc', 'scope'=>'all', 'target_branch' => 'production'));
 
   if (is_string($state)) {
     return $state;
