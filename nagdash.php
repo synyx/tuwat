@@ -419,7 +419,7 @@ function connectGitlabMRs($url) {
     }
 
     $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $mr['updated_at'],  new DateTimeZone('Etc/Zulu'));
-    $description = $mr['author']['name'];
+    $description = 'Author: '.$mr['author']['name'].($mr['assignee'] ? 'Assigned To: '.$mr['assignee']['name'] : '');
     $link = '<a href="'.$mr['web_url'].'" target="_blank">MR '.$mr['references']['short'].'</a>';
 
     $sn = 'MR '.$mr['references']['short'].': '.$mr['title'];
