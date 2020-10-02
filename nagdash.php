@@ -61,7 +61,10 @@ function service_is_allowed($service_name, $detail) {
   }
   if ($service_val == $service_name) {
     #echo $detail['hostname']."|".$service_name."|h".json_encode(host_is_whitelisted($detail['hostname']))."|s".json_encode(service_is_whitelisted($service_name))."|o".json_encode(host_is_whitelisted($detail['hostname']) !== false || service_is_whitelisted($service_name) !== false)."</br>";
-    return host_is_whitelisted($detail['hostname']) !== false || service_is_whitelisted($service_name) !== false;
+    #echo $detail['hostname']."|".$service_name."| h".json_encode(host_is_blacklisted($detail['hostname']))."| w".json_encode(service_is_whitelisted($service_name))."<br>";
+    if (host_is_blacklisted($detail['hostname']) && !service_is_whitelisted($service_name)) return false;
+    #if (host_is_whitelisted($detail['hostname']) !== false) return true;
+    return true;
   } else {
     return false;
   }
@@ -118,6 +121,7 @@ isset($ignore_host) OR $ignore_host = [];
 function host_is_blacklisted($name) {
   global $ignore_host;
   foreach ($ignore_host as $pattern) {
+    #echo "###".$name."->".(!!preg_match($pattern, $name))."(".$pattern."<br>";
     if (!!preg_match($pattern, $name)) {
       return true;
     }
@@ -285,6 +289,14 @@ function connectAlertmanager($url) {
     return $state;
   }
 
+  if (count($state) == 0) {
+    return array("url" => array(
+      'services' => [],
+      'downtimes' => [],
+      'current_state' => 1,
+    ));
+  }
+
   $host_state = array_reduce($state, function ($hosts, $alert) {
     $labels = $alert['labels'];
 
@@ -305,14 +317,16 @@ function connectAlertmanager($url) {
     $ack_mapping = array('unprocessed' => 0, 'active' => 0, 'suppressed' => 1);
 
     $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $alert['startsAt'],  new DateTimeZone('Etc/Zulu'));
+    $description = isset($alert['annotations']['description']) ? $alert['annotations']['description'] : '';
+    $link = isset($alert['annotations']['runbook']) ? '<a href="'.$alert['annotations']['runbook'].'" target="_blank">&#x1F4D6; Runbook</a>' : '';
 
-    $sn = implode(':', k8slabels($labels, array('container', 'endpoint', 'pod')));
+    $sn = implode(' ', k8slabels($labels, array('alertname', 'container', 'endpoint', 'pod')));
     $hosts[$hn]['services'][$sn] = array(
       'current_state'                 => $state_mapping[$alert['status']['state']],
       'problem_has_been_acknowledged' => $ack_mapping[$alert['status']['state']],
       'scheduled_downtime_depth'      => 0,
       'notifications_enabled'         => count($alert['status']['silencedBy']) > 0 ? 0 : 1,
-      'plugin_output'                 => $alert['annotations']['description'] . ' ' . $alert['annotations']['runbook'],
+      'plugin_output'                 => $description . ' ' . $link,
       'max_attempts'                  => 1,
       'current_attempt'               => 1,
       'state_type'                    => 1,
@@ -324,6 +338,7 @@ function connectAlertmanager($url) {
     return $hosts;
   }, array());
 
+  #print_r($host_state);
   return $host_state;
 }
 
@@ -441,6 +456,7 @@ if (count($errors) > 0) {
   }
 }
 foreach ($state as $hostname => $host_detail) {
+  #echo "%%% ".$hostname."% b!".host_is_blacklisted($hostname, $host_detail)." | w".host_is_whitelisted($hostname, $host_detail)."<br>";
   // Check if the host matches the filter
   if (!host_is_blacklisted($hostname, $host_detail) && host_is_whitelisted($hostname, $host_detail) !== false) {
     // If the host is NOT OK...

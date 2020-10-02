@@ -7,6 +7,7 @@
 <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
 <link rel="stylesheet" href="css/blinkftw.css">
 <link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/dark.css">
 <?php
 if (isset($extra_css)) {
     echo "<link rel=\"stylesheet\" href=\"{$extra_css}\">";
