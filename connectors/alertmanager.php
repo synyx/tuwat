@@ -1,0 +1,111 @@
+<?php
+
+/**
+ * @param $url
+ * @return string | array Error as string
+ */
+function connectAlertmanager($url) {
+  $state = alertmanagerV2Get($url, "alerts", array());
+
+  if (is_string($state)) {
+    return $state;
+  }
+
+  if (count($state) == 0) {
+    return array("url" => array(
+      'services' => [],
+      'downtimes' => [],
+      'current_state' => 1,
+    ));
+  }
+
+  $host_state = array_reduce($state, function ($hosts, $alert) {
+    $labels = $alert['labels'];
+
+    if (isset($labels['severity']) && $labels['severity'] == 'none') {
+      return $hosts;
+    }
+
+    $hn = implode(':', k8slabels($labels, array('cluster', 'namespace')));
+    if (!isset($hosts[$hn])) {
+      $hosts[$hn] = array(
+        'services' => [],
+        'downtimes' => [],
+        'current_state' => 0, # "host" is always up
+      );
+    }
+
+    $state_mapping = array('unprocessed' => 3, 'active' => 1, 'suppressed' => 1);
+    $ack_mapping = array('unprocessed' => 0, 'active' => 0, 'suppressed' => 1);
+
+    $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $alert['startsAt'],  new DateTimeZone('Etc/Zulu'));
+    $description = isset($alert['annotations']['description']) ? $alert['annotations']['description'] : '';
+    $link = isset($alert['annotations']['runbook']) ? '<a href="'.$alert['annotations']['runbook'].'" target="_blank">&#x1F4D6; Runbook</a>' : '';
+
+    $sn = implode(' ', k8slabels($labels, array('alertname', 'container', 'endpoint', 'pod')));
+    $hosts[$hn]['services'][$sn] = array(
+      'current_state'                 => $state_mapping[$alert['status']['state']],
+      'problem_has_been_acknowledged' => $ack_mapping[$alert['status']['state']],
+      'scheduled_downtime_depth'      => 0,
+      'notifications_enabled'         => count($alert['status']['silencedBy']) > 0 ? 0 : 1,
+      'plugin_output'                 => $description . ' ' . $link,
+      'max_attempts'                  => 1,
+      'current_attempt'               => 1,
+      'state_type'                    => 1,
+      'downtimes'                     => [],
+      'last_state_change'             => $startsAt->getTimestamp(),
+      'labels'                        => $labels,
+    );
+
+    return $hosts;
+  }, array());
+
+  #print_r($host_state);
+  return $host_state;
+}
+
+function k8slabels($labels, $keys) {
+  $ret = [];
+  foreach ($keys as $key) {
+    if (isset($labels[$key])) {
+      $ret[] = $labels[$key];
+    }
+  }
+  return $ret;
+}
+
+function alertmanagerV2Get($url, $endpoint, $params = array()) {
+  global $curl_stats;
+
+  $hostname    = parse_url($url, PHP_URL_HOST);
+  $port        = parse_url($url, PHP_URL_PORT);
+  $request_url = "$url/v2/{$endpoint}";
+  $headers     = [
+    'Accept: application/json',
+    'X-HTTP-Method-Override: GET',
+  ];
+  $ch          = curl_init();
+  curl_setopt_array(
+    $ch, [
+      CURLOPT_URL            => $request_url,
+      CURLOPT_HTTPHEADER     => $headers,
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_SSL_VERIFYHOST => 0,
+      CURLOPT_POSTFIELDS     => http_build_query($params),
+      CURLOPT_CUSTOMREQUEST  => 'GET',
+    ]
+  );
+  if (!$json = curl_exec($ch)) {
+    return "<pre>Attempt to hit Alertmanager API failed, sorry. Curl said: " . curl_error($ch) . "</pre>";
+  } else {
+    $curl_stats["$hostname:$port"] = curl_getinfo($ch);
+  }
+  curl_close($ch);
+
+  if (!$state = json_decode($json, true)) {
+    return "Attempt to parse alertmanager json failed, sorry (JSON decode failed)";
+  }
+  $curl_stats["$hostname:$port"]['objects'] += count($state);
+
+  return $state;
+}
