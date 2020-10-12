@@ -9,6 +9,7 @@ require_once 'connectors/alertmanager.php';
 require_once 'connectors/gitlab.php';
 require_once 'connectors/icinga2.php';
 require_once 'connectors/nagios.php';
+require_once 'connectors/patchman.php';
 
 if (!function_exists('curl_init')) {
   die("ERROR: The PHP curl extension must be installed for Nagdash to function");
@@ -168,6 +169,23 @@ foreach ($nagios_hosts as $host) {
       return get_host_state($host);
     }, 60);
 
+    switch ($host['type']) {
+      case "icinga2":
+        $host_state = connectIcinga2($host['url']);
+        break;
+      case "alertmanager":
+        $host_state = connectAlertmanager($host['url']);
+        break;
+      case "gitlabmr":
+        $host_state = connectGitlabMRs($host['url']);
+        break;
+      case "patchman":
+        $host_state = connectPatchman($host['url']);
+        break;
+      default:
+        $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
+    }
+
     if (is_string($host_state)) {
       $errors[] = "Could not connect to {$host['type']} API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
     } else {
@@ -216,7 +234,7 @@ if (count($errors) > 0) {
 foreach ($state as $hostname => $host_detail) {
   #echo "%%% ".$hostname."% b!".host_is_blacklisted($hostname, $host_detail)." | w".host_is_whitelisted($hostname, $host_detail)."<br>";
   // Check if the host matches the filter
-  if (!host_is_blacklisted($hostname, $host_detail) && host_is_whitelisted($hostname, $host_detail) !== false) {
+  if (!host_is_blacklisted($hostname) && host_is_whitelisted($hostname) !== false) {
     // If the host is NOT OK...
     if ($host_detail['current_state'] != 0) {
       // Sort the host into the correct array. It's either a known issue or not.
