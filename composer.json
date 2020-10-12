@@ -1,0 +1,7 @@
+{
+    "require": {
+      "ext-apcu": "*",
+      "ext-curl": "*",
+      "ext-json": "*"
+    }
+}
