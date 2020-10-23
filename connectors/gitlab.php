@@ -2,10 +2,20 @@
 
 /**
  * @param $url
+ * @param array $options
  * @return string | array Error as string
  */
-function connectGitlabMRs($url) {
-  $state = gitlabV4Get($url.'/merge_requests', array('wip'=>'no', 'state'=>'opened', 'order_by', 'updated_at', 'sort'=>'desc', 'scope'=>'all', 'target_branch' => 'production'));
+function connectGitlabMRs($url, $options = array()) {
+  $default_options = array(
+    'wip' => 'no',
+    'state' => 'opened',
+    'order_by' => 'updated_at',
+    'sort' => 'desc',
+    'scope' => 'all',
+    'target_branch' => 'master',
+  );
+  $options = array_merge($default_options, $options);
+  $state = gitlabV4Get($url.'/merge_requests', $options);
 
   if (is_string($state)) {
     return $state;
