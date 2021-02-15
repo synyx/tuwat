@@ -144,7 +144,7 @@ function get_host_state($host) {
       $host_state = connectAlertmanager($host['url']);
       break;
     case "gitlabmr":
-      $host_state = connectGitlabMRs($host['url'], isset($host['options']) ?: []);
+      $host_state = connectGitlabMRs($host['url'], isset($host['options']) ? $host['options'] : []);
       break;
     default:
       $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
