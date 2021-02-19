@@ -25,7 +25,7 @@ function connectGitlabMRs($url, $options = array()) {
     return array("url" => array(
       'services' => [],
       'downtimes' => [],
-      'current_state' => 1,
+      'current_state' => 0,
     ));
   }
 
@@ -64,6 +64,11 @@ function connectGitlabMRs($url, $options = array()) {
   return $host_state;
 }
 
+/**
+ * @param $url
+ * @param array $params get parameters
+ * @return array|string Error as string
+ */
 function gitlabV4Get($url, $params = array()) {
   global $curl_stats;
 
@@ -94,7 +99,7 @@ function gitlabV4Get($url, $params = array()) {
   }
   curl_close($ch);
 
-  if (!$state = json_decode($json, true)) {
+  if (($state = json_decode($json, true)) === null) {
     return "Attempt to parse gitlab json failed, sorry (JSON decode failed)";
   }
   $curl_stats["$hostname:$port"]['objects'] += count($state);

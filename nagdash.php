@@ -134,6 +134,24 @@ function host_is_blacklisted($name) {
   return false;
 }
 
+function get_host_state($host) {
+
+  switch ($host['type']) {
+    case "icinga2":
+      $host_state = connectIcinga2($host['url']);
+      break;
+    case "alertmanager":
+      $host_state = connectAlertmanager($host['url']);
+      break;
+    case "gitlabmr":
+      $host_state = connectGitlabMRs($host['url'], isset($host['options']) ? $host['options'] : []);
+      break;
+    default:
+      $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
+  }
+
+  return $host_state;
+}
 
 // Check to see if the user has a cookie that disables some hosts
 $unwanted_hosts = unserialize($_COOKIE['nagdash_unwanted_hosts']);
@@ -145,20 +163,10 @@ if (!is_array($unwanted_hosts)) {
 foreach ($nagios_hosts as $host) {
   // Check if the host has been disabled locally
   if (!in_array($host['tag'][0], $unwanted_hosts)) {
-
-    switch ($host['type']) {
-      case "icinga2":
-        $host_state = connectIcinga2($host['url']);
-        break;
-      case "alertmanager":
-        $host_state = connectAlertmanager($host['url']);
-        break;
-      case "gitlabmr":
-        $host_state = connectGitlabMRs($host['url'], isset($host['options']) ?: []);
-        break;
-      default:
-        $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
-    }
+    $cachekey = hash('sha256', json_encode($host), false);
+    $host_state = apcu_entry($cachekey, function () use ($host) {
+      return get_host_state($host);
+    }, 60);
 
     if (is_string($host_state)) {
       $errors[] = "Could not connect to {$host['type']} API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
