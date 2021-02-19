@@ -48,9 +48,9 @@ function patchmanHosts2Nagios($hosts) {
 
     $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $host['lastreport'],  new DateTimeZone('Etc/Zulu'));
 
-    if ($host['security_update_count'] > 0 || $host['bugfix_update_count'] > 25) {
+    if ($host['reboot_required'] || $host['security_update_count'] > 0 || $host['bugfix_update_count'] > 25) {
       $sn                          = 'Patch level insufficient';
-      $description = "Security updates: {$host['security_update_count']}, Updates: {$host['bugfix_update_count']}";
+      $description = "Security updates: {$host['security_update_count']}, Updates: {$host['bugfix_update_count']}, Reboot needed: {$host['reboot_required']}";
       $hosts[$hn]['downtimes'] = [];
       $hosts[$hn]['services'][$sn] = [
         'current_state'                 => 1,
