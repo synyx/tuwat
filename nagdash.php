@@ -154,7 +154,7 @@ foreach ($nagios_hosts as $host) {
         $host_state = connectAlertmanager($host['url']);
         break;
       case "gitlabmr":
-        $host_state = connectGitlabMRs($host['url']);
+        $host_state = connectGitlabMRs($host['url'], isset($host['options']) ?: []);
         break;
       default:
         $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
