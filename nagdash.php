@@ -147,6 +147,9 @@ function get_host_state($host) {
     case "gitlabmr":
       $host_state = connectGitlabMRs($host['url'], isset($host['options']) ? $host['options'] : []);
       break;
+    case "patchman":
+      $host_state = connectPatchman($host['url']);
+      break;
     default:
       $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
   }
@@ -168,23 +171,6 @@ foreach ($nagios_hosts as $host) {
     $host_state = apcu_entry($cachekey, function () use ($host) {
       return get_host_state($host);
     }, 60);
-
-    switch ($host['type']) {
-      case "icinga2":
-        $host_state = connectIcinga2($host['url']);
-        break;
-      case "alertmanager":
-        $host_state = connectAlertmanager($host['url']);
-        break;
-      case "gitlabmr":
-        $host_state = connectGitlabMRs($host['url']);
-        break;
-      case "patchman":
-        $host_state = connectPatchman($host['url']);
-        break;
-      default:
-        $host_state = connectNagiosApi($host['hostname'], $host['port'], $host['protocol']);
-    }
 
     if (is_string($host_state)) {
       $errors[] = "Could not connect to {$host['type']} API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
