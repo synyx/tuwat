@@ -5,11 +5,28 @@
  * @return string | array Error as string
  */
 function connectPatchman($url) {
-  $hosts = patchmanGet($url . "/api/host/");
+  $username    = parse_url($url, PHP_URL_USER);
+  $password    = parse_url($url, PHP_URL_PASS);
+
+  $hosts = patchmanGet($url . "/api/host/", $username, $password);
   if (is_string($hosts)) {
     return $hosts;
   }
-  return patchmanHosts2Nagios($hosts);
+
+  if (array_key_exists('next', $hosts)) {
+    $all_hosts = $hosts['results'];
+    while ($hosts['next']) {
+      $hosts = patchmanGet($hosts['next'], $username, $password);
+      if (is_string($hosts)) {
+        return $hosts;
+      }
+      array_push($all_hosts, $hosts['results']);
+    }
+  } else {
+    $all_hosts = $hosts;
+  }
+
+  return patchmanHosts2Nagios($all_hosts);
 }
 
 /**
@@ -31,9 +48,10 @@ function patchmanHosts2Nagios($hosts) {
 
     $startsAt = DateTime::createFromFormat('Y-m-d\TH:i:s+', $host['lastreport'],  new DateTimeZone('Etc/Zulu'));
 
-    if ($host['security_update_count'] > 0) {
+    if ($host['security_update_count'] > 0 || $host['bugfix_update_count'] > 25) {
       $sn                          = 'Patch level insufficient';
       $description = "Security updates: {$host['security_update_count']}, Updates: {$host['bugfix_update_count']}";
+      $hosts[$hn]['downtimes'] = [];
       $hosts[$hn]['services'][$sn] = [
         'current_state'                 => 1,
         'problem_has_been_acknowledged' => 0,
@@ -53,13 +71,16 @@ function patchmanHosts2Nagios($hosts) {
   }, array());
 
   #print_r($host_state);
-  return array(array_key_first($host_state) => $host_state[array_key_first($host_state)]);
+  #return array(array_key_first($host_state) => $host_state[array_key_first($host_state)]);
+  return $host_state;
 }
 
-function patchmanGet(string $url, $params = array()) {
+function patchmanGet($url, $username, $password) {
   $hostname    = parse_url($url, PHP_URL_HOST);
+  $path    = parse_url($url, PHP_URL_PATH);
   $port        = parse_url($url, PHP_URL_PORT);
-  $request_url = $url;
+  $params        = parse_url($url, PHP_URL_QUERY);
+  $request_url = "https://{$hostname}{$path}?{$params}";
   $headers     = [
     'Accept: */*',
     'X-HTTP-Method-Override: GET',
@@ -75,15 +96,14 @@ function patchmanGet(string $url, $params = array()) {
       #CURLOPT_SSL_VERIFYPEER => 1
       CURLOPT_SSL_VERIFYHOST => 0,
       CURLOPT_SSL_VERIFYPEER => 0,
-      CURLOPT_POSTFIELDS     => http_build_query($params),
+      CURLOPT_USERPWD        => $username . ":" . $password,
+      CURLOPT_POSTFIELDS     => $params,
       CURLOPT_CUSTOMREQUEST  => 'GET',
-      CURLOPT_COOKIEJAR      => '/tmp/nagdash_cookiejar.txt',
-      CURLOPT_COOKIEFILE     => '/tmp/nagdash_cookiejar.txt',
       CURLOPT_VERBOSE        => true,
     ]
   );
   if (!$response = curl_exec($ch)) {
-    return ["<pre>Attempt to hit patchman failed, sorry. Curl said: " . curl_error($ch) . "</pre>"];
+    return "<pre>Attempt to hit patchman failed, sorry. Curl said: " . curl_error($ch) . $request_url . "</pre>";
   } else {
     $curl_stats["$hostname:$port"] = curl_getinfo($ch);
   }
