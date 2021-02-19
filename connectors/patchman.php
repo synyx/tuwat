@@ -5,7 +5,10 @@
  * @return string | array Error as string
  */
 function connectPatchman($url) {
-  $hosts = patchmanGet($url . "/api/hosts/");
+  $hosts = patchmanGet($url . "/api/host/");
+  if (is_string($hosts)) {
+    return $hosts;
+  }
   return patchmanHosts2Nagios($hosts);
 }
 
@@ -90,10 +93,10 @@ function patchmanGet(string $url, $params = array()) {
   $body = substr($response, $header_size);
 
   if (!$state = json_decode($body, true)) {
-    return "Attempt to parse gitlab json failed, sorry (JSON decode failed)";
+    return "Attempt to parse gitlab json failed, sorry (JSON decode failed): $body";
   }
   $curl_stats["$hostname:$port"]['objects'] += count($state);
 
   #print_r($header);
-  return $body;
+  return $state;
 }
