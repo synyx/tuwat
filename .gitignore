@@ -6,3 +6,5 @@ done.json
 progress.json
 temp.txt
 
+# composer
+vendor/
