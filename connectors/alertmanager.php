@@ -83,7 +83,7 @@ function alertmanagerV2Get($url, $endpoint, $headers = []) {
   $hostname    = parse_url($url, PHP_URL_HOST);
   $scheme      = parse_url($url, PHP_URL_SCHEME);
   $port        = parse_url($url, PHP_URL_PORT);
-  $request_url = "$scheme://$hostname:$port/v2/{$endpoint}";
+  $request_url = "$scheme://$hostname:$port/api/v2/{$endpoint}";
   $headers     = array_merge([
     'Accept: application/json'
   ], $headers);
