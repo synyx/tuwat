@@ -15,11 +15,7 @@ function connectAlertmanager($url, $token_url = null) {
   }
 
   if (count($state) == 0) {
-    return array("url" => array(
-      'services' => [],
-      'downtimes' => [],
-      'current_state' => 1,
-    ));
+    return 'DeadMansSwitch expected';
   }
 
   $host_state = array_reduce($state, function ($hosts, $alert) {
