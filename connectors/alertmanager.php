@@ -1,11 +1,14 @@
 <?php
 
 /**
- * @param $url
+ * @param string $url Alertmanager API URL
+ * @param string $token_url OAuth2 Token URL
  * @return string | array Error as string
  */
-function connectAlertmanager($url) {
-  $state = alertmanagerV2Get($url, "alerts", array());
+function connectAlertmanager($url, $token_url = null) {
+  $hdr = $token_url ? [oauth2_auth_header($url, $token_url)] : [];
+
+  $state = alertmanagerV2Get($url, "alerts", $hdr);
 
   if (is_string($state)) {
     return $state;
@@ -74,16 +77,16 @@ function k8slabels($labels, $keys) {
   return $ret;
 }
 
-function alertmanagerV2Get($url, $endpoint, $params = array()) {
+function alertmanagerV2Get($url, $endpoint, $headers = []) {
   global $curl_stats;
 
   $hostname    = parse_url($url, PHP_URL_HOST);
+  $scheme      = parse_url($url, PHP_URL_SCHEME);
   $port        = parse_url($url, PHP_URL_PORT);
-  $request_url = "$url/v2/{$endpoint}";
-  $headers     = [
-    'Accept: application/json',
-    'X-HTTP-Method-Override: GET',
-  ];
+  $request_url = "$scheme://$hostname:$port/v2/{$endpoint}";
+  $headers     = array_merge([
+    'Accept: application/json'
+  ], $headers);
   $ch          = curl_init();
   curl_setopt_array(
     $ch, [
@@ -91,10 +94,9 @@ function alertmanagerV2Get($url, $endpoint, $params = array()) {
       CURLOPT_HTTPHEADER     => $headers,
       CURLOPT_RETURNTRANSFER => true,
       CURLOPT_SSL_VERIFYHOST => 0,
-      CURLOPT_POSTFIELDS     => http_build_query($params),
-      CURLOPT_CUSTOMREQUEST  => 'GET',
     ]
   );
+  curl_setopt($ch, CURLOPT_VERBOSE, true);
   if (!$json = curl_exec($ch)) {
     return "<pre>Attempt to hit Alertmanager API failed, sorry. Curl said: " . curl_error($ch) . "</pre>";
   } else {
@@ -108,4 +110,31 @@ function alertmanagerV2Get($url, $endpoint, $params = array()) {
   $curl_stats["$hostname:$port"]['objects'] += count($state);
 
   return $state;
+}
+
+function oauth2_auth_header($url, $token_url) {
+  $client_id = parse_url($url, PHP_URL_USER);
+  $client_secret = parse_url($url, PHP_URL_PASS);
+  $token = oauth2_get_token($token_url, $client_id, $client_secret);
+  return "Authorization: {$token['token_type']} {$token['access_token']}";
+}
+
+function oauth2_get_token($token_url, $client_id, $client_secret) {
+  $req = array(
+    'grant_type' => 'client_credentials',
+    'client_id' => $client_id,
+    'client_secret' => $client_secret,
+  );
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $token_url);
+  curl_setopt($ch, CURLOPT_HEADER, false);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_POST, true);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($req));
+  curl_setopt($ch, CURLOPT_VERBOSE, true);
+  $body = curl_exec($ch);
+  curl_close($ch);
+
+  return json_decode($body, true);
 }

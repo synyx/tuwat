@@ -142,7 +142,7 @@ function get_host_state($host) {
       $host_state = connectIcinga2($host['url']);
       break;
     case "alertmanager":
-      $host_state = connectAlertmanager($host['url']);
+      $host_state = connectAlertmanager($host['url'], $host['token-uri'] ?? null);
       break;
     case "gitlabmr":
       $host_state = connectGitlabMRs($host['url'], isset($host['options']) ? $host['options'] : []);
