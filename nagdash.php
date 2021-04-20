@@ -170,7 +170,7 @@ foreach ($nagios_hosts as $host) {
     $cachekey = hash('sha256', json_encode($host), false);
     $host_state = apcu_entry($cachekey, function () use ($host) {
       return get_host_state($host);
-    }, 60);
+    }, $cacheTTL ?? 60);
 
     if (is_string($host_state)) {
       $errors[] = "Could not connect to {$host['type']} API on host {$host['hostname']}, port {$host['port']}: {$host_state}";
