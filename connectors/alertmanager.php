@@ -104,7 +104,7 @@ function alertmanagerV2Get($url, $endpoint, $headers = []) {
   }
   curl_close($ch);
 
-  if (!$state = json_decode($json, true)) {
+  if (($state = json_decode($json, true)) === FALSE) {
     return "Attempt to parse alertmanager json failed, sorry (JSON decode failed)";
   }
   $curl_stats["$hostname:$port"]['objects'] += count($state);
