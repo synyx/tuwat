@@ -116,7 +116,7 @@ function oauth2_auth_header($url, $token_url) {
   $client_id = parse_url($url, PHP_URL_USER);
   $client_secret = parse_url($url, PHP_URL_PASS);
   $token = oauth2_get_token($token_url, $client_id, $client_secret);
-  return "Authorization: {$token['token_type']} {$token['access_token']}";
+  return "Authorization: Bearer {$token['access_token']}";
 }
 
 function oauth2_get_token($token_url, $client_id, $client_secret) {
