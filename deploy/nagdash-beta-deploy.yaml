@@ -1,0 +1,68 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: infra
+  name: nagdash-beta
+  labels:
+    app: nagdash-beta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nagdash-beta
+  template:
+    metadata:
+      labels:
+        app: nagdash-beta
+    spec:
+      imagePullSecrets:
+        - name: nagdash-docker-registry
+      containers:
+        - name: nagdash
+          imagePullPolicy: Always
+          image: container-registry.synyx.de/infrastructure/nagdash:beta
+          ports:
+          - containerPort: 80
+          volumeMounts:
+          - name: nagdash-beta-config-volume
+            mountPath: /var/www/html/config.php
+            subPath: config.php
+      volumes:
+        - name: nagdash-beta-config-volume
+          configMap:
+            name: nagdash
+
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: infra
+  name: nagdash-beta
+spec:
+  selector:
+    app: nagdash-beta
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: infra
+  name: nagdash-beta
+spec:
+  rules:
+  - host: nagdash-beta.synyx.cloud
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nagdash-beta
+          servicePort: 80

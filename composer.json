@@ -1,0 +1,9 @@
+{
+    "require": {
+      "ext-apcu": "*",
+      "ext-curl": "*",
+      "ext-json": "*",
+      "ext-dom": "*",
+      "ext-libxml": "*"
+    }
+}

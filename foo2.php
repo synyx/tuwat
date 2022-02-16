@@ -1,11 +1,77 @@
-<html><head>
-<meta http-equiv="refresh" content="15; URL=foo.php">
+<<<<<<< HEAD
+<html>
+<head>
+    <title>Nagios Dashboard</title>
+    <meta http-equiv="refresh" content="15">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
 </head>
 <link rel="stylesheet" href="css/blinkftw.css">
 <link rel="stylesheet" href="css/main.css">
 <body>
 
 <?php
+date_default_timezone_set('Europe/Berlin');
+if (date("G") >= 20){
+    echo "<marquee><center><blink><h1>Alles wird gut! &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; echt!</h1></blink></center></marquee>";
+}
+?>
+
+<?php
+flush();
+include("nagdash.php");
+
+
+function curl_get_file_contents($URL)
+{
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($c, CURLOPT_URL, $URL);
+    $contents = curl_exec($c);
+    curl_close($c);
+
+    if ($contents) return $contents;
+    else return FALSE;
+}
+
+#$ddate = file_get_contents('http://api.ddate.cc/v1/today.txt');
+echo "<center><h3>";
+if (file_exists('/var/www/dash/Nagdash/ddate.txt')) {
+    $ddate = file_get_contents('/var/www/dash/Nagdash/ddate.txt');
+    echo "$ddate";
+} else {
+    if (file_exists('/usr/bin/ddate')) {
+        $ddate = exec("/usr/bin/ddate");
+        echo "$ddate";
+    } else {
+        echo "ddate not reachable!";
+    }
+}
+echo "</h3><br><h3>";#
+if (file_exists('temp.txt')) {
+    include("temp.txt");
+    echo "°C";
+} else {
+    echo "Temperature not reachable!";
+}
+echo "</h3></center>";
+
+$beer_url = "https://bier.synyx.coffee/dashboard";
+$beertime = curl_get_file_contents($beer_url);
+if ($beertime != FALSE) {
+    if (preg_match('/files\/([^\/]+)\//', file_get_contents($beer_url), $matches) && isset($matches[1])) {
+        $biertime = $matches[1] == 'nobeertime' ? 'No Beertime (╯°□°）╯︵ ┻━┻' : 'Beertime ¯\(ツ)/¯';
+    } else {
+        $biertime = "not sure if its biertime…";
+    }
+} else {
+    $biertime = "biertime not reachable…";
+}
+echo "<center><h3>$biertime</h3></center><br>";
+
+
+
 $nofiles = TRUE;
 $of = "done.json";
 $op = "progress.json";
