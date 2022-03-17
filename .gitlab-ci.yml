@@ -14,6 +14,9 @@ build:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "registry.synyx.cloud/infra/nagdash:${CONTAINER_BUILD_TAG}"
+      --label "org.opencontainers.image.created=$CI_COMMIT_TIMESTAMP"
+      --label "org.opencontainers.image.version=$CONTAINER_BUILD_TAG"
+      --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       variables:
