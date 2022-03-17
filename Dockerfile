@@ -2,6 +2,8 @@ FROM registry.synyx.cloud/docker.io/library/php:7-apache
 
 RUN apt-get update \
     && apt-get install -y perl bash ddate libjson-perl libwww-perl libsys-syslog-perl liblockfile-simple-perl \
+    && echo 'de_DE.UTF-8 UTF-8' > /etc/locale.gen \
+    && locale-gen \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
