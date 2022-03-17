@@ -12,8 +12,10 @@ default:
     - kubernetes
 
 variables:
-  CONTAINER_REGISTRY: registry.synyx.cloud
+  CONTAINER_REGISTRY: https://registry.synyx.cloud
   CONTAINER_REPOSITORY: admins/nagdash
+  K8S_API: https://k8s-master.synyx.coffee:6443
+  K8S_NS: infra
 
 deploy:
   stage: deploy
@@ -22,9 +24,9 @@ deploy:
     url: https://nagdash.synyx.coffee
   before_script:
     - export KUBECONFIG=/tmp/config
-    - kubectl config set-cluster synyx --server=https://k8s-master.synyx.coffee:6443 --certificate-authority=$CI_PROJECT_DIR/deploy/ca.crt
+    - kubectl config set-cluster synyx --server=$K8S_API --certificate-authority=$CI_PROJECT_DIR/deploy/ca.crt
     - kubectl config set-credentials deployer --token="$K8S_DEPLOYER_TOKEN"
-    - kubectl config set-context default --user=deployer --cluster=synyx --namespace=infra
+    - kubectl config set-context default --user=deployer --cluster=synyx --namespace=$K8S_NS
     - kubectl config use-context default
   script:
     - kubectl version
