@@ -17,3 +17,8 @@ ENV LANG="de_DE.UTF-8" TZ="Europe/Berlin"
 #    && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
 
 COPY . /var/www/html/
+
+LABEL org.opencontainers.image.authors="Jonathan Buch <jbuch@synyx.de>" \
+      org.opencontainers.image.url=${CI_PROJECT_URL} \
+      org.opencontainers.image.vendor="synyx GmbH & Co. KG" \
+      org.opencontainers.image.title="nagdash"
