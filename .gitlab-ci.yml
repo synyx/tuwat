@@ -10,6 +10,7 @@ build:
     - echo "{\"auths\":{\"registry.synyx.cloud\":{\"auth\":\"$(printf "%s:%s" "${CONTAINER_REGISTRY_USERNAME}" "${CONTAINER_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
     - >-
       /kaniko/executor
+      --cache=true --reproducible
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "registry.synyx.cloud/infra/nagdash:${CI_COMMIT_TAG}"
