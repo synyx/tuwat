@@ -1,5 +1,9 @@
 ---
 
+default:
+  tags:
+    - docker
+
 build:
   stage: build
   image:
