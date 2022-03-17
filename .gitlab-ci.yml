@@ -17,7 +17,7 @@ build:
       --cache=true --reproducible
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
-      --destination "registry.synyx.cloud/infra/nagdash:${CONTAINER_BUILD_TAG}"
+      --destination "registry.synyx.cloud/admins/nagdash:${CONTAINER_BUILD_TAG}"
       --label "org.opencontainers.image.created=$CI_COMMIT_TIMESTAMP"
       --label "org.opencontainers.image.version=$CONTAINER_BUILD_TAG"
       --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
@@ -45,7 +45,7 @@ deploy:
     - kubectl config use-context default
   script:
     - kubectl version
-    - kubectl set image deployment/nagdash nagdash=registry.synyx.cloud/infra/nagdash:$CI_COMMIT_TAG
+    - kubectl set image deployment/nagdash nagdash=registry.synyx.cloud/admins/nagdash:$CI_COMMIT_TAG
     - kubectl rollout status -w deployment/nagdash
   image: registry.synyx.cloud/docker.io/bitnami/kubectl:1.22
   rules:
