@@ -7,7 +7,7 @@ default:
 build:
   stage: build
   image:
-    name: registry.synyx.cloud/gcr.io/kaniko-project/executor:debug
+    name: registry.synyx.cloud/gcr.io/kaniko-project/executor:v1.8.0-debug
     entrypoint: [""]
   script:
     - mkdir -p /kaniko/.docker
