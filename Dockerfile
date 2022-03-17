@@ -1,4 +1,4 @@
-FROM php:7-apache
+FROM registry.synyx.cloud/docker.io/library/php:7-apache
 
 RUN apt-get update \
    && apt-get install -y perl bash ddate libjson-perl libwww-perl libsys-syslog-perl liblockfile-simple-perl
