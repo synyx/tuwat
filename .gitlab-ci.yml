@@ -4,7 +4,7 @@ include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
   # Import pre-fabricated Docker pipeline based on kaniko
   - project: 'gitlabci/gitlabci-templates'
-    file: '/pipelines/Kaniko.gitlab-ci.yml'
+    file: '/jobs/Kaniko/Base.gitlab-ci.yml'
 
 default:
   tags:
@@ -16,6 +16,11 @@ variables:
   CONTAINER_REPOSITORY: admins/nagdash
   K8S_API: https://k8s-master.synyx.coffee:6443
   K8S_NS: infra
+
+# Build and push image before deployment
+build-docker:
+  stage: build
+  extends: ['.kaniko']
 
 deploy:
   stage: deploy
