@@ -11,7 +11,7 @@ build:
     entrypoint: [""]
   script:
     - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"registry.synyx.cloud\":{\"auth\":\"$(printf "%s:%s" "${CONTAINER_REGISTRY_USERNAME}" "${CONTAINER_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - echo "{\"auths\":{\"registry.synyx.cloud\":{\"username\":\"$CONTAINER_REGISTRY_USERNAME\",\"password\":\"$CONTAINER_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - >-
       /kaniko/executor
       --cache=true --reproducible
