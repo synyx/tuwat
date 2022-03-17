@@ -24,7 +24,7 @@ deploy:
     - export KUBECONFIG=/tmp/config
     - kubectl config set-cluster synyx --server=https://k8s-master.synyx.coffee:6443 --certificate-authority=$CI_PROJECT_DIR/deploy/ca.crt
     - kubectl config set-credentials deployer --token="$K8S_DEPLOYER_TOKEN"
-    - kubectl config set-context default --user=deployer --cluster=synyx --namespace=rabenyx
+    - kubectl config set-context default --user=deployer --cluster=synyx --namespace=infra
     - kubectl config use-context default
   script:
     - kubectl version
