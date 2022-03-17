@@ -18,11 +18,11 @@ spec:
         app: nagdash
     spec:
       imagePullSecrets:
-        - name: nagdash-docker-registry
+        - name: registry.synyx.cloud
       containers:
         - name: nagdash
           imagePullPolicy: Always
-          image: container-registry.synyx.de/infrastructure/nagdash:v0.1.1
+          image: registry.synyx.cloud/infra/nagdash:v0.1.1
           ports:
           - containerPort: 80
           volumeMounts:
