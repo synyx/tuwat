@@ -566,7 +566,8 @@ function build_controls($tag, $host, $service) {
 }
 
 #$ddate = file_get_contents('http://api.ddate.cc/v1/today.txt');
-$ddate = file_get_contents('/var/www/dash/Nagdash/ddate.txt');
+#$ddate = file_get_contents('/var/www/dash/Nagdash/ddate.txt');
+$ddate = system("ddate");
 echo "<center><h3>$ddate</h3><br>";
 echo "<h3>";
 include("temp.txt");
