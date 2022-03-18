@@ -22,7 +22,7 @@ spec:
       containers:
         - name: nagdash
           imagePullPolicy: Always
-          image: registry.synyx.cloud/infra/nagdash:v0.1.1
+          image: registry.synyx.cloud/admins/nagdash:v0.2.1
           ports:
           - containerPort: 80
           volumeMounts:
