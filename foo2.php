@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <html>
 <head>
     <title>Nagios Dashboard</title>
@@ -121,7 +120,7 @@ if ($nofiles) {
         }
 
         $data .= "<tr><td>".$lala['subject']."</td><td>Hero: <b>". $hero."</b></td></tr>\r\n";
-    
+
         #var_dump($lala['assigned_to']['name']);
         #
 
