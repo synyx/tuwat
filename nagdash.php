@@ -564,29 +564,3 @@ function build_controls($tag, $host, $service) {
   $controls .= "</div>";
   return $controls;
 }
-
-#$ddate = file_get_contents('http://api.ddate.cc/v1/today.txt');
-#$ddate = file_get_contents('/var/www/dash/Nagdash/ddate.txt');
-$ddate = system("ddate");
-echo "<center><h3>$ddate</h3><br>";
-echo "</h3><br><h3>";#
-if (file_exists('temp.txt')) {
-  include("temp.txt");
-  echo "°C";
-} else {
-  echo "Temperature not reachable!";
-}
-echo "</h3></center>";
- $biertime = "not sure if its biertime…";
-if (preg_match('/<title>(.+)<\/title>/',file_get_contents('http://bier.synyx.coffee'),$matches) && isset($matches[1])){
-	$biertime =	$matches[1];
-	}
-else{
-	   $biertime = "not sure if its biertime…";
-}
-#echo "<center><h3>$biertime</h3></center><br>".date("R");
-echo "<center><h3>$biertime</h3></center><br>";
-
-include("synyx.html");
-
-?>
