@@ -34,7 +34,12 @@ deploy:
   script:
     - kubectl version
     - kubectl set image deployment/nagdash nagdash=$CONTAINER_REGISTRY/$CONTAINER_REPOSITORY:$CI_COMMIT_TAG
-    - kubectl rollout status --watch=true --timeout=30s deployment/nagdash
+    - |-
+      if ! kubectl rollout status --watch=true --timeout=30s deployment/nagdash; then
+        kubectl rollout undo deployment/nagdash
+        kubectl rollout status --watch=true --timeout=30s deployment/nagdash
+        exit 1
+      fi
   image: registry.synyx.cloud/docker.io/bitnami/kubectl:1.22
   rules:
     - if: $CI_COMMIT_TAG
