@@ -567,12 +567,12 @@ function build_controls($tag, $host, $service) {
 
 #$ddate = file_get_contents('http://api.ddate.cc/v1/today.txt');
 $ddate = file_get_contents('/var/www/dash/Nagdash/ddate.txt');
-echo "<center><h3>$ddate</h3><br>"; 
+echo "<center><h3>$ddate</h3><br>";
 echo "<h3>";
 include("temp.txt");
-echo "°C</h3></center>"; 
+echo "°C</h3></center>";
  $biertime = "not sure if its biertime…";
-if (preg_match('/<title>(.+)<\/title>/',file_get_contents('http://bier.synyx.de'),$matches) && isset($matches[1])){ 
+if (preg_match('/<title>(.+)<\/title>/',file_get_contents('http://bier.synyx.coffee'),$matches) && isset($matches[1])){
 	$biertime =	$matches[1];
 	}
 else{
