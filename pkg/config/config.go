@@ -3,6 +3,8 @@ package config
 import (
 	"flag"
 	"os"
+
+	"github.com/synyx/gonagdash/pkg/connectors"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -18,6 +20,7 @@ type Config struct {
 	JaegerUrl    string
 	Instance     string
 	PrintVersion bool
+	Connectors   []connectors.Connector
 }
 
 func NewConfiguration() *Config {

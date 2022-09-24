@@ -38,7 +38,8 @@ type result struct {
 
 func NewAggregator(cfg *config.Config) *Aggregator {
 	return &Aggregator{
-		interval: 1 * time.Minute,
+		interval:   1 * time.Minute,
+		connectors: cfg.Connectors,
 	}
 }
 
@@ -50,25 +51,9 @@ run:
 	for {
 		select {
 		case <-ticker.C:
-			var wg sync.WaitGroup
-
 			otelzap.Ctx(ctx).Info("Collecting")
 
-			for _, c := range a.connectors {
-				go func(c connectors.Connector) {
-					ctx, cancel := context.WithTimeout(ctx, a.interval/2)
-					defer cancel()
-					defer wg.Done()
-
-					alerts, err := c.Collect(ctx)
-					collect <- result{
-						collector: c.Name(),
-						alerts:    alerts,
-						error:     err,
-					}
-				}(c)
-			}
-			wg.Wait()
+			a.collect(ctx, collect)
 
 			a.aggregate(results)
 			results = nil
@@ -79,6 +64,27 @@ run:
 		}
 	}
 	ticker.Stop()
+}
+
+func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
+	var wg sync.WaitGroup
+
+	for _, c := range a.connectors {
+		wg.Add(1)
+		go func(c connectors.Connector) {
+			ctx, cancel := context.WithTimeout(ctx, a.interval/2)
+			defer cancel()
+			defer wg.Done()
+
+			alerts, err := c.Collect(ctx)
+			collect <- result{
+				collector: c.Name(),
+				alerts:    alerts,
+				error:     err,
+			}
+		}(c)
+	}
+	wg.Wait()
 }
 
 func (a *Aggregator) aggregate(results []result) {
