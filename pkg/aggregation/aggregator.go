@@ -8,6 +8,7 @@ import (
 	"github.com/synyx/gonagdash/pkg/config"
 	"github.com/synyx/gonagdash/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 type Aggregate struct {
@@ -45,38 +46,48 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 
 func (a *Aggregator) Run(ctx context.Context) {
 	ticker := time.NewTicker(a.interval)
-	collect := make(chan result)
+	defer ticker.Stop()
+
+	collect := make(chan result, 20)
 	var results []result
-run:
+
+	otelzap.Ctx(ctx).Info("Collecting on Start")
+	go a.collect(ctx, collect)
+
 	for {
 		select {
 		case <-ticker.C:
 			otelzap.Ctx(ctx).Info("Collecting")
-
-			a.collect(ctx, collect)
-
-			a.aggregate(results)
-			results = nil
-		case result := <-collect:
-			results = append(results, result)
+			go a.collect(ctx, collect)
+		case r, ok := <-collect:
+			if !ok {
+				a.aggregate(ctx, results)
+				results = nil
+				collect = make(chan result, 20)
+			} else if ok {
+				otelzap.Ctx(ctx).Info("Appending")
+				results = append(results, r)
+			}
 		case <-ctx.Done():
-			break run
+			return
 		}
 	}
-	ticker.Stop()
 }
 
 func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	var wg sync.WaitGroup
 
+	ctx, cancel := context.WithTimeout(ctx, a.interval/2)
+	defer cancel()
+
 	for _, c := range a.connectors {
+		otelzap.Ctx(ctx).Info("Adding collection", zap.String("collector", c.Name()))
 		wg.Add(1)
 		go func(c connectors.Connector) {
-			ctx, cancel := context.WithTimeout(ctx, a.interval/2)
-			defer cancel()
 			defer wg.Done()
 
 			alerts, err := c.Collect(ctx)
+			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("collector", c.Name()), zap.Int("count", len(alerts)), zap.Error(err))
 			collect <- result{
 				collector: c.Name(),
 				alerts:    alerts,
@@ -84,10 +95,15 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 			}
 		}(c)
 	}
+	otelzap.Ctx(ctx).Info("Waiting for collection end")
 	wg.Wait()
+	otelzap.Ctx(ctx).Info("Collection end")
+	close(collect)
 }
 
-func (a *Aggregator) aggregate(results []result) {
+func (a *Aggregator) aggregate(ctx context.Context, results []result) {
+	otelzap.Ctx(ctx).Info("Aggregating results", zap.Int("count", len(results)))
+
 	var alerts []Alert
 	for _, r := range results {
 		for _, a := range r.alerts {

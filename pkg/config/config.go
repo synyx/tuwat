@@ -4,7 +4,13 @@ import (
 	"flag"
 	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/gonagdash/pkg/connectors/alertmanager"
+	"github.com/synyx/gonagdash/pkg/connectors/gitlabmr"
+	"github.com/synyx/gonagdash/pkg/connectors/icinga2"
+	"github.com/synyx/gonagdash/pkg/connectors/nagiosapi"
+	"github.com/synyx/gonagdash/pkg/connectors/patchman"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -12,6 +18,7 @@ var fInstance = flag.String("instance", "0", "Running instance identifier")
 var fMode = flag.String("mode", "dev", "Mode to use (dev, prod)")
 var fEnvironment = flag.String("environment", "test", "(test, stage, prod)")
 var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application to port")
+var fConfigFile = flag.String("conf", "/etc/gonagdash.toml", "Configuration file")
 
 type Config struct {
 	WebAddr      string
@@ -21,6 +28,14 @@ type Config struct {
 	Instance     string
 	PrintVersion bool
 	Connectors   []connectors.Connector
+}
+
+type ConnectorConfig struct {
+	Alertmanagers []alertmanager.Config `toml:"alertmanager"`
+	GitlabMRs     []gitlabmr.Config     `toml:"gitlabmr"`
+	Icinga2s      []icinga2.Config      `toml:"icinga2"`
+	NagiosAPIs    []nagiosapi.Config    `toml:"nagiosapi"`
+	Patchmans     []patchman.Config     `toml:"patchman"`
 }
 
 func NewConfiguration() *Config {
@@ -55,6 +70,28 @@ func NewConfiguration() *Config {
 		cfg.WebAddr = value
 	} else {
 		cfg.WebAddr = *fAddr
+	}
+
+	var connectorConfigs ConnectorConfig
+	_, err := toml.DecodeFile(*fConfigFile, &connectorConfigs)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, connectorConfig := range connectorConfigs.Alertmanagers {
+		cfg.Connectors = append(cfg.Connectors, alertmanager.NewCollector(connectorConfig))
+	}
+	for _, connectorConfig := range connectorConfigs.GitlabMRs {
+		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewCollector(connectorConfig))
+	}
+	for _, connectorConfig := range connectorConfigs.Icinga2s {
+		cfg.Connectors = append(cfg.Connectors, icinga2.NewCollector(connectorConfig))
+	}
+	for _, connectorConfig := range connectorConfigs.NagiosAPIs {
+		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewCollector(connectorConfig))
+	}
+	for _, connectorConfig := range connectorConfigs.Patchmans {
+		cfg.Connectors = append(cfg.Connectors, patchman.NewCollector(connectorConfig))
 	}
 
 	return cfg

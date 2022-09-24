@@ -30,5 +30,7 @@ func main() {
 	webHandler := web.WebHandler(cfg, aggregator)
 
 	go web.Handle(appCtx, cfg, webHandler)
+	go aggregator.Run(appCtx)
+
 	<-appCtx.Done()
 }
