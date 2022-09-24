@@ -1,19 +1,27 @@
 {{define "content"}}
-{{- /*gotype: Alerts */ -}}
-<h2>Service Status</h2>
+{{- /*gotype: github.com/synyx/gonagdash/pkg/aggregation.Aggregate */ -}}
+<h3>
+    Alerts
+    {{.CheckTime}}
+</h3>
 
-<table>
+<table class="widetable">
     <thead>
     <tr>
-        <td>Where</td>
-        <td>What</td>
-        <td>When</td>
+        <th width="30%">Where</th>
+        <th width="60%">What</th>
+        <th width="10%">When</th>
     </tr>
     </thead>
     <tbody>
     {{range .Alerts}}
     <tr>
-        <td></td>
+        <td>
+            {{.Where}}
+            <span class="tag {{.Tag}}">{{.Tag}}</span>
+        </td>
+        <td class="status {{.Status}}">{{.What}}</td>
+        <td>{{.When}}</td>
     </tr>
     {{end}}
     </tbody>

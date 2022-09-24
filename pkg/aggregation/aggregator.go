@@ -13,6 +13,7 @@ type Aggregate struct {
 
 type Alert struct {
 	Where  string
+	Tag    string
 	What   string
 	When   time.Duration
 	Status string
@@ -26,5 +27,28 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 }
 
 func (a *Aggregator) Alerts() Aggregate {
-	return Aggregate{}
+	return Aggregate{
+		CheckTime: time.Now(),
+		Alerts: []Alert{
+			{
+				Where:  "kubernetes/k8s-apps",
+				Tag:    "synyx",
+				What:   "MR !272",
+				When:   1 * time.Minute,
+				Status: "yellow",
+			}, {
+				Where:  "foo.synyx.coffee",
+				Tag:    "prod",
+				What:   "MR !272",
+				When:   2 * time.Hour,
+				Status: "gray",
+			}, {
+				Where:  "foo.contargo.net",
+				Tag:    "RZ1",
+				What:   "MR !272",
+				When:   25 * time.Hour * 24,
+				Status: "red",
+			},
+		},
+	}
 }
