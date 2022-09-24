@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/synyx/gonagdash/pkg/aggregation"
 	"github.com/synyx/gonagdash/pkg/buildinfo"
 	"github.com/synyx/gonagdash/pkg/config"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -24,6 +25,8 @@ var templates embed.FS
 type webHandler struct {
 	routes []route
 	fs     fs.FS
+
+	aggregator *aggregation.Aggregator
 }
 
 type webContent struct {
@@ -31,11 +34,13 @@ type webContent struct {
 	Content interface{}
 }
 
-func WebHandler(cfg *config.Config) http.Handler {
-	handler := &webHandler{}
+func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
+	handler := &webHandler{
+		aggregator: aggregator,
+	}
 
 	if cfg.Mode == "dev" {
-		_, filename, _, _ := runtime.Caller(1)
+		_, filename, _, _ := runtime.Caller(0)
 		templatespath := path.Join(path.Dir(filename), "/templates")
 		handler.fs = os.DirFS(templatespath)
 	} else {

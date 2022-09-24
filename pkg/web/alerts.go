@@ -5,9 +5,10 @@ import (
 )
 
 func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(404)
 
-	renderer := h.baseRenderer(req, "404.gohtml")
+	aggregate := h.aggregator.Alerts()
 
-	renderer(w, 404, webContent{})
+	renderer := h.baseRenderer(req, "alerts.gohtml")
+
+	renderer(w, 404, webContent{Content: aggregate})
 }

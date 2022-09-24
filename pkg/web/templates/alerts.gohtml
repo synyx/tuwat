@@ -1,3 +1,21 @@
 {{define "content"}}
+{{- /*gotype: Alerts */ -}}
+<h2>Service Status</h2>
 
+<table>
+    <thead>
+    <tr>
+        <td>Where</td>
+        <td>What</td>
+        <td>When</td>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Alerts}}
+    <tr>
+        <td></td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
 {{end}}

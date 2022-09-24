@@ -32,12 +32,13 @@ func Serve(ctx context.Context, addr string, handler http.Handler) {
 		close(idleConnectionsClosed)
 	}()
 
+	otelzap.Ctx(ctx).Info("Starting http server", zap.String("addr", addr))
+
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		// Still try to start, application might still do useful work
 		otelzap.Ctx(ctx).DPanic("http server failed to start", zap.Error(err))
 		return
 	}
-	otelzap.Ctx(ctx).Info("http server started", zap.String("addr", addr))
 
 	<-idleConnectionsClosed
 }
