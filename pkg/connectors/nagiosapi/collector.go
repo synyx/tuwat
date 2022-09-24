@@ -29,32 +29,13 @@ func (c *Collector) Name() string {
 }
 
 func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+"/state", nil)
+	content, err := c.collectHosts(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	decoder := json.NewDecoder(res.Body)
-
-	var response Response
-	err = decoder.Decode(&response)
-	if err != nil {
-		return nil, err
-	}
-	if !response.Success {
-		// TODO(jo): the `content` map is overloaded with an error string
-		return nil, fmt.Errorf("API failure response")
 	}
 
 	var alerts []connectors.Alert
-	for hostName, host := range response.Content {
+	for hostName, host := range content {
 		if host.ProblemHasBeenAcknowledged == "1" {
 			continue
 		} else if host.NotificationsEnabled == "0" {
@@ -100,4 +81,32 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	return alerts, nil
+}
+
+func (c *Collector) collectHosts(ctx context.Context) (map[string]Host, error) {
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+"/state", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	decoder := json.NewDecoder(res.Body)
+
+	var response Response
+	err = decoder.Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+	if !response.Success {
+		// TODO(jo): the `content` map is overloaded with an error string
+		return nil, fmt.Errorf("API failure response")
+	}
+
+	return response.Content, nil
 }
