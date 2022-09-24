@@ -26,6 +26,7 @@ type Alert struct {
 type Aggregator struct {
 	interval time.Duration
 
+	current    Aggregate
 	connectors []connectors.Connector
 }
 
@@ -44,8 +45,7 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 func (a *Aggregator) Run(ctx context.Context) {
 	ticker := time.NewTicker(a.interval)
 	collect := make(chan result)
-	results := make(map[string]result)
-
+	var results []result
 run:
 	for {
 		select {
@@ -69,8 +69,11 @@ run:
 				}(c)
 			}
 			wg.Wait()
+
+			a.aggregate(results)
+			results = nil
 		case result := <-collect:
-			results[result.collector] = result
+			results = append(results, result)
 		case <-ctx.Done():
 			break run
 		}
@@ -78,33 +81,27 @@ run:
 	ticker.Stop()
 }
 
-func (a *Aggregator) Collect() {
+func (a *Aggregator) aggregate(results []result) {
+	var alerts []Alert
+	for _, r := range results {
+		for _, a := range r.alerts {
+			alert := Alert{
+				Where:  a.Tags["Hostname"],
+				Tag:    r.collector,
+				What:   a.Description,
+				When:   time.Now().Sub(a.Start),
+				Status: a.State.String(),
+			}
+			alerts = append(alerts, alert)
+		}
+	}
 
+	a.current = Aggregate{
+		CheckTime: time.Now(),
+		Alerts:    alerts,
+	}
 }
 
 func (a *Aggregator) Alerts() Aggregate {
-	return Aggregate{
-		CheckTime: time.Now(),
-		Alerts: []Alert{
-			{
-				Where:  "kubernetes/k8s-apps",
-				Tag:    "synyx",
-				What:   "MR !272",
-				When:   1 * time.Minute,
-				Status: "yellow",
-			}, {
-				Where:  "foo.synyx.coffee",
-				Tag:    "prod",
-				What:   "MR !272",
-				When:   2 * time.Hour,
-				Status: "gray",
-			}, {
-				Where:  "foo.contargo.net",
-				Tag:    "RZ1",
-				What:   "MR !272",
-				When:   25 * time.Hour * 24,
-				Status: "red",
-			},
-		},
-	}
+	return a.current
 }

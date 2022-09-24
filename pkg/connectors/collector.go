@@ -11,9 +11,10 @@ type Connector interface {
 }
 
 type Alert struct {
-	Tags  map[string]string
-	Start time.Time
-	State State
+	Tags        map[string]string
+	Start       time.Time
+	State       State
+	Description string
 }
 
 type State int
@@ -24,3 +25,17 @@ const (
 	Critical       = 2
 	Unknown        = 3
 )
+
+func (s State) String() string {
+	switch s {
+	case OK:
+		return "green"
+	case Warning:
+		return "yellow"
+	case Critical:
+		return "red"
+	case Unknown:
+		return "grey"
+	}
+	return "grey"
+}
