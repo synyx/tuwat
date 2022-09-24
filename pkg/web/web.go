@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"embed"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/synyx/gonagdash/pkg/aggregation"
 	"github.com/synyx/gonagdash/pkg/buildinfo"
@@ -115,7 +117,11 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 		templateDefinition = "base"
 	}
 
-	tmpl, err := template.ParseFS(h.fs, templateFiles...)
+	funcs := template.FuncMap{
+		"niceDuration": niceDuration,
+	}
+	tmpl := template.New("base").Funcs(funcs)
+	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
 		panic(err)
@@ -140,4 +146,18 @@ type ctxKey struct{}
 func getField(r *http.Request, index int) string {
 	fields := r.Context().Value(ctxKey{}).([]string)
 	return fields[index]
+}
+
+func niceDuration(d time.Duration) string {
+	if d > 2*time.Hour*24 {
+		return fmt.Sprintf("%.0fd", d.Hours()/24)
+	} else if d > 2*time.Hour {
+		return fmt.Sprintf("%.0fh", d.Hours())
+	} else if d > 2*time.Minute {
+		return fmt.Sprintf("%.0fm", d.Minutes())
+	} else if d > 0 {
+		return fmt.Sprintf("%.0fs", d.Seconds())
+	} else {
+		return d.String()
+	}
 }
