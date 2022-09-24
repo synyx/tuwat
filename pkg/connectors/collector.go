@@ -1,9 +1,13 @@
-package collection
+package connectors
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
-type Collector interface {
-	Collect() []Alert
+type Connector interface {
+	Name() string
+	Collect(ctx context.Context) ([]Alert, error)
 }
 
 type Alert struct {
