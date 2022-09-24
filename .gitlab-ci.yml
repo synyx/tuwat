@@ -1,0 +1,94 @@
+---
+include:
+  # We include the default workflow for MR based pipelines (e.g build on default branch, tags and MR events)
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
+  # Import pre-fabricated Docker pipeline based on kaniko
+  - project: 'gitlabci/gitlabci-templates'
+    file: '/jobs/Kaniko/Base.gitlab-ci.yml'
+
+default:
+  tags:
+    - docker
+    - kubernetes
+
+variables:
+  CONTAINER_REGISTRY: registry.synyx.cloud
+  CONTAINER_REPOSITORY: admins/nagdash
+
+
+.go:base:
+  image: registry.synyx.cloud/gitlabci/golang:1.19-bullseye
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  cache:
+    - key: ${CI_COMMIT_REF_SLUG}
+      paths:
+        - .go
+      policy: pull-push
+
+build:app:
+  stage: build
+  extends: .go:base
+  script:
+    - go build -tags netgo -ldflags="${GO_LD_FLAGS}" -o ${BIN_NAME} ./cmd/gonagdash
+  variables:
+    GO_LD_FLAGS: "-extldflags -static -X '${GO_PROJECT}/pkg/buildinfo.GitSHA=${CI_COMMIT_SHA}'"
+    CGO_ENABLED: '0'
+    GOOS: linux
+    GOARCH: amd64
+  rules:
+    - if: $CI_COMMIT_TAG
+      variables:
+        GO_LD_FLAGS: "-extldflags -static -X '${GO_PROJECT}/cmd/srd.GitSHA=${CI_COMMIT_SHA}' -X '${GO_PROJECT}/pkg/buildinfo.Version=${CI_COMMIT_TAG}'"
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      variables:
+        GO_LD_FLAGS: "-extldflags -static -X '${GO_PROJECT}/cmd/srd.GitSHA=${CI_COMMIT_SHA}' -X '${GO_PROJECT}/pkg/buildinfo.Version=${CI_COMMIT_REF_SLUG}'"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  artifacts:
+    paths:
+      - ${BIN_NAME}
+    expire_in: 1 hour
+
+test:app:
+  stage: test
+  extends: .go:base
+  script:
+    - gotestsum --junitfile test-report-go.xml --format testname
+    - go test -coverprofile=coverage.txt -covermode atomic -race $(go list ./... | grep -v "vendor")
+    - gocover-cobertura < coverage.txt > coverage.xml
+  needs:
+    - build:app
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit:
+        - test-report-go.xml
+    expire_in: 1 hour
+
+lint:staticcheck:app:
+  stage: test
+  extends: .go:base
+  allow_failure: true
+  script:
+    - staticcheck $(go list ./... | grep -v "vendor")
+  needs:
+    - build:app
+
+lint:vet:app:
+  stage: test
+  extends: .go:base
+  allow_failure: true
+  script:
+    - go vet $(go list ./... | grep -v "vendor")
+  needs:
+    - build:app
+
+build:kaniko:app:
+  stage: build
+  extends: .kaniko
+  needs:
+    - job: build:app
+      artifacts: true

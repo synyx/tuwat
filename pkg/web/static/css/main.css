@@ -1,0 +1,789 @@
+/* Styling lists */
+dl { display: table; }
+dl > div { display: table-row; }
+dl > div > dt, dl > div > dd { display: table-cell; /*border: 1px solid black;*/ padding: 0.25em; }
+dl > div > dt { font-weight: bold; }
+
+.services-status {
+    color: #98999b
+}
+
+.services-status .fa:before {
+    content: "\f111"
+}
+
+.services-status.UP, .services-status.up {
+    color: #009354
+}
+
+.services-status.UP .fa:before, .services-status.up .fa:before {
+    content: "\f058"
+}
+
+.services-status.DOWN, .services-status.down {
+    color: #d30926
+}
+
+.services-status.DOWN .fa:before, .services-status.down .fa:before {
+    content: "\f056"
+}
+
+.services-status.ACKNOWLEDGED, .services-status.acknowledged {
+    color: #00a7ce
+}
+
+.services-status.ACKNOWLEDGED .fa:before, .services-status.acknowledged .fa:before {
+    content: "\f06a"
+}
+
+.services-status.WARNING, .services-status.warning {
+    color: #ff6010
+}
+
+.services-status.WARNING .fa:before, .services-status.warning .fa:before {
+    content: "\f06a"
+}
+
+.services-status.OLD, .services-status.old {
+    color: #4b4b4d
+}
+
+.services-status.OLD .fa:before, .services-status.old .fa:before {
+    content: "\f059"
+}
+
+.host-status {
+    color: #98999b
+}
+
+.host-status .fa:before {
+    content: "\f111"
+}
+
+.host-status.UP, .host-status.up {
+    color: #009354
+}
+
+.host-status.UP .fa:before, .host-status.up .fa:before {
+    content: "\f058"
+}
+
+.host-status.DOWN, .host-status.down {
+    color: #d30926
+}
+
+.host-status.DOWN .fa:before, .host-status.down .fa:before {
+    content: "\f056"
+}
+
+.host-status.ACKNOWLEDGED, .host-status.acknowledged {
+    color: #00a7ce
+}
+
+.host-status.ACKNOWLEDGED .fa:before, .host-status.acknowledged .fa:before {
+    content: "\f06a"
+}
+
+.host-status.WARNING, .host-status.warning {
+    color: #ff6010
+}
+
+.host-status.WARNING .fa:before, .host-status.warning .fa:before {
+    content: "\f06a"
+}
+
+.host-status.OLD, .host-status.old {
+    color: #4b4b4d
+}
+
+.host-status.OLD .fa:before, .host-status.old .fa:before {
+    content: "\f059"
+}
+
+
+.services-environment {
+    color: #eff0f2;
+    background-color: #98999b;
+    font-weight: 500;
+    display: inline-block;
+    min-width: 50px;
+}
+
+.services-details .services-environment {
+    margin-bottom: 15px
+}
+
+.services-environment.test, .services-environment.TEST {
+    background-color: #6eb6ea;
+    color: #eff0f2
+}
+
+.services-environment.stage, .services-environment.STAGE {
+    background-color: #f7924f;
+    color: #eff0f2
+}
+
+.services-environment.prod, .services-environment.PROD {
+    background-color: #e85c71;
+    color: #eff0f2
+}
+
+.services-overview h1 {
+    margin-top: 24px;
+    text-align: left;
+    display: inline-block
+}
+
+.services-overview .services-version {
+    color: #87888a;
+    display: block
+}
+
+@media (min-width: 996px) {
+    .services-overview .services-version {
+        display: inline-block
+    }
+}
+
+.services-overview #visual-dependencies {
+    background-image: url("/img/chordDiagramIcon.png");
+    margin-top: 24px;
+    width: 42px;
+    height: 42px;
+    display: inline-block;
+    background-size: 42px 42px;
+    margin-right: 42px
+}
+
+.services-overview .graph-search {
+    margin-top: 24px;
+    width: 33px;
+    height: 33px;
+    display: inline-block;
+    margin-right: 72px;
+}
+
+.services-overview .graph-search a {
+    color: black
+}
+
+.services-overview .table td:first-child {
+    text-align: center;
+    padding-right: 40px;
+    width: 10%
+}
+
+.services-overview .table td:last-child {
+    text-align: center;
+    width: 15%
+}
+
+.services-overview .table th:last-child {
+    text-align: center;
+}
+
+.hosts-overview .table td:first-child {
+    text-align: center;
+    padding-right: 40px;
+    width: 10%
+}
+
+.hosts-overview .table td:last-child {
+    text-align: center;
+    width: 15%
+}
+
+.hosts-overview .table th:last-child {
+    text-align: center;
+}
+
+.services-details h1 {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    text-align: left;
+    display: inline-block
+}
+
+.services-details h2 {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    display: inline
+}
+
+.services-details #simulation {
+    background-image: url("/img/simulationIcon.png");
+    width: 42px;
+    height: 42px;
+    display: inline-block;
+    background-size: 42px 42px;
+    margin-right: 16px;
+    margin-bottom: 16px
+}
+
+.services-details .gitLabLink a {
+    color: black
+}
+
+.services-details .informationValue, .services-details .interfaceValue {
+    white-space: pre-wrap
+}
+
+.services-details .interfaceKey {
+    font-weight: 300
+}
+
+.services-details table.table {
+    margin-bottom: 0
+}
+
+.services-details table.table td:first-child {
+    font-weight: 300;
+    width: 1%;
+    text-transform: capitalize
+}
+
+.services-details table.interface-dependencies {
+    width: 100%
+}
+
+.services-details table.interface-dependencies td:first-child {
+    font-weight: inherit;
+    width: inherit;
+    text-transform: none
+}
+
+.services-details table.interface-dependencies .dependants {
+    padding-left: 5px;
+    color: #98999b;
+    font-size: 13px
+}
+
+.services-details table.interface-dependencies .interface.ajp, .services-details table.interface-dependencies .interface.jolokia, .services-details table.interface-dependencies .interface.actuator, .services-details table.interface-dependencies .interface.shutdown, .services-details table.interface-dependencies .interface.rmi {
+    color: #98999b
+}
+
+.services-details .services-links > a {
+    padding-right: 6px
+}
+
+.services-details .fa-inverse {
+    color: #4b4b4d
+}
+
+.services-details .fa-stack-1x {
+    line-height: inherit
+}
+
+.services-details .fa-stack-2x {
+    font-size: 2em;
+    color: #b1b2b3
+}
+
+.services-details .fa-stack-1x, .services-details .fa-stack-2x {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    text-align: center
+}
+
+.services-details .fa-stack {
+    position: relative;
+    display: inline-block;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    vertical-align: middle
+}
+
+.badge-tag {
+    background-color: #b1b2b3;
+    color: #4b4b4d;
+}
+
+.badge-tag:hover {
+    background-color: #231f20;
+    color: #fff;
+}
+
+.services-details .fa-stack:hover i:first-child {
+    color: #231f20
+}
+
+.services-details .fa-stack:hover i:last-child {
+    color: #fff
+}
+
+.services-details .interface, .services-details .information {
+    padding: 8px 12px;
+    line-height: 1.42857;
+    vertical-align: top;
+    border-top: 1px solid #D9DADB
+}
+
+.services-details .servicePlanTable {
+    padding-left: 25px
+}
+
+.services-details .service-instance-outer {
+    margin-bottom: 50px;
+    margin-top: 20px;
+    border: solid thin lightgray
+}
+
+.services-details .service-instance-inner {
+    margin: 20px
+}
+
+.services-details .show-bigger-environment {
+    padding-top: 5px;
+    min-height: 30px;
+    min-width: 75px
+}
+
+.services-details .links:hover {
+    color: transparent;
+    background-color: transparent
+}
+
+.services-details .inactive {
+    text-decoration: line-through
+}
+
+.services-details h1 {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    text-align: left;
+    display: inline-block
+}
+
+.host-details .service-instance-outer {
+    margin-bottom: 50px;
+    margin-top: 44px;
+    border: solid thin lightgray
+}
+
+.host-details .service-instance-inner {
+    margin: 20px
+}
+
+.services-dependencies #circle circle {
+    fill: none;
+    pointer-events: all
+}
+
+.services-dependencies .group path {
+    fill-opacity: .5
+}
+
+.services-dependencies path.chord {
+    stroke: #000;
+    stroke-width: .25px
+}
+
+.services-dependencies #circle path.fade {
+    opacity: 1
+}
+
+.services-dependencies #circle:hover path.fade {
+    display: none
+}
+
+.services-systemView #visualization {
+    margin-top: 20px;
+    margin-bottom: 50px;
+    height: 600px;
+    border: 1px solid lightgray
+}
+
+.status-info.UP {
+    color: #009354;
+}
+
+.status-info.DOWN {
+    color: #d30926;
+}
+
+.status-info.UNKNOWN {
+    color: #7c6e72;
+}
+
+.status-info.ACKNOWLEDGED {
+    color: #00a7ce;
+}
+
+.status-info.WARNING {
+    color: #ff6010;
+}
+
+.toolbox:hover {
+    -webkit-animation-play-state: paused;
+}
+
+.toolbox:hover .info {
+    visibility: visible;
+}
+
+.toolbox .info {
+    width: 30em;
+    padding: 10px;
+    background: rgba(255, 255, 255, 1);
+    border-radius: 3px;
+    position: absolute;
+    visibility: hidden;
+    margin: -105px 0 0 -100px;
+    box-shadow: 0 0 50px 0 rgba(0, 0, 0, .5);
+    font-size: 75%;
+}
+
+.services-graphSearch p {
+    background-color: inherit;
+}
+
+.services-graphSearch section {
+    height: 800px
+}
+
+.services-graphSearch h2 {
+    display: inline
+}
+
+.services-graphSearch .ppt-result:hover {
+    background-color: inherit;
+}
+
+.services-graphSearch .ppt-result {
+    border-top: 1px solid lightgray;
+    padding: 10px unset;
+}
+
+.services-graphSearch .ppt-container-results {
+    max-height: 800px;
+    overflow: hidden;
+}
+
+.panel-body {
+    background-color: inherit !important;
+}
+
+.services-graphSearch .ppt-section-header {
+    background-color: inherit;
+    min-width: 25%;
+    min-height: inherit;
+    border-radius: 0;
+    font-size: 30px;
+    font-weight: normal;
+}
+
+.services-graphSearch {
+    padding-bottom: 20px;
+}
+
+.services-graphSearch .ppt-container-results, .services-graphSearch .result-index {
+    background-color: white;
+}
+
+.services-graphSearch .ppt-div-graph {
+    margin-top: 40px;
+    height: 600px;
+    background-color: inherit;
+}
+
+.services-graphSearch .ppt-svg-graph {
+    border: 1px solid lightgray;
+}
+
+.services-graphSearch .ppt-icon:hover {
+    color: black;
+}
+
+.services-graphSearch .ppt-span, .services-graphSearch .ppt-span-link {
+    color: black
+}
+
+.services-graphSearch .ppt-link-text-relation.value {
+    stroke: #000
+}
+
+.services-graphSearch .ppt-textPath {
+    stroke: #000
+}
+
+.services-graphSearch .ppt-node-text-root, .services-graphSearch .ppt-node-text-choose, .services-graphSearch .ppt-node-text-value {
+    fill: black
+}
+
+.services-graphSearch .result-index {
+    padding-left: 18px
+}
+
+.services-graphSearch .result-index span {
+    cursor: pointer;
+    color: #0d75b8;
+    margin-right: 5px;
+    margin-left: 5px
+}
+
+.personDetails .person-status {
+    color: #d30926
+}
+
+.simulation .table tr:first-child {
+    font-weight: bold
+}
+
+.simulation .table td:last-child {
+    text-align: left
+}
+
+.simulation #visualization {
+    margin-top: 20px;
+    margin-bottom: 50px;
+    height: 600px;
+    border: 1px solid lightgray
+}
+
+.simulation p {
+    max-width: 600px
+}
+
+.simulation .simulationInfoTable td {
+    width: 19%
+}
+
+.simulation .simulationInfoTable td:first-child {
+    width: 10%
+}
+
+.simulation .simulationInfoTable td:last-child {
+    width: 10%;
+    text-align: center
+}
+
+.simulation .simulationInfo {
+    min-height: 50px;
+    background-color: #d9dadb
+}
+
+.simulation .fa-inverse {
+    color: #4b4b4d
+}
+
+.simulation .fa-stack-1x {
+    line-height: inherit
+}
+
+.simulation .fa-stack-2x {
+    font-size: 2em;
+    color: #b1b2b3
+}
+
+.simulation .fa-stack-1x, .simulation .fa-stack-2x {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    text-align: center
+}
+
+.simulation .fa-stack {
+    position: relative;
+    display: inline-block;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    vertical-align: middle
+}
+
+.simulation .fa-stack:hover i:first-child {
+    color: #231f20
+}
+
+.simulation .fa-stack:hover i:last-child {
+    color: #fff
+}
+
+.simulation .links:hover {
+    color: transparent;
+    background-color: transparent
+}
+
+.simulation #change-layout, #switch-interfaces {
+
+    color: #87888a;
+    position: absolute;
+    z-index: 10
+}
+
+.simulation #switch-interfaces {
+    margin-top: 30px;
+    font-size: 30px;
+    margin-left: 1055px;
+}
+
+.simulation #change-layout {
+    margin-top: 30px;
+    font-size: 30px;
+    margin-left: 1095px;
+}
+
+.simulation #change-layout:hover, #switch-interfaces:hover {
+    color: #231f20
+}
+
+.simulation .simulation-warning {
+    color: #ff6010;
+    display: inline-block
+}
+
+.simulation .simulation-good {
+    color: #009354;
+    display: inline-block
+}
+
+.simulation .contacts > a {
+    padding-right: 6px
+}
+
+.simulation .affected-service-data {
+    text-align: left
+}
+
+.simulation .h4 {
+    margin-top: 40px
+}
+
+.simulation-steps .maximum-steps {
+    display: inline
+}
+
+.simulation-steps .table td:first-child {
+    width: 275px
+}
+
+.simulation-steps .table td:last-child {
+    text-align: left
+}
+
+.simulation-steps .first-bold td:first-child {
+    font-weight: bold
+}
+
+.simulation-steps #visualization {
+    margin-top: 20px;
+    margin-bottom: 50px;
+    height: 600px;
+    border: 1px solid lightgray
+}
+
+.simulation-steps p {
+    max-width: 600px
+}
+
+.simulation-steps #change-layout, #switch-interfaces {
+
+    color: #87888a;
+    position: absolute;
+    z-index: 10
+}
+
+.simulation-steps #switch-interfaces {
+    margin-top: 30px;
+    font-size: 30px;
+    margin-left: 1055px;
+}
+
+.simulation-steps #change-layout {
+    margin-top: 30px;
+    font-size: 30px;
+    margin-left: 1095px;
+}
+
+.simulation-steps #change-layout:hover, #switch-interfaces:hover {
+    color: #231f20
+}
+
+.simulation-steps .affected-services {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #d9dadb
+}
+
+.services-systemView .maximum-steps {
+    display: inline
+}
+
+.services-systemView .table td:first-child {
+    width: 275px
+}
+
+.services-systemView .table td:last-child {
+    text-align: left
+}
+
+.services-systemView .first-bold td:first-child {
+    font-weight: bold
+}
+
+.services-systemView #visualization {
+    margin-top: 20px;
+    margin-bottom: 50px;
+    height: 600px;
+    border: 1px solid lightgray
+}
+
+.services-systemView p {
+    max-width: 600px
+}
+
+.services-systemView #change-layout, #switch-interfaces {
+
+    color: #87888a;
+    position: absolute;
+    z-index: 10
+}
+
+.services-systemView #switch-interfaces {
+    margin-top: 30px;
+    font-size: 30px;
+    margin-left: 1055px;
+}
+
+.services-systemView #change-layout {
+    margin-top: 30px;
+    font-size: 30px;
+    margin-left: 1095px;
+}
+
+.services-systemView #change-layout:hover, #switch-interfaces:hover {
+    color: #231f20
+}
+
+.services-systemView .affected-services {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #d9dadb
+}
+
+input.filter[type="checkbox"] {
+    display:none;
+}
+input.filter[type="checkbox"] + label.fa {
+    color: #444;
+    font-size: 25px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    position: absolute;
+    right: 80px;
+}
+input.filter[type="checkbox"]:checked + label.fa {
+    color: #000;
+}
+input.filter[type="checkbox"] + label.fa:before {
+    display:inline-block;
+    content: "\f0b0";
+    cursor:pointer;
+}
+
+input.filter[type="checkbox"]:checked +label.fa:before{
+    content:"\f0b0";
+    position: relative;
+    left: 2px;
+}
