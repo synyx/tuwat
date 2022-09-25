@@ -23,7 +23,9 @@ func TestIcinga2Collector(t *testing.T) {
 
 	cfg := Config{
 		Name: "test",
-		URL:  testServer.URL,
+		HTTPConfig: connectors.HTTPConfig{
+			URL: testServer.URL,
+		},
 	}
 
 	var collector connectors.Connector = NewCollector(cfg)

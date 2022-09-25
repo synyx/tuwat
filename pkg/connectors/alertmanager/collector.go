@@ -2,6 +2,7 @@ package alertmanager
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -26,16 +27,20 @@ type Config struct {
 }
 
 func NewCollector(cfg Config) *Collector {
-	oauth2 := clientcredentials.Config{
-		ClientID:       cfg.ClientId,
-		ClientSecret:   cfg.ClientSecret,
-		TokenURL:       cfg.TokenURL,
-		Scopes:         nil,
-		EndpointParams: nil,
-		AuthStyle:      0,
+	collector := &Collector{config: cfg}
+
+	if cfg.ClientId != "" {
+		collector.oauth2 = clientcredentials.Config{
+			ClientID:       cfg.ClientId,
+			ClientSecret:   cfg.ClientSecret,
+			TokenURL:       cfg.TokenURL,
+			Scopes:         nil,
+			EndpointParams: nil,
+			AuthStyle:      0,
+		}
 	}
 
-	return &Collector{cfg, oauth2}
+	return collector
 }
 
 func (c *Collector) Name() string {
@@ -65,13 +70,13 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	for _, sourceAlert := range sourceAlerts {
-		if sourceAlert.Status.State == "active" || sourceAlert.Status.State == "suppressed" {
+		if sourceAlert.Status.State == "suppressed" {
 			continue
 		} else if len(sourceAlert.Status.SilencedBy) > 0 {
 			continue
 		}
 
-		last, err := time.Parse("2006-01-02T15:04:05.000000", sourceAlert.StartsAt)
+		last, err := time.Parse("2006-01-02T15:04:05Z07", sourceAlert.StartsAt)
 		if err != nil {
 			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
@@ -86,7 +91,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Hostname": strings.Join(k8sLabels(sourceAlert.Labels, "cluster", "namespace"), ":"),
 			},
 			Start:       last,
-			State:       connectors.Critical,
+			State:       connectors.Warning,
 			Description: descr,
 			Details:     sourceAlert.Annotations["description"],
 			Links:       links,
@@ -127,7 +132,15 @@ func (c *Collector) collectAlerts(ctx context.Context) ([]Alert, error) {
 
 func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
 
-	client := c.oauth2.Client(ctx)
+	var client *http.Client
+	if c.config.ClientId != "" {
+		client = c.oauth2.Client(ctx)
+	} else {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
+		}
+		client = &http.Client{Transport: tr}
+	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

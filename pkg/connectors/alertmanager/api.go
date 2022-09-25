@@ -7,6 +7,7 @@ type Alert struct {
 	Annotations map[string]string `json:"annotations"`
 	Status      Status            `json:"status"`
 }
+
 type Status struct {
 	State      string   `json:"state"`
 	SilencedBy []string `json:"silencedBy"`
