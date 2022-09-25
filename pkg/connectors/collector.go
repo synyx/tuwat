@@ -23,9 +23,9 @@ type State int
 
 const (
 	OK       State = 0
-	Warning        = 1
-	Critical       = 2
-	Unknown        = 3
+	Warning  State = 1
+	Critical State = 2
+	Unknown  State = 3
 )
 
 func (s State) String() string {

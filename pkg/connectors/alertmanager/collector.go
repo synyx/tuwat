@@ -70,10 +70,28 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	for _, sourceAlert := range sourceAlerts {
+		severity, _ := sourceAlert.Labels["severity"]
+
 		if sourceAlert.Status.State == "suppressed" {
 			continue
 		} else if len(sourceAlert.Status.SilencedBy) > 0 {
 			continue
+		} else if severity == "none" {
+			continue
+		}
+
+		state := connectors.Critical
+		if severity == "warning" {
+			state = connectors.Warning
+		} else if sourceAlert.Status.State == "unprocessed" {
+			state = connectors.Unknown
+		} else if sourceAlert.Status.State == "active" && severity == "" {
+			state = connectors.Critical
+		} else {
+			otelzap.Ctx(ctx).DPanic("Cannot parse: Unknown state",
+				zap.Any("state", sourceAlert.Status.State),
+				zap.Any("severity", severity),
+			)
 		}
 
 		last, err := time.Parse("2006-01-02T15:04:05Z07", sourceAlert.StartsAt)
@@ -91,7 +109,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Hostname": strings.Join(k8sLabels(sourceAlert.Labels, "cluster", "namespace"), ":"),
 			},
 			Start:       last,
-			State:       connectors.Warning,
+			State:       state,
 			Description: descr,
 			Details:     sourceAlert.Annotations["description"],
 			Links:       links,
