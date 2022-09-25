@@ -29,8 +29,8 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 			default:
 				otelzap.Ctx(s.Request().Context()).Info("panic serving", zap.Any("error", err))
 			}
-			_ = s.Close()
 		}
+		_ = s.Close()
 	}()
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
