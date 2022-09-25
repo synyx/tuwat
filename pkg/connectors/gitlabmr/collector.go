@@ -19,11 +19,9 @@ type Collector struct {
 
 type Config struct {
 	Name string
-	URL  string
+	connectors.HTTPConfig
 
 	TargetBranch string
-
-	Token string
 }
 
 func NewCollector(cfg Config) *Collector {
@@ -89,7 +87,7 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.config.Token)
+	req.Header.Set("Authorization", "Bearer "+c.config.BearerToken)
 
 	q := req.URL.Query()
 	q.Add("wip", "no")

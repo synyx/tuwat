@@ -22,12 +22,7 @@ type Collector struct {
 
 type Config struct {
 	Name string
-	URL  string
-
-	// oauth2
-	ClientId     string
-	ClientSecret string
-	TokenURL     string
+	connectors.HTTPConfig
 }
 
 func NewCollector(cfg Config) *Collector {

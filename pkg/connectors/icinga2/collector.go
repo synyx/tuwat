@@ -17,7 +17,7 @@ type Collector struct {
 
 type Config struct {
 	Name string
-	URL  string
+	connectors.HTTPConfig
 }
 
 func NewCollector(cfg Config) *Collector {
@@ -137,6 +137,9 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 
 	req.Header.Set("Accept", "application/json")
+	if c.config.Username != "" {
+		req.SetBasicAuth(c.config.Username, c.config.Password)
+	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
