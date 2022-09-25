@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -49,6 +50,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
 
+		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
+			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
+
 		alert := connectors.Alert{
 			Tags: map[string]string{
 				"Hostname": host.Hostname,
@@ -56,6 +60,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Start:       last,
 			State:       connectors.Critical,
 			Description: "Host Security critical",
+			Details:     details,
 		}
 		alerts = append(alerts, alert)
 	}

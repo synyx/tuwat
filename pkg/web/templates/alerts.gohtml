@@ -17,10 +17,14 @@
     {{range .Alerts}}
     <tr>
         <td>
-            {{.Where}}
-            <span class="tag {{.Tag}}">{{.Tag}}</span>
+            {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
         </td>
-        <td class="status {{.Status}}">{{.What}}</td>
+        <td class="status {{.Status}}">
+            {{.What}}
+            <details>
+                {{.Details}}
+            </details>
+        </td>
         <td>{{niceDuration .When}}</td>
     </tr>
     {{end}}

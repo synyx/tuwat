@@ -104,3 +104,14 @@ th {
     padding: 3px;
     opacity: 0.90;
 }
+
+.status > details {
+    display: inline;
+    position: relative;
+    float: right;
+    max-width: inherit;
+}
+
+td.status {
+    overflow: hidden;
+}

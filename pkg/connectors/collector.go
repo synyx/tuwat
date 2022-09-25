@@ -15,6 +15,7 @@ type Alert struct {
 	Start       time.Time
 	State       State
 	Description string
+	Details     string
 }
 
 type State int

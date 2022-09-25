@@ -3,6 +3,7 @@ package gitlabmr
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -48,6 +49,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		project := strings.SplitN(mr.References.Full, "!", 2)[0]
 		descr := "MR " + mr.References.Short + ": " + mr.Title
+		details := fmt.Sprintf("Author: %s, Assigned To: %s", mr.Author.Name, mr.Assignee.Name)
 		alert := connectors.Alert{
 			Tags: map[string]string{
 				"Hostname": project,
@@ -55,6 +57,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Start:       last,
 			State:       connectors.Warning,
 			Description: descr,
+			Details:     details,
 		}
 		alerts = append(alerts, alert)
 	}

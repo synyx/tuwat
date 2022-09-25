@@ -18,11 +18,12 @@ type Aggregate struct {
 }
 
 type Alert struct {
-	Where  string
-	Tag    string
-	What   string
-	When   time.Duration
-	Status string
+	Where   string
+	Tag     string
+	What    string
+	Details string
+	When    time.Duration
+	Status  string
 }
 
 type Aggregator struct {
@@ -109,11 +110,12 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	for _, r := range results {
 		for _, a := range r.alerts {
 			alert := Alert{
-				Where:  a.Tags["Hostname"],
-				Tag:    r.collector,
-				What:   a.Description,
-				When:   time.Now().Sub(a.Start),
-				Status: a.State.String(),
+				Where:   a.Tags["Hostname"],
+				Tag:     r.collector,
+				What:    a.Description,
+				Details: a.Details,
+				When:    time.Now().Sub(a.Start),
+				Status:  a.State.String(),
 			}
 			alerts = append(alerts, alert)
 		}

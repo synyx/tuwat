@@ -2,6 +2,7 @@ package icinga2
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"math"
@@ -61,6 +62,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(host.State),
 			Description: "Host down",
+			Details:     host.Output,
 		}
 		alerts = append(alerts, alert)
 		problemHosts[host.DisplayName] = true
@@ -86,6 +88,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(service.State),
 			Description: service.DisplayName,
+			Details:     service.LastCheckResult.Output,
 		}
 		alerts = append(alerts, alert)
 	}
@@ -140,8 +143,13 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	if c.config.Username != "" {
 		req.SetBasicAuth(c.config.Username, c.config.Password)
 	}
+	
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
+	}
+	client := &http.Client{Transport: tr}
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

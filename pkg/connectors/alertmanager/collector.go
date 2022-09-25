@@ -84,6 +84,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Start:       last,
 			State:       connectors.Critical,
 			Description: descr,
+			Details:     sourceAlert.Annotations["description"],
 		}
 		alerts = append(alerts, alert)
 	}

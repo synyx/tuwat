@@ -61,6 +61,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				Start:       time.Unix(stateChange, 0),
 				State:       connectors.State(state),
 				Description: "Host down",
+				Details:     host.PluginOutput,
 			}
 			alerts = append(alerts, alert)
 			continue
@@ -89,6 +90,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				Start:       time.Unix(stateChange, 0),
 				State:       connectors.State(state),
 				Description: serviceName,
+				Details:     service.PluginOutput,
 			}
 			alerts = append(alerts, alert)
 		}
