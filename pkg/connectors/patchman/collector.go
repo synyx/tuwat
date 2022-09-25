@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 type Collector struct {
@@ -60,18 +63,74 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 }
 
 func (c *Collector) collectHosts(ctx context.Context) ([]Host, error) {
-	body, err := c.get("/api/host/", ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer body.Close()
-
-	decoder := json.NewDecoder(body)
-
 	var response []Host
-	err = decoder.Decode(&response)
-	if err != nil {
-		return nil, err
+	next := "/api/host/"
+
+	for next != "" {
+		body, err := c.get(next, ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer body.Close()
+
+		decoder := json.NewDecoder(body)
+
+		// read open bracket
+		t, err := decoder.Token()
+		if err != nil {
+			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+		}
+
+		if d, ok := t.(json.Delim); ok && d == '{' {
+			// Paging necessary
+		pageHandler:
+			for t, err := decoder.Token(); err == nil; t, err = decoder.Token() {
+				if err != nil {
+					otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				}
+
+				if s, ok := t.(string); ok && s == "next" {
+					s, err := decoder.Token()
+					if s, ok := s.(string); ok && err == nil {
+						u, _ := url.Parse(s)
+						next = "/api/host/?" + u.RawQuery
+					} else {
+						next = ""
+					}
+				}
+
+				if s, ok := t.(string); ok && s == "results" {
+					t, err := decoder.Token()
+					if d, ok := t.(json.Delim); ok && d != '[' {
+						otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+					}
+					break pageHandler
+				}
+			}
+		} else {
+			next = ""
+		}
+
+		// while the array contains values
+		for decoder.More() {
+			var h Host
+			// decode an array value (Message)
+			err := decoder.Decode(&h)
+			if err != nil {
+				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			}
+
+			response = append(response, h)
+		}
+
+		// read closing bracket
+		t, err = decoder.Token()
+		if err != nil {
+			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			return nil, err
+		}
+
+		otelzap.Ctx(ctx).Info("Would pull next", zap.String("url", next))
 	}
 
 	return response, nil
