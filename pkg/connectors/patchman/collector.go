@@ -40,9 +40,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
-		last, err := time.Parse("2006-01-02T15:04:05.000000", host.LastReport)
+		last, err := time.Parse("2006-01-02T15:04:05", host.LastReport)
 		if err != nil {
-			panic(err)
+			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
 
 		alert := connectors.Alert{
