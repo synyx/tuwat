@@ -17,6 +17,9 @@
         document.eventSource = new WebSocket(wsUrl);
         connectStreamSource(document.eventSource);
     </script>
+    <noscript>
+        <meta http-equiv="refresh" content="60; url=/alerts" />
+    </noscript>
 </head>
 <body>
 <main id="app">
