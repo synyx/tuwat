@@ -11,7 +11,7 @@
 
     <link rel="stylesheet" href="/static/css/main.css" />
     <script type="module" defer>
-        import Turbo from 'https://cdn.skypack.dev/@hotwired/turbo';
+        import {connectStreamSource} from '/static/js/turbo.7.2.0.js';
 
         const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts"
         document.eventSource = new WebSocket(wsUrl);
