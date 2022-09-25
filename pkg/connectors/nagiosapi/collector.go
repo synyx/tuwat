@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 type Collector struct {
@@ -43,8 +45,14 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if i, e := strconv.ParseInt(host.ScheduledDowntimeDepth, 10, 32); e == nil && i > 0 {
 			continue
 		} else if host.CurrentState != "0" {
-			state, _ := strconv.ParseInt(host.CurrentState, 10, 32)
-			stateChange, _ := strconv.ParseInt(host.LastStateChange, 10, 64)
+			state, err := strconv.ParseInt(host.CurrentState, 10, 32)
+			if err != nil {
+				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			}
+			stateChange, err := strconv.ParseInt(host.LastStateChange, 10, 64)
+			if err != nil {
+				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			}
 
 			alert := connectors.Alert{
 				Tags: map[string]string{
@@ -65,8 +73,14 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				continue
 			}
 
-			state, _ := strconv.ParseInt(service.CurrentState, 10, 32)
-			stateChange, _ := strconv.ParseInt(service.LastStateChange, 10, 64)
+			state, err := strconv.ParseInt(service.CurrentState, 10, 32)
+			if err != nil {
+				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			}
+			stateChange, err := strconv.ParseInt(service.LastStateChange, 10, 64)
+			if err != nil {
+				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			}
 
 			alert := connectors.Alert{
 				Tags: map[string]string{
