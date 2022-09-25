@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"time"
 
@@ -117,6 +118,10 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 			alerts = append(alerts, alert)
 		}
 	}
+
+	sort.Slice(alerts, func(i, j int) bool {
+		return alerts[i].When < alerts[j].When
+	})
 
 	a.current = Aggregate{
 		CheckTime: time.Now(),

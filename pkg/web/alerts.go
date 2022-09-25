@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -13,13 +12,9 @@ import (
 
 func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 
-	aggregate := h.aggregator.Alerts()
-
-	sort.Slice(aggregate.Alerts, func(i, j int) bool {
-		return aggregate.Alerts[i].When < aggregate.Alerts[j].When
-	})
-
 	renderer := h.baseRenderer(req, "alerts.gohtml")
+
+	aggregate := h.aggregator.Alerts()
 
 	renderer(w, 200, webContent{Content: aggregate})
 }
@@ -41,10 +36,6 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 	for {
 		aggregate := h.aggregator.Alerts()
-
-		sort.Slice(aggregate.Alerts, func(i, j int) bool {
-			return aggregate.Alerts[i].When < aggregate.Alerts[j].When
-		})
 
 		renderer(webContent{Content: aggregate})
 		time.Sleep(10 * time.Second)
