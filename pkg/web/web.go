@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	"github.com/synyx/gonagdash/pkg/config"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
+	"golang.org/x/net/websocket"
 )
 
 //go:embed templates
@@ -51,6 +53,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 
 	handler.routes = []route{
 		newRoute("GET", "/", handler.alerts),
+		newRoute("GET", "/ws/alerts", websocket.Handler(handler.wsalerts).ServeHTTP),
 	}
 
 	return handler
@@ -109,18 +112,13 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 	var templateFiles []string
 	var templateDefinition string
 
-	if req.Header.Get("Turbo-Frame") == "content-container" {
-		templateFiles = append([]string{"_content.gohtml"}, patterns...)
-		templateDefinition = "content-container"
-	} else {
-		templateFiles = append([]string{"_base.gohtml", "_content.gohtml"}, patterns...)
-		templateDefinition = "base"
-	}
+	templateFiles = append([]string{"_base.gohtml"}, patterns...)
+	templateDefinition = "base"
 
 	funcs := template.FuncMap{
 		"niceDuration": niceDuration,
 	}
-	tmpl := template.New("base").Funcs(funcs)
+	tmpl := template.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
@@ -136,6 +134,49 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
 			otelzap.Ctx(req.Context()).Error("template execution failed", zap.Error(err))
+			panic(err)
+		}
+	}
+}
+
+type wsRenderFunc func(data webContent)
+
+func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderFunc {
+	var templateFiles []string
+	var templateDefinition string
+
+	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition = "content-container"
+
+	funcs := template.FuncMap{
+		"niceDuration": niceDuration,
+	}
+	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	if err != nil {
+		otelzap.Ctx(s.Request().Context()).Error("compiling template failed", zap.Error(err))
+		panic(err)
+	}
+
+	return func(data webContent) {
+		w, err := s.NewFrameWriter(websocket.TextFrame)
+		if err != nil {
+			panic(err)
+		}
+
+		data.Version = buildinfo.Version
+
+		buf := new(bytes.Buffer)
+
+		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
+		if err != nil {
+			otelzap.Ctx(s.Request().Context()).Info("template execution failed", zap.Error(err))
+			panic(err)
+		}
+
+		_, err = w.Write(buf.Bytes())
+		if err != nil {
+			otelzap.Ctx(s.Request().Context()).Info("sending failed", zap.Error(err))
 			panic(err)
 		}
 	}

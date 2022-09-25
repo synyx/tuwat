@@ -1,0 +1,9 @@
+{{define "content-container"}}
+<turbo-stream action="replace" target="content-container">
+    <template>
+    <section id="content-container" class="container">
+        {{template "content" .Content}}
+    </section>
+    </template>
+</turbo-stream>
+{{end}}
