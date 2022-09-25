@@ -11,11 +11,36 @@
 
     <link rel="stylesheet" href="/static/css/main.css" />
     <script type="module" defer>
-        import {connectStreamSource} from '/static/js/turbo.7.2.0.js';
+        import * as Turbo from '/static/js/turbo.7.2.0.js';
 
-        const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts"
-        document.eventSource = new WebSocket(wsUrl);
-        connectStreamSource(document.eventSource);
+        function connect() {
+            if (window["WebSocket"]) {
+                const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts"
+                const socket = new WebSocket(wsUrl);
+                socket.addEventListener("close", function (ev) {
+                    console.log('Socket is closed. Reconnect will be attempted in 1 second.', ev.reason);
+                    Turbo.disconnectStreamSource(socket);
+                    setTimeout(function() {
+                        connect();
+                    }, 1000);
+                })
+                socket.addEventListener("error", function (ev) {
+                    console.error('Socket encountered error: ', ev.message, 'Closing socket');
+                    socket.close()
+                })
+                socket.addEventListener("open", function () {
+                    Turbo.connectStreamSource(socket);
+                })
+            } else if (window["EventSource"]) {
+                // TODO: implement SSE
+                //Turbo.connectStreamSource(new EventSource("/sse/alerts"));
+            } else {
+                setTimeout(function () {
+                    location.reload();
+                }, 60000);
+            }
+        }
+        connect();
     </script>
     <noscript>
         <meta http-equiv="refresh" content="60; url=/alerts" />
