@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"embed"
@@ -19,6 +20,7 @@ import (
 	"github.com/synyx/gonagdash/pkg/buildinfo"
 	"github.com/synyx/gonagdash/pkg/config"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 )
@@ -54,6 +56,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 	handler.routes = []route{
 		newRoute("GET", "/", handler.alerts),
 		newRoute("GET", "/ws/alerts", websocket.Handler(handler.wsalerts).ServeHTTP),
+		newRoute("GET", "/sse/alerts", handler.ssealerts),
 	}
 
 	return handler
@@ -136,6 +139,70 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 			otelzap.Ctx(req.Context()).Error("template execution failed", zap.Error(err))
 			panic(err)
 		}
+	}
+}
+
+type sseRenderFunc func(data webContent)
+
+func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) sseRenderFunc {
+	var templateFiles []string
+	var templateDefinition string
+
+	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition = "content-container"
+
+	funcs := template.FuncMap{
+		"niceDuration": niceDuration,
+	}
+	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	if err != nil {
+		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
+		panic(err)
+	}
+
+	// prepare the flusher
+	flusher, _ := w.(http.Flusher)
+	ctx, _ := context.WithTimeout(req.Context(), 10*time.Minute)
+	req = req.WithContext(ctx)
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	fmt.Fprint(w, "retry: 60000\n\n")
+
+	flusher.Flush()
+
+	return func(data webContent) {
+		data.Version = buildinfo.Version
+		buf := new(bytes.Buffer)
+
+		tr := trace.SpanFromContext(req.Context())
+		fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID())
+
+		fmt.Fprint(w, "event: message\n")
+		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
+		if err != nil {
+			otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
+			panic(err)
+		}
+
+		scanner := bufio.NewScanner(buf)
+		for scanner.Scan() {
+			_, err = w.Write([]byte("data: "))
+			_, err = w.Write(scanner.Bytes())
+			_, err = w.Write([]byte("\n"))
+			if err != nil {
+				otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
+				panic(err)
+			}
+		}
+		_, err = w.Write([]byte("\n"))
+		flusher.Flush()
 	}
 }
 

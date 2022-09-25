@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"time"
@@ -47,5 +48,41 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 		renderer(webContent{Content: aggregate})
 		time.Sleep(10 * time.Second)
+	}
+}
+
+func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			switch err := err.(type) {
+			case error:
+				otelzap.Ctx(req.Context()).Info("panic serving", zap.Error(err))
+			default:
+				otelzap.Ctx(req.Context()).Info("panic serving", zap.Any("error", err))
+			}
+		}
+	}()
+
+	renderer := h.sseRenderer(w, req, "alerts.gohtml")
+
+	ping := time.NewTicker(10 * time.Second)
+	defer ping.Stop()
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case _ = <-ping.C:
+			_, _ = fmt.Fprint(w, "event: ping\n\n")
+			w.(http.Flusher).Flush()
+		case _ = <-ticker.C:
+			otelzap.Ctx(req.Context()).Info("sending to sse client")
+			aggregate := h.aggregator.Alerts()
+
+			renderer(webContent{Content: aggregate})
+		case <-req.Context().Done():
+			otelzap.Ctx(req.Context()).Info("stop sending to sse client")
+			return
+		}
 	}
 }

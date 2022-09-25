@@ -14,9 +14,9 @@
         import * as Turbo from '/static/js/turbo.7.2.0.js';
 
         function connect() {
-            if (window["WebSocket"]) {
+            if (window["WebSocket"] || window["EventSource"]) {
                 const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts"
-                const socket = new WebSocket(wsUrl);
+                const socket = window["WebSocket"] ? new WebSocket(wsUrl): new EventSource("/sse/alerts");
                 socket.addEventListener("close", function (ev) {
                     console.log('Socket is closed. Reconnect will be attempted in 1 second.', ev.reason);
                     Turbo.disconnectStreamSource(socket);
@@ -29,11 +29,9 @@
                     socket.close()
                 })
                 socket.addEventListener("open", function () {
+                    console.log('Socket is connected.  Enabling turbo.');
                     Turbo.connectStreamSource(socket);
                 })
-            } else if (window["EventSource"]) {
-                // TODO: implement SSE
-                //Turbo.connectStreamSource(new EventSource("/sse/alerts"));
             } else {
                 setTimeout(function () {
                     location.reload();

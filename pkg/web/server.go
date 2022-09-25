@@ -13,7 +13,8 @@ func Serve(ctx context.Context, addr string, handler http.Handler) {
 	srv := &http.Server{
 		Addr:           addr,
 		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		WriteTimeout:   10 * time.Minute,
+		IdleTimeout:    10 * time.Minute,
 		MaxHeaderBytes: 1 << 20,
 		Handler:        handler,
 	}
