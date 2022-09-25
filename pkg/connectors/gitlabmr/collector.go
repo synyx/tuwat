@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 type Collector struct {
@@ -41,9 +43,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	var alerts []connectors.Alert
 
 	for _, mr := range mRs {
-		last, err := time.Parse("2006-01-02T15:04:05.000000", mr.UpdatedAt)
+		last, err := time.Parse(time.RFC3339, mr.UpdatedAt)
 		if err != nil {
-			panic(err)
+			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
 
 		project := strings.SplitN(mr.References.Full, "!", 2)[0]
