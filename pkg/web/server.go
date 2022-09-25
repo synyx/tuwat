@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -17,6 +18,7 @@ func Serve(ctx context.Context, addr string, handler http.Handler) {
 		IdleTimeout:    10 * time.Minute,
 		MaxHeaderBytes: 1 << 20,
 		Handler:        handler,
+		BaseContext:    func(net.Listener) context.Context { return ctx },
 	}
 
 	idleConnectionsClosed := make(chan struct{})
