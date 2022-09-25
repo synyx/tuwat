@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,7 +23,8 @@ type Collector struct {
 }
 
 type Config struct {
-	Name string
+	Name    string
+	Cluster string
 	connectors.HTTPConfig
 }
 
@@ -103,15 +105,30 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		if rb, ok := sourceAlert.Annotations["runbook"]; ok {
 			links["&#x1F4D6; Runbook"] = rb
 		}
-		descr := strings.Join(k8sLabels(sourceAlert.Labels, "alertname", "pod"), ":")
+
+		descr := sourceAlert.Labels["alertname"]
+		details := sourceAlert.Annotations["description"]
+		namespace := strings.Join(k8sLabels(sourceAlert.Labels, "namespace"), ":")
+
+		r := regexp.MustCompile(`in namespace\W+([a-zA-Z-0-9_]+)`)
+		if s := r.FindAllStringSubmatch(details, 1); len(s) > 0 {
+			namespace = s[0][1]
+		}
+
+		if violation, ok := sourceAlert.Labels["violation_msg"]; ok {
+			details = violation
+			namespace = sourceAlert.Labels["violating_namespace"]
+			descr = strings.Join(k8sLabels(sourceAlert.Labels, "alertname", "kind", "violating_name"), ":")
+		}
+
 		alert := connectors.Alert{
 			Tags: map[string]string{
-				"Hostname": strings.Join(k8sLabels(sourceAlert.Labels, "cluster", "namespace"), ":"),
+				"Hostname": c.config.Cluster + "/" + namespace,
 			},
 			Start:       last,
 			State:       state,
 			Description: descr,
-			Details:     sourceAlert.Annotations["description"],
+			Details:     details,
 			Links:       links,
 		}
 		alerts = append(alerts, alert)

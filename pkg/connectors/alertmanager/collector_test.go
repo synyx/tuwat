@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
@@ -160,3 +161,15 @@ const mockResponse = `
   }
 ]
 `
+
+func TestCollector_Collect(t *testing.T) {
+	r := regexp.MustCompile(`in namespace\W+([a-zA-Z-0-9_-]+)`)
+	details := "constraint violation of kind ContainerLimits in Pod gitlab-agent-landingpage-659cf9567d-kkxsl in namespace api-gateway-stage\n\t\t"
+	where := ""
+	if s := r.FindAllStringSubmatch(details, 1); len(s) > 0 {
+		where = s[0][1]
+	}
+	if where != "api-gateway-stage" {
+		t.Fail()
+	}
+}
