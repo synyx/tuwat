@@ -16,6 +16,7 @@ type Alert struct {
 	State       State
 	Description string
 	Details     string
+	Links       map[string]string
 }
 
 type State int

@@ -24,6 +24,7 @@ type Alert struct {
 	Details string
 	When    time.Duration
 	Status  string
+	Links   map[string]string
 }
 
 type Aggregator struct {

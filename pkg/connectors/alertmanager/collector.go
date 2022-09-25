@@ -76,6 +76,10 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
 
+		links := make(map[string]string)
+		if rb, ok := sourceAlert.Annotations["runbook"]; ok {
+			links["&#x1F4D6; Runbook"] = rb
+		}
 		descr := strings.Join(k8sLabels(sourceAlert.Labels, "alertname", "pod"), ":")
 		alert := connectors.Alert{
 			Tags: map[string]string{
@@ -85,6 +89,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.Critical,
 			Description: descr,
 			Details:     sourceAlert.Annotations["description"],
+			Links:       links,
 		}
 		alerts = append(alerts, alert)
 	}

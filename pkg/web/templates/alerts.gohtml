@@ -23,6 +23,9 @@
             {{.What}}
             <details>
                 {{.Details}}
+                {{range $key, $value := .Links}}
+                <a href="{{$value}}">{{$key}}</a>
+                {{end}}
             </details>
         </td>
         <td><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
