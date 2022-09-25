@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
@@ -76,7 +78,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		last, err := time.Parse("2006-01-02T15:04:05.000000", sourceAlert.StartsAt)
 		if err != nil {
-			panic(err)
+			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
 
 		descr := strings.Join(k8sLabels(sourceAlert.Labels, "alertname", "pod"), ":")
