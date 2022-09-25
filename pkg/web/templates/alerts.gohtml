@@ -2,7 +2,7 @@
 {{- /*gotype: github.com/synyx/gonagdash/pkg/aggregation.Aggregate */ -}}
 <h3>
     Alerts
-    {{.CheckTime.Format "15:04:05"}}
+    <time datetime="{{.CheckTime.Format "2006-01-02T15:04:05+07:00"}}">{{.CheckTime.Format "15:04:05"}}</time>
 </h3>
 
 <table class="widetable">
@@ -25,7 +25,7 @@
                 {{.Details}}
             </details>
         </td>
-        <td>{{niceDuration .When}}</td>
+        <td><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
     </tr>
     {{end}}
     </tbody>
