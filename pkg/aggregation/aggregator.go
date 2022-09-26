@@ -110,6 +110,18 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 
 	var alerts []Alert
 	for _, r := range results {
+		if r.error != nil {
+			alert := Alert{
+				Where:   "gonagdash",
+				Tag:     r.collector,
+				What:    "Collection Failure",
+				Details: r.error.Error(),
+				When:    0 * time.Second,
+				Status:  connectors.Critical.String(),
+			}
+			alerts = append(alerts, alert)
+		}
+
 		for _, al := range r.alerts {
 			where := al.Labels["Hostname"]
 			buf := new(strings.Builder)
