@@ -19,7 +19,7 @@ func TestCollector(t *testing.T) {
 	defer func() { testServer.Close() }()
 
 	cfg := Config{
-		Name: "test",
+		Tag: "test",
 		HTTPConfig: connectors.HTTPConfig{
 			URL: testServer.URL,
 		},
@@ -78,7 +78,7 @@ const mockResponse = `
       "pod": "app-server-0",
       "prometheus": "apps-monitoring/apps",
       "queue": "meister",
-      "severity": "none",
+      "severity": "warning",
       "vhost": "/"
     }
   },
@@ -155,7 +155,7 @@ const mockResponse = `
       "pod": "app-server-0",
       "prometheus": "apps-monitoring/apps",
       "queue": "selfcheckin.mot.checkin.command.deadletter",
-      "severity": "none",
+      "severity": "warning",
       "vhost": "/"
     }
   }

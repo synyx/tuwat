@@ -6,7 +6,7 @@ import (
 )
 
 type Connector interface {
-	Name() string
+	Tag() string
 	Collect(ctx context.Context) ([]Alert, error)
 }
 

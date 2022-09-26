@@ -88,15 +88,15 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	defer cancel()
 
 	for _, c := range a.connectors {
-		otelzap.Ctx(ctx).Info("Adding collection", zap.String("collector", c.Name()))
+		otelzap.Ctx(ctx).Info("Adding collection", zap.String("collector", c.Tag()))
 		wg.Add(1)
 		go func(c connectors.Connector) {
 			defer wg.Done()
 
 			alerts, err := c.Collect(ctx)
-			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("collector", c.Name()), zap.Int("count", len(alerts)), zap.Error(err))
+			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("collector", c.Tag()), zap.Int("count", len(alerts)), zap.Error(err))
 			collect <- result{
-				collector: c.Name(),
+				collector: c.Tag(),
 				alerts:    alerts,
 				error:     err,
 			}

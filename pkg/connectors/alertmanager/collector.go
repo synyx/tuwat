@@ -23,7 +23,7 @@ type Collector struct {
 }
 
 type Config struct {
-	Name    string
+	Tag     string
 	Cluster string
 	connectors.HTTPConfig
 }
@@ -45,8 +45,8 @@ func NewCollector(cfg Config) *Collector {
 	return collector
 }
 
-func (c *Collector) Name() string {
-	return c.config.Name
+func (c *Collector) Tag() string {
+	return c.config.Tag
 }
 
 func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {

@@ -22,7 +22,7 @@ func TestIcinga2Collector(t *testing.T) {
 	defer func() { testServer.Close() }()
 
 	cfg := Config{
-		Name: "test",
+		Tag: "test",
 		HTTPConfig: connectors.HTTPConfig{
 			URL: testServer.URL,
 		},

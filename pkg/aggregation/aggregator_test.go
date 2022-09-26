@@ -29,7 +29,7 @@ func TestAggregation(t *testing.T) {
 type mockConnector struct {
 }
 
-func (m *mockConnector) Name() string {
+func (m *mockConnector) Tag() string {
 	return "mock"
 }
 
