@@ -9,8 +9,8 @@
     <thead>
     <tr>
         <th width="30%">Where</th>
-        <th width="60%">What</th>
-        <th width="10%">When</th>
+        <th width="65%">What</th>
+        <th width="5%">When</th>
     </tr>
     </thead>
     <tbody>
@@ -22,16 +22,17 @@
         <td class="status {{.Status}}">
             {{.What}}
             <details>
-                <summary></summary>
+                <summary>
+                    {{range $key, $value := .Links}}
+                        <a href="{{$value}}" target="_blank">{{$key}}</a>
+                    {{end}}
+                </summary>
                 <p>
                 {{.Details}}
-                {{range $key, $value := .Links}}
-                <a href="{{$value}}">{{$key}}</a>
-                {{end}}
                 </p>
             </details>
         </td>
-        <td><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+        <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
     </tr>
     {{end}}
     </tbody>

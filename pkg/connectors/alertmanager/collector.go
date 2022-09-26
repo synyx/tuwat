@@ -103,7 +103,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		links := make(map[string]string)
 		if rb, ok := sourceAlert.Annotations["runbook"]; ok {
-			links["&#x1F4D6; Runbook"] = rb
+			links["📖"] = rb
 		}
 
 		descr := sourceAlert.Labels["alertname"]
