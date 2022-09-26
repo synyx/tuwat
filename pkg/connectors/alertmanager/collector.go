@@ -83,11 +83,11 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 
 		state := connectors.Critical
-		if severity == "warning" {
-			state = connectors.Warning
-		} else if sourceAlert.Status.State == "unprocessed" {
+		if sourceAlert.Status.State == "unprocessed" {
 			state = connectors.Unknown
-		} else if sourceAlert.Status.State == "active" && severity == "" {
+		} else if sourceAlert.Status.State == "active" && severity == "warning" {
+			state = connectors.Warning
+		} else if sourceAlert.Status.State == "active" && severity == "critical" {
 			state = connectors.Critical
 		} else {
 			otelzap.Ctx(ctx).DPanic("Cannot parse: Unknown state",
