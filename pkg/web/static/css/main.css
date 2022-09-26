@@ -105,10 +105,32 @@ th {
     opacity: 0.90;
 }
 
+summary {
+    list-style: none;
+}
+summary::-webkit-details-marker {
+    display: none;
+}
+details summary::before {
+    content: "🛈";
+}
+details[open] summary::before {
+    content: "⮾";
+}
+.status details summary {
+    cursor: pointer;
+}
+
 .status > details {
     display: inline;
     position: relative;
     float: right;
+    max-width: inherit;
+}
+.status > details[open] {
+    display: inline;
+    position: relative;
+    float: left;
     max-width: inherit;
 }
 
