@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"text/template"
 
 	"github.com/BurntSushi/toml"
 	"github.com/synyx/gonagdash/pkg/connectors"
@@ -21,16 +22,20 @@ var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application to port"
 var fConfigFile = flag.String("conf", "/etc/gonagdash.toml", "Configuration file")
 
 type Config struct {
-	WebAddr      string
-	Mode         string
-	Environment  string
-	JaegerUrl    string
-	Instance     string
-	PrintVersion bool
-	Connectors   []connectors.Connector
+	WebAddr       string
+	Mode          string
+	Environment   string
+	JaegerUrl     string
+	Instance      string
+	PrintVersion  bool
+	Connectors    []connectors.Connector
+	WhereTemplate *template.Template
 }
-
+type MainConfig struct {
+	WhereTemplate string
+}
 type ConnectorConfig struct {
+	Main          MainConfig            `json:"main"`
 	Alertmanagers []alertmanager.Config `toml:"alertmanager"`
 	GitlabMRs     []gitlabmr.Config     `toml:"gitlabmr"`
 	Icinga2s      []icinga2.Config      `toml:"icinga2"`
@@ -92,6 +97,22 @@ func NewConfiguration() *Config {
 	}
 	for _, connectorConfig := range connectorConfigs.Patchmans {
 		cfg.Connectors = append(cfg.Connectors, patchman.NewCollector(connectorConfig))
+	}
+
+	cfg.WhereTemplate, err = template.New("where").
+		Funcs(map[string]any{
+			"first": func(m map[string]string, x ...string) string {
+				for _, y := range x {
+					if z, ok := m[y]; ok {
+						return z
+					}
+				}
+				return "NOT_FOUND"
+			},
+		}).
+		Parse(connectorConfigs.Main.WhereTemplate)
+	if err != nil {
+		panic(err)
 	}
 
 	return cfg

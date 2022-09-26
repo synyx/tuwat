@@ -54,7 +54,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
 
 		alert := connectors.Alert{
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": host.Hostname,
 			},
 			Start:       last,

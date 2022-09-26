@@ -36,21 +36,21 @@ func (m *mockConnector) Name() string {
 func (m *mockConnector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	alerts := []connectors.Alert{
 		{
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": "kubernetes/k8s-apps",
 			},
 			Description: "Service Down",
 			Start:       time.Now().Add(-1 * time.Minute),
 			State:       connectors.Warning,
 		}, {
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": "nagios",
 			},
 			Description: "Weird",
 			Start:       time.Now().Add(-2 * time.Hour),
 			State:       connectors.Unknown,
 		}, {
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": "gitlab",
 			},
 			Description: "MR !272",

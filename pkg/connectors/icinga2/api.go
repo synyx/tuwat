@@ -27,6 +27,7 @@ type ServiceAttrs struct {
 type Service struct {
 	HostName            string      `json:"host_name"`
 	DisplayName         string      `json:"display_name"`
+	Zone                string      `json:"zone"`
 	State               int         `json:"state"`
 	LastStateChange     float64     `json:"last_state_change"`
 	Acknowledgement     int         `json:"acknowledgement"`

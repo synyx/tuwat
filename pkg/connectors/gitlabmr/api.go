@@ -8,6 +8,7 @@ type Alert struct {
 	Assignee   Person     `json:"assignee"`
 	WebUrl     string     `json:"web_url"`
 	References References `json:"references"`
+	Milestone  Milestone  `json:"milestone"`
 }
 
 type Person struct {
@@ -18,4 +19,8 @@ type References struct {
 	Short    string `json:"short"`
 	Relative string `json:"relative"`
 	Full     string `json:"full"`
+}
+
+type Milestone struct {
+	Title string `json:"title"`
 }

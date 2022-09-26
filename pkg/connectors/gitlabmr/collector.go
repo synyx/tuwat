@@ -1,6 +1,7 @@
 package gitlabmr
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -51,13 +52,17 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		descr := "MR " + mr.References.Short + ": " + mr.Title
 		details := fmt.Sprintf("Author: %s, Assigned To: %s", mr.Author.Name, mr.Assignee.Name)
 		alert := connectors.Alert{
-			Tags: map[string]string{
-				"Hostname": project,
+			Labels: map[string]string{
+				"Project":   project,
+				"Milestone": mr.Milestone.Title,
 			},
 			Start:       last,
 			State:       connectors.Warning,
 			Description: descr,
 			Details:     details,
+			Links: map[string]string{
+				"MR": mr.WebUrl,
+			},
 		}
 		alerts = append(alerts, alert)
 	}
@@ -72,11 +77,18 @@ func (c *Collector) collectMRs(ctx context.Context) ([]Alert, error) {
 	}
 	defer body.Close()
 
-	decoder := json.NewDecoder(body)
+	b, _ := io.ReadAll(body)
+	buf := bytes.NewBuffer(b)
+
+	decoder := json.NewDecoder(buf)
 
 	var response []Alert
 	err = decoder.Decode(&response)
 	if err != nil {
+		otelzap.Ctx(ctx).DPanic("Cannot parse",
+			zap.String("url", c.config.URL),
+			zap.String("data", buf.String()),
+			zap.Error(err))
 		return nil, err
 	}
 
@@ -102,9 +114,12 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 		q.Add("target_branch", c.config.TargetBranch)
 	}
 	req.URL.RawQuery = q.Encode()
+	url := req.URL.String()
+	otelzap.Ctx(ctx).Info("Pulling", zap.String("url", url))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", url), zap.Error(err))
 		return nil, err
 	}
 

@@ -56,7 +56,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		sec, dec := math.Modf(host.LastStateChange)
 		alert := connectors.Alert{
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": host.DisplayName,
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
@@ -82,8 +82,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		sec, dec := math.Modf(service.LastStateChange)
 		alert := connectors.Alert{
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": service.HostName,
+				"Zone":     service.Zone,
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(service.State),
@@ -143,7 +144,7 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	if c.config.Username != "" {
 		req.SetBasicAuth(c.config.Username, c.config.Password)
 	}
-	
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
 	}

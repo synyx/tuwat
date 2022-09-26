@@ -3,7 +3,9 @@ package aggregation
 import (
 	"context"
 	"sort"
+	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/config"
@@ -32,6 +34,7 @@ type Aggregator struct {
 
 	current    Aggregate
 	connectors []connectors.Connector
+	whereTempl *template.Template
 }
 
 type result struct {
@@ -44,6 +47,7 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 	return &Aggregator{
 		interval:   1 * time.Minute,
 		connectors: cfg.Connectors,
+		whereTempl: cfg.WhereTemplate,
 	}
 }
 
@@ -109,14 +113,21 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 
 	var alerts []Alert
 	for _, r := range results {
-		for _, a := range r.alerts {
+		for _, al := range r.alerts {
+			where := al.Labels["Hostname"]
+			buf := new(strings.Builder)
+			err := a.whereTempl.ExecuteTemplate(buf, "where", al)
+			if err == nil {
+				where = buf.String()
+			}
+
 			alert := Alert{
-				Where:   a.Tags["Hostname"],
+				Where:   where,
 				Tag:     r.collector,
-				What:    a.Description,
-				Details: a.Details,
-				When:    time.Now().Sub(a.Start),
-				Status:  a.State.String(),
+				What:    al.Description,
+				Details: al.Details,
+				When:    time.Now().Sub(al.Start),
+				Status:  al.State.String(),
 			}
 			alerts = append(alerts, alert)
 		}

@@ -11,7 +11,7 @@ type Connector interface {
 }
 
 type Alert struct {
-	Tags        map[string]string
+	Labels      map[string]string
 	Start       time.Time
 	State       State
 	Description string

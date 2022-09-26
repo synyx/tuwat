@@ -61,7 +61,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		u, _ := url.Parse(c.config.URL)
 
 		alert := connectors.Alert{
-			Tags: map[string]string{
+			Labels: map[string]string{
 				"Hostname": u.Host,
 			},
 			Start:       time.Now(),
@@ -107,7 +107,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 
 		descr := sourceAlert.Labels["alertname"]
-		details := sourceAlert.Annotations["description"]
+		details := strings.Join(k8sLabels(sourceAlert.Annotations, "summary", "description"), "\n")
 		namespace := strings.Join(k8sLabels(sourceAlert.Labels, "namespace"), ":")
 
 		r := regexp.MustCompile(`in namespace\W+([a-zA-Z-0-9_]+)`)
@@ -115,16 +115,16 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			namespace = s[0][1]
 		}
 
-		if violation, ok := sourceAlert.Labels["violation_msg"]; ok {
-			details = violation
-			namespace = sourceAlert.Labels["violating_namespace"]
-			descr = strings.Join(k8sLabels(sourceAlert.Labels, "alertname", "kind", "violating_name"), ":")
+		tags := map[string]string{
+			"Cluster":   c.config.Cluster,
+			"Namespace": namespace,
+		}
+		for k, v := range sourceAlert.Labels {
+			tags[k] = v
 		}
 
 		alert := connectors.Alert{
-			Tags: map[string]string{
-				"Hostname": c.config.Cluster + "/" + namespace,
-			},
+			Labels:      tags,
 			Start:       last,
 			State:       state,
 			Description: descr,
