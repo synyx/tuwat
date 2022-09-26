@@ -22,10 +22,13 @@
         <td class="status {{.Status}}">
             {{.What}}
             <details>
+                <summary>Details</summary>
+                <p>
                 {{.Details}}
                 {{range $key, $value := .Links}}
                 <a href="{{$value}}">{{$key}}</a>
                 {{end}}
+                </p>
             </details>
         </td>
         <td><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>

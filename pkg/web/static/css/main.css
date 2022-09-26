@@ -112,6 +112,32 @@ th {
     max-width: inherit;
 }
 
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+    content:"🛈";
+}
+details[open] summary::before {
+    content:"✖";
+}
+.status details summary {
+    cursor: pointer;
+}
 td.status {
-    overflow: hidden;
+    position: relative;
+}
+.status details p {
+    z-index: 1000;
+    cursor: auto;
+    opacity: 100%;
+    background: #eee;
+    font-size: 0.75em;
+    padding: 5px;
+    width: max-content;
+    max-width: 500px;
+    position: relative;
+    top: 10px;
+    border-radius: 4px;
+    right: 0;
 }
