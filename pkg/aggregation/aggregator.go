@@ -64,7 +64,6 @@ func (a *Aggregator) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			otelzap.Ctx(ctx).Info("Collecting")
 			go a.collect(ctx, collect)
 		case r, ok := <-collect:
 			if !ok {
@@ -72,7 +71,6 @@ func (a *Aggregator) Run(ctx context.Context) {
 				results = nil
 				collect = make(chan result, 20)
 			} else if ok {
-				otelzap.Ctx(ctx).Info("Appending")
 				results = append(results, r)
 			}
 		case <-ctx.Done():
@@ -88,7 +86,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	defer cancel()
 
 	for _, c := range a.connectors {
-		otelzap.Ctx(ctx).Info("Adding collection", zap.String("collector", c.Tag()))
+		otelzap.Ctx(ctx).Debug("Adding collection", zap.String("collector", c.Tag()))
 		wg.Add(1)
 		go func(c connectors.Connector) {
 			defer wg.Done()
@@ -102,9 +100,8 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 			}
 		}(c)
 	}
-	otelzap.Ctx(ctx).Info("Waiting for collection end")
 	wg.Wait()
-	otelzap.Ctx(ctx).Info("Collection end")
+	otelzap.Ctx(ctx).Debug("Collection end")
 	close(collect)
 }
 

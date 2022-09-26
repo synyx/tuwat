@@ -115,7 +115,6 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 	req.URL.RawQuery = q.Encode()
 	url := req.URL.String()
-	otelzap.Ctx(ctx).Info("Pulling", zap.String("url", url))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
