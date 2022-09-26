@@ -128,6 +128,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				Details: al.Details,
 				When:    time.Now().Sub(al.Start),
 				Status:  al.State.String(),
+				Links:   al.Links,
 			}
 			alerts = append(alerts, alert)
 		}
