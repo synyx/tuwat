@@ -10,6 +10,7 @@ type Host struct {
 	Tags                string `json:"tags"`
 	OSURL               string `json:"os"`
 	ArchURL             string `json:"arch"`
+	DomainURL           string `json:"domain"`
 }
 
 type OS struct {
@@ -18,5 +19,9 @@ type OS struct {
 }
 
 type Arch struct {
+	Name string `json:"name"`
+}
+
+type Domain struct {
 	Name string `json:"name"`
 }

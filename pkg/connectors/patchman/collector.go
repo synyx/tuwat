@@ -19,8 +19,9 @@ import (
 type Collector struct {
 	config Config
 
-	osCache   map[string]OS
-	archCache map[string]Arch
+	osCache     map[string]*OS
+	archCache   map[string]*Arch
+	domainCache map[string]*Domain
 }
 
 type Config struct {
@@ -30,9 +31,10 @@ type Config struct {
 
 func NewCollector(cfg Config) *Collector {
 	return &Collector{
-		config:    cfg,
-		osCache:   make(map[string]OS),
-		archCache: make(map[string]Arch),
+		config:      cfg,
+		osCache:     make(map[string]*OS),
+		archCache:   make(map[string]*Arch),
+		domainCache: make(map[string]*Domain),
 	}
 }
 
@@ -61,8 +63,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
 			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
 
-		os, err := c.getOS(ctx, host.OSURL)
-		arch, err := c.getArch(ctx, host.ArchURL)
+		os, err := getCached(ctx, c, c.osCache, host.OSURL)
+		arch, err := getCached(ctx, c, c.archCache, host.ArchURL)
+		domain, err := getCached(ctx, c, c.domainCache, host.DomainURL)
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -71,6 +74,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"tags":     host.Tags,
 				"os":       os.Name,
 				"arch":     arch.Name,
+				"domain":   domain.Name,
 			},
 			Start:       last,
 			State:       connectors.Critical,
@@ -157,54 +161,30 @@ func (c *Collector) collectHosts(ctx context.Context) ([]Host, error) {
 	return response, nil
 }
 
-func (c *Collector) getOS(ctx context.Context, rawUrl string) (OS, error) {
-	if os, ok := c.osCache[rawUrl]; ok {
-		return os, nil
+func getCached[T any](ctx context.Context, c *Collector, cache map[string]*T, rawUrl string) (*T, error) {
+	if element, ok := cache[rawUrl]; ok {
+		return element, nil
 	}
 
 	split := strings.Split(rawUrl, "/")
+	typ := split[len(split)-3]
 	id := split[len(split)-2]
 
-	body, err := c.get(ctx, "/api/os/"+id+"/")
+	body, err := c.get(ctx, "/api/"+typ+"/"+id+"/")
 	if err != nil {
-		return OS{}, err
+		return new(T), err
 	}
 	defer body.Close()
 
 	decoder := json.NewDecoder(body)
 
-	var os OS
-	if err = decoder.Decode(&os); err != nil {
-		return OS{}, err
+	var element T
+	if err = decoder.Decode(&element); err != nil {
+		return &element, err
 	}
 
-	c.osCache[rawUrl] = os
-	return os, nil
-}
-
-func (c *Collector) getArch(ctx context.Context, rawUrl string) (Arch, error) {
-	if arch, ok := c.archCache[rawUrl]; ok {
-		return arch, nil
-	}
-
-	split := strings.Split(rawUrl, "/")
-	id := split[len(split)-2]
-
-	body, err := c.get(ctx, "/api/machine-architecture/"+id+"/")
-	if err != nil {
-		return Arch{}, err
-	}
-	defer body.Close()
-
-	decoder := json.NewDecoder(body)
-
-	var arch Arch
-	if err = decoder.Decode(&arch); err != nil {
-		return Arch{}, err
-	}
-
-	c.archCache[rawUrl] = arch
-	return arch, nil
+	cache[rawUrl] = &element
+	return &element, nil
 }
 
 func (c *Collector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
