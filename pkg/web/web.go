@@ -25,7 +25,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-//go:embed templates
+//go:embed templates/*
 var templates embed.FS
 
 type webHandler struct {
