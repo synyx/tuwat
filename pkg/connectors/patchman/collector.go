@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
@@ -17,6 +18,9 @@ import (
 
 type Collector struct {
 	config Config
+
+	osCache   map[string]OS
+	archCache map[string]Arch
 }
 
 type Config struct {
@@ -25,7 +29,11 @@ type Config struct {
 }
 
 func NewCollector(cfg Config) *Collector {
-	return &Collector{cfg}
+	return &Collector{
+		config:    cfg,
+		osCache:   make(map[string]OS),
+		archCache: make(map[string]Arch),
+	}
 }
 
 func (c *Collector) Tag() string {
@@ -53,10 +61,16 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
 			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
 
+		os, err := c.getOS(ctx, host.OSURL)
+		arch, err := c.getArch(ctx, host.ArchURL)
+
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.Hostname,
 				"Source":   c.config.URL,
+				"tags":     host.Tags,
+				"os":       os.Name,
+				"arch":     arch.Name,
 			},
 			Start:       last,
 			State:       connectors.Critical,
@@ -74,7 +88,7 @@ func (c *Collector) collectHosts(ctx context.Context) ([]Host, error) {
 	next := "/api/host/"
 
 	for next != "" {
-		body, err := c.get(next, ctx)
+		body, err := c.get(ctx, next)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +157,57 @@ func (c *Collector) collectHosts(ctx context.Context) ([]Host, error) {
 	return response, nil
 }
 
-func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+func (c *Collector) getOS(ctx context.Context, rawUrl string) (OS, error) {
+	if os, ok := c.osCache[rawUrl]; ok {
+		return os, nil
+	}
+
+	split := strings.Split(rawUrl, "/")
+	id := split[len(split)-2]
+
+	body, err := c.get(ctx, "/api/os/"+id+"/")
+	if err != nil {
+		return OS{}, err
+	}
+	defer body.Close()
+
+	decoder := json.NewDecoder(body)
+
+	var os OS
+	if err = decoder.Decode(&os); err != nil {
+		return OS{}, err
+	}
+
+	c.osCache[rawUrl] = os
+	return os, nil
+}
+
+func (c *Collector) getArch(ctx context.Context, rawUrl string) (Arch, error) {
+	if arch, ok := c.archCache[rawUrl]; ok {
+		return arch, nil
+	}
+
+	split := strings.Split(rawUrl, "/")
+	id := split[len(split)-2]
+
+	body, err := c.get(ctx, "/api/machine-architecture/"+id+"/")
+	if err != nil {
+		return Arch{}, err
+	}
+	defer body.Close()
+
+	decoder := json.NewDecoder(body)
+
+	var arch Arch
+	if err = decoder.Decode(&arch); err != nil {
+		return Arch{}, err
+	}
+
+	c.archCache[rawUrl] = arch
+	return arch, nil
+}
+
+func (c *Collector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
@@ -161,6 +225,7 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	client := &http.Client{Transport: tr}
 
 	res, err := client.Do(req)
+	otelzap.Ctx(ctx).Debug("patchman get", zap.String("url", req.URL.String()), zap.Error(err))
 	if err != nil {
 		return nil, err
 	}

@@ -8,4 +8,15 @@ type Host struct {
 	SecurityUpdateCount int    `json:"security_update_count"`
 	UpdatedAt           string `json:"updated_at"`
 	Tags                string `json:"tags"`
+	OSURL               string `json:"os"`
+	ArchURL             string `json:"arch"`
+}
+
+type OS struct {
+	Name    string `json:"name"`
+	OSGroup string `json:"osgroup"`
+}
+
+type Arch struct {
+	Name string `json:"name"`
 }
