@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -120,6 +121,7 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 
 	funcs := template.FuncMap{
 		"niceDuration": niceDuration,
+		"json":         formatJson,
 	}
 	tmpl := template.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
@@ -153,6 +155,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 
 	funcs := template.FuncMap{
 		"niceDuration": niceDuration,
+		"json":         formatJson,
 	}
 	tmpl := template.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
@@ -217,6 +220,7 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 	funcs := template.FuncMap{
 		"niceDuration": niceDuration,
+		"json":         formatJson,
 	}
 	tmpl := template.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
@@ -268,4 +272,9 @@ func niceDuration(d time.Duration) string {
 	} else {
 		return d.String()
 	}
+}
+
+func formatJson(s any) string {
+	x, _ := json.MarshalIndent(s, "", "  ")
+	return string(x)
 }

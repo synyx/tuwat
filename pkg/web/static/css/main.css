@@ -43,11 +43,19 @@ th {
 
 .widetable {
     width: 99%;
-    clear: both
+    clear: both;
+    table-layout: fixed;
+}
+.widetable td {
+    text-overflow: ellipsis;
+}
+.widetable td pre {
+    overflow: hidden;
+    white-space: break-spaces;
 }
 
 .desc {
-    font-size: 0.8em
+    font-size: 0.8em;
 }
 
 .tag {
@@ -132,8 +140,4 @@ details[open] summary::before {
     position: relative;
     float: left;
     max-width: inherit;
-}
-
-td.status {
-    overflow: hidden;
 }

@@ -27,9 +27,8 @@
                         <a href="{{$value}}" target="_blank">{{$key}}</a>
                     {{end}}
                 </summary>
-                <p>
-                {{.Details}}
-                </p>
+                <div>{{.Details}}</div>
+                <pre>{{json .Labels}}</pre>
             </details>
         </td>
         <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>

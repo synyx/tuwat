@@ -28,6 +28,7 @@ type Alert struct {
 	When    time.Duration
 	Status  string
 	Links   map[string]string
+	Labels  map[string]string
 }
 
 type Aggregator struct {
@@ -166,6 +167,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				When:    time.Now().Sub(al.Start),
 				Status:  al.State.String(),
 				Links:   al.Links,
+				Labels:  al.Labels,
 			}
 			alerts = append(alerts, alert)
 		}
