@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/synyx/gonagdash/pkg/connectors"
@@ -30,9 +31,12 @@ type Config struct {
 	PrintVersion  bool
 	Connectors    []connectors.Connector
 	WhereTemplate *template.Template
+	Interval      time.Duration
 }
+
 type MainConfig struct {
 	WhereTemplate string
+	Interval      string
 }
 type ConnectorConfig struct {
 	Main          MainConfig            `json:"main"`
@@ -118,6 +122,14 @@ func (cfg *Config) loadFile(file string) error {
 			},
 		}).
 		Parse(connectorConfigs.Main.WhereTemplate)
+
+	if connectorConfigs.Main.Interval != "" {
+		if cfg.Interval, err = time.ParseDuration(connectorConfigs.Main.Interval); err != nil {
+			return err
+		}
+	} else {
+		cfg.Interval = 1 * time.Minute
+	}
 
 	return err
 }

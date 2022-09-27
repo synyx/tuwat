@@ -61,7 +61,7 @@ func init() {
 
 func NewAggregator(cfg *config.Config) *Aggregator {
 	return &Aggregator{
-		interval:      1 * time.Minute,
+		interval:      cfg.Interval,
 		connectors:    cfg.Connectors,
 		whereTempl:    cfg.WhereTemplate,
 		registrations: make(map[any]chan<- bool),
