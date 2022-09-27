@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -18,6 +19,7 @@ import (
 type Aggregate struct {
 	CheckTime time.Time
 	Alerts    []Alert
+	Blocked   []Alert
 }
 
 type Alert struct {
@@ -41,12 +43,18 @@ type Aggregator struct {
 	mu            *sync.RWMutex // Protecting Registrations
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
+	blockRules    []blockRule
 }
 
 type result struct {
 	collector string
 	alerts    []connectors.Alert
 	error     error
+}
+
+type blockRule struct {
+	label string
+	re    *regexp.Regexp
 }
 
 var (
@@ -61,10 +69,22 @@ func init() {
 }
 
 func NewAggregator(cfg *config.Config) *Aggregator {
+
+	var blockRules []blockRule
+	for _, r := range cfg.BlockRules {
+		rule := blockRule{
+			label: r[0],
+			re:    regexp.MustCompile(r[1]),
+		}
+		blockRules = append(blockRules, rule)
+	}
+
 	return &Aggregator{
-		interval:      cfg.Interval,
-		connectors:    cfg.Connectors,
-		whereTempl:    cfg.WhereTemplate,
+		interval:   cfg.Interval,
+		connectors: cfg.Connectors,
+		whereTempl: cfg.WhereTemplate,
+		blockRules: blockRules,
+
 		registrations: make(map[any]chan<- bool),
 		mu:            new(sync.RWMutex),
 		cmu:           new(sync.RWMutex),
@@ -138,6 +158,8 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	a.cmu.RUnlock()
 
 	var alerts []Alert
+	var blockedAlerts []Alert
+
 	for _, r := range results {
 		if r.error != nil {
 			alert := Alert{
@@ -169,7 +191,12 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				Links:   al.Links,
 				Labels:  al.Labels,
 			}
-			alerts = append(alerts, alert)
+
+			if a.allow(alert) {
+				alerts = append(alerts, alert)
+			} else {
+				blockedAlerts = append(blockedAlerts, alert)
+			}
 		}
 	}
 
@@ -181,6 +208,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	a.current = Aggregate{
 		CheckTime: time.Now(),
 		Alerts:    alerts,
+		Blocked:   blockedAlerts,
 	}
 	a.amu.Unlock()
 
@@ -249,4 +277,16 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 
 	a.connectors = cfg.Connectors
 	a.whereTempl = cfg.WhereTemplate
+}
+
+func (a *Aggregator) allow(alert Alert) bool {
+	for _, rule := range a.blockRules {
+		if rule.label == "_what" && rule.re.MatchString(alert.What) {
+			return false
+		} else if l, ok := alert.Labels[rule.label]; ok && rule.re.MatchString(l) {
+			return false
+		}
+	}
+
+	return true
 }

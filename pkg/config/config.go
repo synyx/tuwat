@@ -32,11 +32,13 @@ type Config struct {
 	Connectors    []connectors.Connector
 	WhereTemplate *template.Template
 	Interval      time.Duration
+	BlockRules    [][2]string
 }
 
 type MainConfig struct {
 	WhereTemplate string
 	Interval      string
+	BlockRules    [][2]string
 }
 type ConnectorConfig struct {
 	Main          MainConfig            `json:"main"`
@@ -130,6 +132,8 @@ func (cfg *Config) loadFile(file string) error {
 	} else {
 		cfg.Interval = 1 * time.Minute
 	}
+
+	cfg.BlockRules = connectorConfigs.Main.BlockRules
 
 	return err
 }

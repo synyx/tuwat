@@ -1,8 +1,8 @@
 {{define "content"}}
-{{- /*gotype: github.com/synyx/gonagdash/pkg/aggregation.Aggregate */ -}}
+{{- /*gotype: github.com/synyx/gonagdash/pkg/web.webContent*/ -}}
 <h3>
     Alerts
-    <time datetime="{{.CheckTime.Format "2006-01-02T15:04:05+07:00"}}">{{.CheckTime.Format "15:04:05"}}</time>
+    <time datetime="{{.Content.CheckTime.Format "2006-01-02T15:04:05+07:00"}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
 </h3>
 
 <table class="widetable">
@@ -14,7 +14,7 @@
     </tr>
     </thead>
     <tbody>
-    {{range .Alerts}}
+    {{range .Content.Alerts}}
     <tr>
         <td>
             {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
@@ -36,4 +36,42 @@
     {{end}}
     </tbody>
 </table>
+
+{{if eq .Environment "test"}}
+<h3>Filtered Alerts</h3>
+<pre>
+    {{json .FilterRules}}
+</pre>
+<table class="widetable">
+    <thead>
+    <tr>
+        <th width="30%">Where</th>
+        <th width="65%">What</th>
+        <th width="5%">When</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Content.Blocked}}
+        <tr>
+            <td>
+                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            </td>
+            <td class="status {{.Status}}">
+                {{.What}}
+                <details>
+                    <summary>
+                        {{range $key, $value := .Links}}
+                            <a href="{{$value}}" target="_blank">{{$key}}</a>
+                        {{end}}
+                    </summary>
+                    <div>{{.Details}}</div>
+                    <pre>{{json .Labels}}</pre>
+                </details>
+            </td>
+            <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+{{end}}
 {{end}}
