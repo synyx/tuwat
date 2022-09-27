@@ -52,12 +52,10 @@ func main() {
 				otelzap.Ctx(appCtx).Error("Failed to read new configuration", zap.Error(err))
 			}
 
-			// XXX(jo): race condition within
 			aggregator.Reconfigure(cfg)
 		case <-appCtx.Done():
 			otelzap.Ctx(appCtx).Info("Exiting")
 			return
 		}
 	}
-
 }

@@ -37,7 +37,9 @@ type Aggregator struct {
 	connectors    []connectors.Connector
 	whereTempl    *template.Template
 	registrations map[any]chan<- bool
-	mu            *sync.RWMutex
+	mu            *sync.RWMutex // Protecting Registrations
+	cmu           *sync.RWMutex // Protecting Configuration
+	amu           *sync.RWMutex // Protecting current Aggregate
 }
 
 type result struct {
@@ -64,6 +66,8 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 		whereTempl:    cfg.WhereTemplate,
 		registrations: make(map[any]chan<- bool),
 		mu:            new(sync.RWMutex),
+		cmu:           new(sync.RWMutex),
+		amu:           new(sync.RWMutex),
 	}
 }
 
@@ -101,7 +105,11 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	ctx, cancel := context.WithTimeout(ctx, a.interval/2)
 	defer cancel()
 
-	for _, c := range a.connectors {
+	a.cmu.RLock()
+	collectors := a.connectors
+	a.cmu.RUnlock()
+
+	for _, c := range collectors {
 		otelzap.Ctx(ctx).Debug("Adding collection", zap.String("collector", c.Tag()))
 		wg.Add(1)
 		go func(c connectors.Connector) {
@@ -124,6 +132,10 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	otelzap.Ctx(ctx).Info("Aggregating results", zap.Int("count", len(results)))
 
+	a.cmu.RLock()
+	whereTempl := a.whereTempl
+	a.cmu.RUnlock()
+
 	var alerts []Alert
 	for _, r := range results {
 		if r.error != nil {
@@ -141,7 +153,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 		for _, al := range r.alerts {
 			where := al.Labels["Hostname"]
 			buf := new(strings.Builder)
-			err := a.whereTempl.ExecuteTemplate(buf, "where", al)
+			err := whereTempl.ExecuteTemplate(buf, "where", al)
 			if err == nil {
 				where = buf.String()
 			}
@@ -163,15 +175,20 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 		return alerts[i].When < alerts[j].When
 	})
 
+	a.amu.Lock()
 	a.current = Aggregate{
 		CheckTime: time.Now(),
 		Alerts:    alerts,
 	}
+	a.amu.Unlock()
 
 	a.notify(ctx)
 }
 
 func (a *Aggregator) Alerts() Aggregate {
+	a.amu.RLock()
+	defer a.amu.RUnlock()
+
 	return a.current
 }
 
@@ -225,6 +242,9 @@ func (a *Aggregator) notify(ctx context.Context) {
 }
 
 func (a *Aggregator) Reconfigure(cfg *config.Config) {
+	a.cmu.Lock()
+	defer a.cmu.Unlock()
+
 	a.connectors = cfg.Connectors
 	a.whereTempl = cfg.WhereTemplate
 }
