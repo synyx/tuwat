@@ -7,15 +7,16 @@ type HostAttrs struct {
 	Host Host `json:"attrs"`
 }
 type Host struct {
-	DisplayName         string  `json:"display_name"`
-	State               int     `json:"state"`
-	LastStateChange     float64 `json:"last_state_change"`
-	Acknowledgement     int     `json:"acknowledgement"`
-	DowntimeDepth       int     `json:"downtime_depth"`
-	EnableNotifications bool    `json:"enable_notifications"`
-	Output              string  `json:"output"`
-	MaxCheckAttempts    int     `json:"max_check_attempts"`
-	CheckAttempt        int     `json:"check_attempt"`
+	DisplayName         string   `json:"display_name"`
+	State               int      `json:"state"`
+	LastStateChange     float64  `json:"last_state_change"`
+	Acknowledgement     int      `json:"acknowledgement"`
+	DowntimeDepth       int      `json:"downtime_depth"`
+	EnableNotifications bool     `json:"enable_notifications"`
+	Output              string   `json:"output"`
+	MaxCheckAttempts    int      `json:"max_check_attempts"`
+	CheckAttempt        int      `json:"check_attempt"`
+	Groups              []string `json:"groups"`
 }
 
 type ServiceResponse struct {
@@ -36,6 +37,7 @@ type Service struct {
 	LastCheckResult     CheckResult `json:"last_check_result"`
 	MaxCheckAttempts    int         `json:"max_check_attempts"`
 	CheckAttempt        int         `json:"check_attempt"`
+	Groups              []string    `json:"groups"`
 }
 
 type CheckResult struct {

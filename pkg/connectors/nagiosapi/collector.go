@@ -57,6 +57,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			alert := connectors.Alert{
 				Labels: map[string]string{
 					"Hostname": hostName,
+					"Source":   c.config.URL,
 				},
 				Start:       time.Unix(stateChange, 0),
 				State:       connectors.State(state),
@@ -86,6 +87,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			alert := connectors.Alert{
 				Labels: map[string]string{
 					"Hostname": hostName,
+					"Source":   c.config.URL,
 				},
 				Start:       time.Unix(stateChange, 0),
 				State:       connectors.State(state),

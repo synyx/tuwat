@@ -118,6 +118,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		tags := map[string]string{
 			"Cluster":   c.config.Cluster,
 			"Namespace": namespace,
+			"Source":    c.config.URL,
 		}
 		for k, v := range sourceAlert.Labels {
 			tags[k] = v

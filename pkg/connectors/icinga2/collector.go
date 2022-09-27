@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/synyx/gonagdash/pkg/connectors"
@@ -58,6 +59,8 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.DisplayName,
+				"Source":   c.config.URL,
+				"groups":   strings.Join(host.Groups, ","),
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(host.State),
@@ -85,6 +88,8 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Labels: map[string]string{
 				"Hostname": service.HostName,
 				"Zone":     service.Zone,
+				"Source":   c.config.URL,
+				"groups":   strings.Join(service.Groups, ","),
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(service.State),

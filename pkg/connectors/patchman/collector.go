@@ -56,6 +56,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.Hostname,
+				"Source":   c.config.URL,
 			},
 			Start:       last,
 			State:       connectors.Critical,

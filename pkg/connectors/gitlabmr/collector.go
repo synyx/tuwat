@@ -55,6 +55,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Labels: map[string]string{
 				"Project":   project,
 				"Milestone": mr.Milestone.Title,
+				"Author":    mr.Author.Name,
+				"Assignee":  mr.Assignee.Name,
+				"Source":    c.config.URL,
 			},
 			Start:       last,
 			State:       connectors.Warning,
