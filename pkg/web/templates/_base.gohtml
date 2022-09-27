@@ -32,6 +32,19 @@
                     console.log('Socket is connected.  Enabling turbo.');
                     Turbo.connectStreamSource(socket);
                 })
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    const csEl = document.getElementById('connection-state');
+                    csEl.addEventListener("change", function (ev) {
+                        if (this.checked) {
+                            console.log('Manually connecting stream.');
+                            Turbo.disconnectStreamSource(socket);
+                        } else {
+                            console.log('Manually disconnecting stream.');
+                            Turbo.connectStreamSource(socket);
+                        }
+                    });
+                });
             } else {
                 setTimeout(function () {
                     location.reload();
@@ -46,6 +59,12 @@
 </head>
 <body>
 <main id="app">
+    <section>
+    <form>
+        <input type="checkbox" checked="checked" name="connection-state" id="connection-state" class="connection-state">
+        <label for="connection-state"></label>
+    </form>
+    </section>
     <section id="content-container" class="container">
         {{template "content" .Content}}
     </section>

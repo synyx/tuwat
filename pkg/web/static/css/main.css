@@ -141,3 +141,30 @@ details[open] summary::before {
     float: left;
     max-width: inherit;
 }
+
+input.connection-state[type="checkbox"] {
+    display: none;
+}
+input.connection-state[type="checkbox"] + label {
+    color: #444;
+    font-size: 20px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    position: fixed;
+    right: 60px;
+}
+input.connection-state[type="checkbox"]:checked + label {
+    color: #000;
+}
+input.connection-state[type="checkbox"] + label:before {
+    display: inline-block;
+    content: "📶";
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+input.connection-state[type="checkbox"]:checked +label:before{
+    content:"📶";
+    opacity: 1;
+}
