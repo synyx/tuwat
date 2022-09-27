@@ -1,9 +1,7 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
@@ -20,7 +18,6 @@ func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *webHandler) wsalerts(s *websocket.Conn) {
-
 	defer func() {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
@@ -32,13 +29,28 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		}
 		_ = s.Close()
 	}()
+
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
-	for {
-		aggregate := h.aggregator.Alerts()
+	otelzap.Ctx(s.Request().Context()).Info("Registering", zap.Any("thing", h))
+	update := h.aggregator.Register(h)
+	defer h.aggregator.Unregister(h)
 
-		renderer(webContent{Content: aggregate})
-		time.Sleep(10 * time.Second)
+	for {
+		select {
+		case _, ok := <-update:
+			if !ok {
+				otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client")
+				return
+			}
+
+			otelzap.Ctx(s.Request().Context()).Debug("sending to websocket client")
+			aggregate := h.aggregator.Alerts()
+			renderer(webContent{Content: aggregate})
+		case <-s.Request().Context().Done():
+			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client")
+			return
+		}
 	}
 }
 
@@ -56,20 +68,20 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 
 	renderer := h.sseRenderer(w, req, "alerts.gohtml")
 
-	ping := time.NewTicker(10 * time.Second)
-	defer ping.Stop()
-	ticker := time.NewTicker(60 * time.Second)
-	defer ticker.Stop()
+	otelzap.Ctx(req.Context()).Info("Registering", zap.Any("thing", h))
+	update := h.aggregator.Register(h)
+	defer h.aggregator.Unregister(h)
 
 	for {
 		select {
-		case _ = <-ping.C:
-			_, _ = fmt.Fprint(w, "event: ping\n\n")
-			w.(http.Flusher).Flush()
-		case _ = <-ticker.C:
-			otelzap.Ctx(req.Context()).Info("sending to sse client")
-			aggregate := h.aggregator.Alerts()
+		case _, ok := <-update:
+			if !ok {
+				otelzap.Ctx(req.Context()).Debug("stop sending to sse client")
+				return
+			}
 
+			otelzap.Ctx(req.Context()).Debug("sending to sse client")
+			aggregate := h.aggregator.Alerts()
 			renderer(webContent{Content: aggregate})
 		case <-req.Context().Done():
 			otelzap.Ctx(req.Context()).Info("stop sending to sse client")

@@ -8,6 +8,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/synyx/gonagdash/pkg/config"
 	"github.com/synyx/gonagdash/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -32,9 +33,10 @@ type Alert struct {
 type Aggregator struct {
 	interval time.Duration
 
-	current    Aggregate
-	connectors []connectors.Connector
-	whereTempl *template.Template
+	current       Aggregate
+	connectors    []connectors.Connector
+	whereTempl    *template.Template
+	registrations map[any]chan<- bool
 }
 
 type result struct {
@@ -43,11 +45,23 @@ type result struct {
 	error     error
 }
 
+var (
+	regCount = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "gonagdash_aggregator_registrations",
+		Help: "Currently registered aggregation client.",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(regCount)
+}
+
 func NewAggregator(cfg *config.Config) *Aggregator {
 	return &Aggregator{
-		interval:   1 * time.Minute,
-		connectors: cfg.Connectors,
-		whereTempl: cfg.WhereTemplate,
+		interval:      1 * time.Minute,
+		connectors:    cfg.Connectors,
+		whereTempl:    cfg.WhereTemplate,
+		registrations: make(map[any]chan<- bool),
 	}
 }
 
@@ -151,8 +165,50 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 		CheckTime: time.Now(),
 		Alerts:    alerts,
 	}
+
+	a.notify(ctx)
 }
 
 func (a *Aggregator) Alerts() Aggregate {
 	return a.current
+}
+
+func (a *Aggregator) Register(handler any) <-chan bool {
+	if r, ok := a.registrations[handler]; ok {
+		close(r)
+		delete(a.registrations, handler)
+	}
+
+	r := make(chan bool, 1)
+	a.registrations[handler] = r
+	return r
+}
+
+func (a *Aggregator) Unregister(handler any) {
+	if r, ok := a.registrations[handler]; ok {
+		close(r)
+		delete(a.registrations, handler)
+	}
+}
+
+func (a *Aggregator) notify(ctx context.Context) {
+	otelzap.Ctx(ctx).Debug("Notifying", zap.Any("count", len(a.registrations)))
+
+	var toUnregister []any
+
+	for thing, r := range a.registrations {
+		select {
+		case r <- true:
+			otelzap.Ctx(ctx).Debug("Notified", zap.Any("thing", thing))
+		case <-time.After(1 * time.Second):
+			toUnregister = append(toUnregister, thing)
+		}
+	}
+
+	for _, thing := range toUnregister {
+		otelzap.Ctx(ctx).Debug("Force unregistering", zap.Any("thing", thing))
+		a.Unregister(thing)
+	}
+
+	regCount.Set(float64(len(a.registrations)))
 }
