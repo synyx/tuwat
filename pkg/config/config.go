@@ -43,7 +43,7 @@ type ConnectorConfig struct {
 	Patchmans     []patchman.Config     `toml:"patchman"`
 }
 
-func NewConfiguration() *Config {
+func NewConfiguration() (*Config, error) {
 
 	flag.Parse()
 
@@ -77,8 +77,15 @@ func NewConfiguration() *Config {
 		cfg.WebAddr = *fAddr
 	}
 
+	err := cfg.loadFile(*fConfigFile)
+
+	return cfg, err
+}
+
+func (cfg *Config) loadFile(file string) error {
+
 	var connectorConfigs ConnectorConfig
-	_, err := toml.DecodeFile(*fConfigFile, &connectorConfigs)
+	_, err := toml.DecodeFile(file, &connectorConfigs)
 	if err != nil {
 		panic(err)
 	}
@@ -111,11 +118,8 @@ func NewConfiguration() *Config {
 			},
 		}).
 		Parse(connectorConfigs.Main.WhereTemplate)
-	if err != nil {
-		panic(err)
-	}
 
-	return cfg
+	return err
 }
 
 func getHostname() string {

@@ -212,3 +212,8 @@ func (a *Aggregator) notify(ctx context.Context) {
 
 	regCount.Set(float64(len(a.registrations)))
 }
+
+func (a *Aggregator) Reconfigure(cfg *config.Config) {
+	a.connectors = cfg.Connectors
+	a.whereTempl = cfg.WhereTemplate
+}
