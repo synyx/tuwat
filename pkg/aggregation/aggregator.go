@@ -37,6 +37,7 @@ type Aggregator struct {
 	connectors    []connectors.Connector
 	whereTempl    *template.Template
 	registrations map[any]chan<- bool
+	mu            *sync.RWMutex
 }
 
 type result struct {
@@ -62,6 +63,7 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 		connectors:    cfg.Connectors,
 		whereTempl:    cfg.WhereTemplate,
 		registrations: make(map[any]chan<- bool),
+		mu:            new(sync.RWMutex),
 	}
 }
 
@@ -174,6 +176,9 @@ func (a *Aggregator) Alerts() Aggregate {
 }
 
 func (a *Aggregator) Register(handler any) <-chan bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	if r, ok := a.registrations[handler]; ok {
 		close(r)
 		delete(a.registrations, handler)
@@ -185,6 +190,9 @@ func (a *Aggregator) Register(handler any) <-chan bool {
 }
 
 func (a *Aggregator) Unregister(handler any) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	if r, ok := a.registrations[handler]; ok {
 		close(r)
 		delete(a.registrations, handler)
@@ -192,6 +200,9 @@ func (a *Aggregator) Unregister(handler any) {
 }
 
 func (a *Aggregator) notify(ctx context.Context) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
 	otelzap.Ctx(ctx).Debug("Notifying", zap.Any("count", len(a.registrations)))
 
 	var toUnregister []any
