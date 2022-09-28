@@ -22,8 +22,6 @@ type Collector struct {
 type Config struct {
 	Tag string
 	connectors.HTTPConfig
-
-	TargetBranch string
 }
 
 func NewCollector(cfg Config) *Collector {
@@ -74,7 +72,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 }
 
 func (c *Collector) collectMRs(ctx context.Context) ([]Alert, error) {
-	body, err := c.get("/merge_requests", ctx)
+	body, err := c.get("/api/v4/merge_requests", ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -113,9 +111,6 @@ func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	q.Add("order_by", "updated_at")
 	q.Add("sort", "desc")
 	q.Add("scope", "all")
-	if c.config.TargetBranch != "" {
-		q.Add("target_branch", c.config.TargetBranch)
-	}
 	req.URL.RawQuery = q.Encode()
 	url := req.URL.String()
 
