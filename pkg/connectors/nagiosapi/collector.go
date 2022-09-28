@@ -65,7 +65,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				Description: "Host down",
 				Details:     host.PluginOutput,
 				Links: map[string]string{
-					"⌂": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=1&host=" + hostName,
+					"🏠": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=1&host=" + hostName,
 				},
 			}
 			alerts = append(alerts, alert)
@@ -100,7 +100,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				Description: serviceName,
 				Details:     service.PluginOutput,
 				Links: map[string]string{
-					"⌂": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=2&host=" + hostName + "&service=" + serviceName,
+					"🏠": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=2&host=" + hostName + "&service=" + serviceName,
 				},
 			}
 			alerts = append(alerts, alert)

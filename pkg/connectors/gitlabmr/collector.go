@@ -62,7 +62,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Description: descr,
 			Details:     details,
 			Links: map[string]string{
-				"⌂": mr.WebUrl,
+				"🏠": mr.WebUrl,
 			},
 		}
 		alerts = append(alerts, alert)

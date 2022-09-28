@@ -112,8 +112,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"uid": sourceAlert.Labels["uid"],
 		}
 		if filter, err := json.Marshal(filterLabels); err == nil {
-			// See https://github.com/prometheus/alertmanager/issues/211
-			links["⌂"] = c.config.URL + "/#/alerts?filter=" + url.QueryEscape(string(filter))
+			links["🏠"] = c.config.URL + "/#/alerts?filter=" + url.QueryEscape(string(filter))
 		}
 
 		descr := sourceAlert.Labels["alertname"]

@@ -68,7 +68,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Description: "Host down",
 			Details:     host.Output,
 			Links: map[string]string{
-				"⌂": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName,
+				"🏠": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName,
 			},
 		}
 		alerts = append(alerts, alert)
@@ -100,7 +100,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Description: service.DisplayName,
 			Details:     service.LastCheckResult.Output,
 			Links: map[string]string{
-				"⌂": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name,
+				"🏠": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name,
 			},
 		}
 		alerts = append(alerts, alert)
