@@ -18,7 +18,8 @@ type Collector struct {
 }
 
 type Config struct {
-	Tag string
+	Tag          string
+	DashboardURL string
 	connectors.HTTPConfig
 }
 
@@ -66,6 +67,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.State(host.State),
 			Description: "Host down",
 			Details:     host.Output,
+			Links: map[string]string{
+				"⌂": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName,
+			},
 		}
 		alerts = append(alerts, alert)
 		problemHosts[host.DisplayName] = true
@@ -95,6 +99,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.State(service.State),
 			Description: service.DisplayName,
 			Details:     service.LastCheckResult.Output,
+			Links: map[string]string{
+				"⌂": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name,
+			},
 		}
 		alerts = append(alerts, alert)
 	}

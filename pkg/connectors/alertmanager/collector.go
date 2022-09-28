@@ -107,6 +107,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		if rb, ok := sourceAlert.Annotations["runbook"]; ok {
 			links["📖"] = rb
 		}
+		if filter, err := json.Marshal(sourceAlert.Labels); err == nil {
+			links["⌂"] = c.config.URL + "/#/alerts&filter=" + string(filter)
+		}
 
 		descr := sourceAlert.Labels["alertname"]
 		details := strings.Join(k8sLabels(sourceAlert.Annotations, "summary", "description"), "\n")

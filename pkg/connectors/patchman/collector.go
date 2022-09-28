@@ -80,6 +80,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.Critical,
 			Description: "Host Security critical",
 			Details:     details,
+			Links: map[string]string{
+				"⌂": c.config.URL + "/host/" + host.Hostname + "/",
+			},
 		}
 		alerts = append(alerts, alert)
 	}

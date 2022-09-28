@@ -18,7 +18,8 @@ type Collector struct {
 }
 
 type Config struct {
-	Tag string
+	Tag       string
+	NagiosURL string
 	connectors.HTTPConfig
 }
 
@@ -63,6 +64,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				State:       connectors.State(state),
 				Description: "Host down",
 				Details:     host.PluginOutput,
+				Links: map[string]string{
+					"⌂": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=1&host=" + hostName,
+				},
 			}
 			alerts = append(alerts, alert)
 			continue
@@ -93,6 +97,9 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				State:       connectors.State(state),
 				Description: serviceName,
 				Details:     service.PluginOutput,
+				Links: map[string]string{
+					"⌂": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=2&host=" + hostName + "&service=" + serviceName,
+				},
 			}
 			alerts = append(alerts, alert)
 		}
