@@ -120,10 +120,10 @@ summary {
 summary::-webkit-details-marker {
     display: none;
 }
-details summary::before {
+details summary::after {
     content: "🛈";
 }
-details[open] summary::before {
+details[open] summary::after {
     content: "⮾";
 }
 .status details summary {
