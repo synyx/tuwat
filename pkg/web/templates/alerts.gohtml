@@ -39,9 +39,6 @@
 
 {{if eq .Environment "test"}}
 <h3>Filtered Alerts</h3>
-<pre>
-    {{json .FilterRules}}
-</pre>
 <table class="widetable">
     <thead>
     <tr>
@@ -58,6 +55,7 @@
             </td>
             <td class="status {{.Status}}">
                 {{.What}}
+                <span><i>({{.Reason}})</i></span>
                 <details>
                     <summary>
                         {{range $key, $value := .Links}}

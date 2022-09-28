@@ -33,23 +33,20 @@ type webHandler struct {
 	routes []route
 	fs     fs.FS
 
-	aggregator         *aggregation.Aggregator
-	environment        string
-	blockConfiguration [][2]string
+	aggregator  *aggregation.Aggregator
+	environment string
 }
 
 type webContent struct {
 	Version     string
 	Environment string
 	Content     any
-	FilterRules [][2]string
 }
 
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
 	handler := &webHandler{
-		aggregator:         aggregator,
-		environment:        cfg.Environment,
-		blockConfiguration: cfg.BlockRules,
+		aggregator:  aggregator,
+		environment: cfg.Environment,
 	}
 
 	if cfg.Mode == "dev" {
@@ -142,7 +139,6 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 
 		data.Version = buildinfo.Version
 		data.Environment = h.environment
-		data.FilterRules = h.blockConfiguration
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
@@ -191,7 +187,6 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	return func(data webContent) {
 		data.Version = buildinfo.Version
 		data.Environment = h.environment
-		data.FilterRules = h.blockConfiguration
 
 		buf := new(bytes.Buffer)
 
@@ -248,7 +243,6 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 		data.Version = buildinfo.Version
 		data.Environment = h.environment
-		data.FilterRules = h.blockConfiguration
 
 		buf := new(bytes.Buffer)
 

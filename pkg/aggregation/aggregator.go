@@ -19,7 +19,7 @@ import (
 type Aggregate struct {
 	CheckTime time.Time
 	Alerts    []Alert
-	Blocked   []Alert
+	Blocked   []BlockedAlert
 }
 
 type Alert struct {
@@ -33,6 +33,11 @@ type Alert struct {
 	Labels  map[string]string
 }
 
+type BlockedAlert struct {
+	Alert
+	Reason string
+}
+
 type Aggregator struct {
 	interval time.Duration
 
@@ -43,18 +48,13 @@ type Aggregator struct {
 	mu            *sync.RWMutex // Protecting Registrations
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
-	blockRules    []blockRule
+	blockRules    []config.Rule
 }
 
 type result struct {
 	collector string
 	alerts    []connectors.Alert
 	error     error
-}
-
-type blockRule struct {
-	label string
-	re    *regexp.Regexp
 }
 
 var (
@@ -70,20 +70,11 @@ func init() {
 
 func NewAggregator(cfg *config.Config) *Aggregator {
 
-	var blockRules []blockRule
-	for _, r := range cfg.BlockRules {
-		rule := blockRule{
-			label: r[0],
-			re:    regexp.MustCompile(r[1]),
-		}
-		blockRules = append(blockRules, rule)
-	}
-
 	return &Aggregator{
 		interval:   cfg.Interval,
 		connectors: cfg.Connectors,
 		whereTempl: cfg.WhereTemplate,
-		blockRules: blockRules,
+		blockRules: cfg.Filter,
 
 		registrations: make(map[any]chan<- bool),
 		mu:            new(sync.RWMutex),
@@ -158,7 +149,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	a.cmu.RUnlock()
 
 	var alerts []Alert
-	var blockedAlerts []Alert
+	var blockedAlerts []BlockedAlert
 
 	for _, r := range results {
 		if r.error != nil {
@@ -192,10 +183,10 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				Labels:  al.Labels,
 			}
 
-			if a.allow(alert) {
+			if reason := a.allow(alert); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
-				blockedAlerts = append(blockedAlerts, alert)
+				blockedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: reason})
 			}
 		}
 	}
@@ -277,16 +268,31 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 
 	a.connectors = cfg.Connectors
 	a.whereTempl = cfg.WhereTemplate
+	a.blockRules = cfg.Filter
 }
 
-func (a *Aggregator) allow(alert Alert) bool {
+func (a *Aggregator) allow(alert Alert) string {
+outside:
 	for _, rule := range a.blockRules {
-		if rule.label == "_what" && rule.re.MatchString(alert.What) {
-			return false
-		} else if l, ok := alert.Labels[rule.label]; ok && rule.re.MatchString(l) {
-			return false
+		if rule.What != nil && rule.What.MatchString(alert.What) {
+			return rule.Description
+		} else {
+			res := make(map[string]*regexp.Regexp)
+			for l, r := range rule.Labels {
+				if x, ok := alert.Labels[l]; !ok {
+					// if one label does not match, leave entry alone
+					continue outside
+				} else {
+					res[x] = r
+				}
+			}
+			for a, b := range res {
+				if b.MatchString(a) {
+					return rule.Description
+				}
+			}
 		}
 	}
 
-	return true
+	return ""
 }

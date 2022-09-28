@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"regexp"
 	"text/template"
 	"time"
 
@@ -32,21 +33,28 @@ type Config struct {
 	Connectors    []connectors.Connector
 	WhereTemplate *template.Template
 	Interval      time.Duration
-	BlockRules    [][2]string
+	Filter        []Rule
 }
 
 type MainConfig struct {
-	WhereTemplate string
-	Interval      string
-	BlockRules    [][2]string
+	WhereTemplate string `toml:"where"`
+	Interval      string `toml:"interval"`
 }
+
+type Rule struct {
+	Description string                    `toml:"description"`
+	What        *regexp.Regexp            `toml:"what"`
+	Labels      map[string]*regexp.Regexp `toml:"labels"`
+}
+
 type ConnectorConfig struct {
-	Main          MainConfig            `json:"main"`
-	Alertmanagers []alertmanager.Config `toml:"alertmanager"`
-	GitlabMRs     []gitlabmr.Config     `toml:"gitlabmr"`
-	Icinga2s      []icinga2.Config      `toml:"icinga2"`
-	NagiosAPIs    []nagiosapi.Config    `toml:"nagiosapi"`
-	Patchmans     []patchman.Config     `toml:"patchman"`
+	Main          MainConfig               `toml:"main"`
+	Rules         []map[string]interface{} `toml:"rule"`
+	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
+	GitlabMRs     []gitlabmr.Config        `toml:"gitlabmr"`
+	Icinga2s      []icinga2.Config         `toml:"icinga2"`
+	NagiosAPIs    []nagiosapi.Config       `toml:"nagiosapi"`
+	Patchmans     []patchman.Config        `toml:"patchman"`
 }
 
 func NewConfiguration() (*Config, error) {
@@ -133,7 +141,25 @@ func (cfg *Config) loadFile(file string) error {
 		cfg.Interval = 1 * time.Minute
 	}
 
-	cfg.BlockRules = connectorConfigs.Main.BlockRules
+	for _, r := range connectorConfigs.Rules {
+		labels := make(map[string]*regexp.Regexp)
+		if labelFilters, ok := r["label"]; ok {
+			for n, l := range labelFilters.(map[string]interface{}) {
+				labels[n] = regexp.MustCompile(l.(string))
+			}
+		}
+		var what *regexp.Regexp
+		if w, ok := r["what"]; ok {
+			what = regexp.MustCompile(w.(string))
+		}
+
+		br := Rule{
+			Description: r["description"].(string),
+			What:        what,
+			Labels:      labels,
+		}
+		cfg.Filter = append(cfg.Filter, br)
+	}
 
 	return err
 }
