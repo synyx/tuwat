@@ -75,6 +75,8 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		for serviceName, service := range host.Services {
 			if service.CurrentState == "0" {
 				continue
+			} else if service.NotificationsEnabled == "0" {
+				continue
 			} else if service.ProblemHasBeenAcknowledged == "1" {
 				continue
 			}
