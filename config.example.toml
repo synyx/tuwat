@@ -1,0 +1,49 @@
+[main]
+# golang `text/template` describing where the alert is happening
+where = "{{with index .Labels \"Cluster\"}}{{.}}/{{end}}{{first .Labels \"Project\" \"Namespace\" \"Hostname\"}}"
+interval = "1m"
+
+
+[[rule]]
+description = "blocked because example cronjob"
+[rule.label]
+Namespace = "example"
+context = "cronjob"
+
+[[rule]]
+description = "blocked because not needed"
+what = "fooo service"
+
+
+[[icinga2]]
+Tag = "synyx"
+URL = "https://icinga2.synyx.coffee:5665"
+DashboardURL = "https://icinga2.synyx.coffee"
+Insecure = false
+User = "icingaweb2"
+Password = "aBaBaBaBaBaBaBaBaBaB"
+
+[[nagiosapi]]
+Tag = "dev"
+URL = "https://nagiosapi.example.com:8080"
+NagiosURL = "https://icinga.example.com"
+
+[[alertmanager]]
+Tag = "test"
+Cluster = "test"
+URL = "https://alertmanager.example.com"
+ClientID = "client"
+ClientSecret = "1f8867ff-eaeb-4451-926e-2643c07b91b1"
+TokenURL = "https://login.example.com/auth/realms/realm/protocol/openid-connect/token"
+
+[[gitlabmr]]
+Tag = "sysops"
+URL = "https://gitlab.example.com"
+BearerToken = "aBaBaBaBaBaBaBaBaBaB"
+
+[[patchman]]
+Tag = "dev"
+URL = "https://patchman.example.com"
+Insecure = true
+User = "user"
+Password = "password"
