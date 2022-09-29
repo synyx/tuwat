@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Collector struct {
+type Connector struct {
 	config Config
 
 	osCache     map[string]*OS
@@ -29,8 +29,8 @@ type Config struct {
 	connectors.HTTPConfig
 }
 
-func NewCollector(cfg Config) *Collector {
-	return &Collector{
+func NewConnector(cfg Config) *Connector {
+	return &Connector{
 		config:      cfg,
 		osCache:     make(map[string]*OS),
 		archCache:   make(map[string]*Arch),
@@ -38,11 +38,11 @@ func NewCollector(cfg Config) *Collector {
 	}
 }
 
-func (c *Collector) Tag() string {
+func (c *Connector) Tag() string {
 	return c.config.Tag
 }
 
-func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
+func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	hosts, err := c.collectHosts(ctx)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
-func (c *Collector) collectHosts(ctx context.Context) ([]Host, error) {
+func (c *Connector) collectHosts(ctx context.Context) ([]Host, error) {
 	var response []Host
 	next := "/api/host/"
 
@@ -164,7 +164,7 @@ func (c *Collector) collectHosts(ctx context.Context) ([]Host, error) {
 	return response, nil
 }
 
-func getCached[T any](ctx context.Context, c *Collector, cache map[string]*T, rawUrl string) (*T, error) {
+func getCached[T any](ctx context.Context, c *Connector, cache map[string]*T, rawUrl string) (*T, error) {
 	if element, ok := cache[rawUrl]; ok {
 		return element, nil
 	}
@@ -190,7 +190,7 @@ func getCached[T any](ctx context.Context, c *Collector, cache map[string]*T, ra
 	return &element, nil
 }
 
-func (c *Collector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
+func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

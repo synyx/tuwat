@@ -17,7 +17,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-type Collector struct {
+type Connector struct {
 	config Config
 	oauth2 clientcredentials.Config
 }
@@ -28,11 +28,11 @@ type Config struct {
 	connectors.HTTPConfig
 }
 
-func NewCollector(cfg Config) *Collector {
-	collector := &Collector{config: cfg}
+func NewConnector(cfg Config) *Connector {
+	c := &Connector{config: cfg}
 
 	if cfg.ClientId != "" {
-		collector.oauth2 = clientcredentials.Config{
+		c.oauth2 = clientcredentials.Config{
 			ClientID:       cfg.ClientId,
 			ClientSecret:   cfg.ClientSecret,
 			TokenURL:       cfg.TokenURL,
@@ -42,14 +42,14 @@ func NewCollector(cfg Config) *Collector {
 		}
 	}
 
-	return collector
+	return c
 }
 
-func (c *Collector) Tag() string {
+func (c *Connector) Tag() string {
 	return c.config.Tag
 }
 
-func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
+func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	sourceAlerts, err := c.collectAlerts(ctx)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func k8sLabels(haystack map[string]string, needles ...string) []string {
 	return out
 }
 
-func (c *Collector) collectAlerts(ctx context.Context) ([]Alert, error) {
+func (c *Connector) collectAlerts(ctx context.Context) ([]Alert, error) {
 	body, err := c.get("/api/v2/alerts", ctx)
 	if err != nil {
 		return nil, err
@@ -177,7 +177,7 @@ func (c *Collector) collectAlerts(ctx context.Context) ([]Alert, error) {
 	return response, nil
 }
 
-func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
 
 	var client *http.Client
 	if c.config.ClientId != "" {

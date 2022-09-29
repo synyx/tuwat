@@ -13,7 +13,7 @@ import (
 	"github.com/synyx/gonagdash/pkg/connectors"
 )
 
-type Collector struct {
+type Connector struct {
 	config Config
 }
 
@@ -23,15 +23,15 @@ type Config struct {
 	connectors.HTTPConfig
 }
 
-func NewCollector(cfg Config) *Collector {
-	return &Collector{cfg}
+func NewConnector(cfg Config) *Connector {
+	return &Connector{cfg}
 }
 
-func (c *Collector) Tag() string {
+func (c *Connector) Tag() string {
 	return c.config.Tag
 }
 
-func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
+func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	hosts, err := c.collectHosts(ctx)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
-func (c *Collector) collectServices(ctx context.Context) ([]ServiceAttrs, error) {
+func (c *Connector) collectServices(ctx context.Context) ([]ServiceAttrs, error) {
 	body, err := c.get("/v1/objects/services", ctx)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (c *Collector) collectServices(ctx context.Context) ([]ServiceAttrs, error)
 	return response.Results, nil
 }
 
-func (c *Collector) collectHosts(ctx context.Context) ([]HostAttrs, error) {
+func (c *Connector) collectHosts(ctx context.Context) ([]HostAttrs, error) {
 	body, err := c.get("/v1/objects/hosts", ctx)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (c *Collector) collectHosts(ctx context.Context) ([]HostAttrs, error) {
 	return response.Results, nil
 }
 
-func (c *Collector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

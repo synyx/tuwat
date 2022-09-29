@@ -105,19 +105,19 @@ func (cfg *Config) loadFile(file string) error {
 	}
 
 	for _, connectorConfig := range connectorConfigs.Alertmanagers {
-		cfg.Connectors = append(cfg.Connectors, alertmanager.NewCollector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, alertmanager.NewConnector(connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.GitlabMRs {
-		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewCollector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewConnector(connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.Icinga2s {
-		cfg.Connectors = append(cfg.Connectors, icinga2.NewCollector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, icinga2.NewConnector(connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.NagiosAPIs {
-		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewCollector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewConnector(connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.Patchmans {
-		cfg.Connectors = append(cfg.Connectors, patchman.NewCollector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(connectorConfig))
 	}
 
 	cfg.WhereTemplate, err = template.New("where").

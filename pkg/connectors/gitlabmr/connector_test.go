@@ -10,7 +10,7 @@ import (
 	"github.com/synyx/gonagdash/pkg/connectors"
 )
 
-func TestCollector(t *testing.T) {
+func TestConnector(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		_, _ = res.Write([]byte(mockResponse))
@@ -24,8 +24,8 @@ func TestCollector(t *testing.T) {
 		},
 	}
 
-	var collector connectors.Connector = NewCollector(cfg)
-	alerts, err := collector.Collect(context.Background())
+	var connector connectors.Connector = NewConnector(cfg)
+	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

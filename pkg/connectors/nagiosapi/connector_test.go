@@ -9,7 +9,7 @@ import (
 	"github.com/synyx/gonagdash/pkg/connectors"
 )
 
-func TestNagiosCollector(t *testing.T) {
+func TestNagiosConnector(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		_, _ = res.Write([]byte(nagiosApiMockResponse))
@@ -23,8 +23,8 @@ func TestNagiosCollector(t *testing.T) {
 		},
 	}
 
-	var collector connectors.Connector = NewCollector(cfg)
-	alerts, err := collector.Collect(context.Background())
+	var connector connectors.Connector = NewConnector(cfg)
+	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -52,9 +52,9 @@ type Aggregator struct {
 }
 
 type result struct {
-	collector string
-	alerts    []connectors.Alert
-	error     error
+	tag    string
+	alerts []connectors.Alert
+	error  error
 }
 
 var (
@@ -118,24 +118,23 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	defer cancel()
 
 	a.cmu.RLock()
-	collectors := a.connectors
-	a.cmu.RUnlock()
-
-	for _, c := range collectors {
-		otelzap.Ctx(ctx).Debug("Adding collection", zap.String("collector", c.Tag()))
+	for _, c := range a.connectors {
+		otelzap.Ctx(ctx).Debug("Adding collection", zap.String("tag", c.Tag()))
 		wg.Add(1)
 		go func(c connectors.Connector) {
 			defer wg.Done()
 
 			alerts, err := c.Collect(ctx)
-			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("collector", c.Tag()), zap.Int("count", len(alerts)), zap.Error(err))
+			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("tag", c.Tag()), zap.Int("count", len(alerts)), zap.Error(err))
 			collect <- result{
-				collector: c.Tag(),
-				alerts:    alerts,
-				error:     err,
+				tag:    c.Tag(),
+				alerts: alerts,
+				error:  err,
 			}
 		}(c)
 	}
+	a.cmu.RUnlock()
+
 	wg.Wait()
 	otelzap.Ctx(ctx).Debug("Collection end")
 	close(collect)
@@ -155,7 +154,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 		if r.error != nil {
 			alert := Alert{
 				Where:   "gonagdash",
-				Tag:     r.collector,
+				Tag:     r.tag,
 				What:    "Collection Failure",
 				Details: r.error.Error(),
 				When:    0 * time.Second,
@@ -174,7 +173,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 
 			alert := Alert{
 				Where:   where,
-				Tag:     r.collector,
+				Tag:     r.tag,
 				What:    al.Description,
 				Details: al.Details,
 				When:    time.Now().Sub(al.Start),

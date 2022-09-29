@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Collector struct {
+type Connector struct {
 	config Config
 }
 
@@ -23,15 +23,15 @@ type Config struct {
 	connectors.HTTPConfig
 }
 
-func NewCollector(cfg Config) *Collector {
-	return &Collector{cfg}
+func NewConnector(cfg Config) *Connector {
+	return &Connector{cfg}
 }
 
-func (c *Collector) Tag() string {
+func (c *Connector) Tag() string {
 	return c.config.Tag
 }
 
-func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
+func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	content, err := c.collectHosts(ctx)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (c *Collector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
-func (c *Collector) collectHosts(ctx context.Context) (map[string]Host, error) {
+func (c *Connector) collectHosts(ctx context.Context) (map[string]Host, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+"/state", nil)
 	if err != nil {

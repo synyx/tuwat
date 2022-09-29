@@ -7,6 +7,10 @@ import (
 
 type Connector interface {
 	Tag() string
+	Collector
+}
+
+type Collector interface {
 	Collect(ctx context.Context) ([]Alert, error)
 }
 
