@@ -85,6 +85,10 @@ th {
     color: #eff0f2;
 }
 
+.status {
+    font-weight: bold;
+}
+
 .status.green {
     background-color: #269926;
     color: white;
@@ -151,6 +155,7 @@ details[open] summary::after {
     font-size: 0.75em;
     opacity: 0.8;
     width: 95%;
+    font-weight: normal;
 }
 
 input.connection-state[type="checkbox"] {
