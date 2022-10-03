@@ -71,6 +71,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			Labels: map[string]string{
 				"Hostname": host.Hostname,
 				"Source":   c.config.URL,
+				"Type":     "Host",
 				"tags":     host.Tags,
 				"os":       os.Name,
 				"arch":     arch.Name,

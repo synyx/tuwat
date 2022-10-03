@@ -62,6 +62,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Hostname": host.DisplayName,
 				"Source":   c.config.URL,
 				"groups":   strings.Join(host.Groups, ","),
+				"Type":     "Host",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(host.State),

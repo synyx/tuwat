@@ -59,6 +59,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				Labels: map[string]string{
 					"Hostname": hostName,
 					"Source":   c.config.URL,
+					"Type":     "Host",
 				},
 				Start:       time.Unix(stateChange, 0),
 				State:       connectors.State(state),
@@ -94,6 +95,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				Labels: map[string]string{
 					"Hostname": hostName,
 					"Source":   c.config.URL,
+					"Type":     "Service",
 				},
 				Start:       time.Unix(stateChange, 0),
 				State:       connectors.State(state),
