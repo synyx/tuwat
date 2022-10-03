@@ -14,6 +14,8 @@ type Collector interface {
 	Collect(ctx context.Context) ([]Alert, error)
 }
 
+type SilencerFunc func(ctx context.Context, duration time.Duration, user string) error
+
 type Alert struct {
 	Labels      map[string]string
 	Start       time.Time
@@ -21,6 +23,7 @@ type Alert struct {
 	Description string
 	Details     string
 	Links       map[string]string
+	Silence     SilencerFunc
 }
 
 type State int

@@ -72,6 +72,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"🏠": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName,
 			},
 		}
+		alert.Silence = c.createSilencer(alert)
 		alerts = append(alerts, alert)
 		problemHosts[host.DisplayName] = true
 	}
@@ -95,6 +96,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Zone":     service.Zone,
 				"Source":   c.config.URL,
 				"groups":   strings.Join(service.Groups, ","),
+				"Type":     "Service",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(service.State),
@@ -104,6 +106,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"🏠": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name,
 			},
 		}
+		alert.Silence = c.createSilencer(alert)
 		alerts = append(alerts, alert)
 	}
 

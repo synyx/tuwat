@@ -59,6 +59,8 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 
 	handler.routes = []route{
 		newRoute("GET", "/", handler.alerts),
+		newRoute("GET", "/alerts", handler.alerts),
+		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
 		newRoute("GET", "/ws/alerts", websocket.Handler(handler.wsalerts).ServeHTTP),
 		newRoute("GET", "/sse/alerts", handler.ssealerts),
 	}
@@ -135,6 +137,39 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 
 	return func(w http.ResponseWriter, statusCode int, data webContent) {
 		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(statusCode)
+
+		data.Version = buildinfo.Version
+		data.Environment = h.environment
+
+		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
+		if err != nil {
+			otelzap.Ctx(req.Context()).Error("template execution failed", zap.Error(err))
+			panic(err)
+		}
+	}
+}
+
+func (h *webHandler) partialRenderer(req *http.Request, patterns ...string) renderFunc {
+	var templateFiles []string
+	var templateDefinition string
+
+	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition = "base"
+
+	funcs := template.FuncMap{
+		"niceDuration": niceDuration,
+		"json":         formatJson,
+	}
+	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	if err != nil {
+		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
+		panic(err)
+	}
+
+	return func(w http.ResponseWriter, statusCode int, data webContent) {
+		w.Header().Set("Content-Type", "text/vnd.turbo-stream.html")
 		w.WriteHeader(statusCode)
 
 		data.Version = buildinfo.Version

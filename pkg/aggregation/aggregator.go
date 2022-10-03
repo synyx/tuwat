@@ -23,6 +23,7 @@ type Aggregate struct {
 }
 
 type Alert struct {
+	Id      string
 	Where   string
 	Tag     string
 	What    string
@@ -31,6 +32,7 @@ type Alert struct {
 	Status  string
 	Links   map[string]string
 	Labels  map[string]string
+	Silence connectors.SilencerFunc
 }
 
 type BlockedAlert struct {
@@ -52,9 +54,10 @@ type Aggregator struct {
 }
 
 type result struct {
-	tag    string
-	alerts []connectors.Alert
-	error  error
+	tag       string
+	alerts    []connectors.Alert
+	error     error
+	connector connectors.Connector
 }
 
 var (
@@ -127,9 +130,10 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 			alerts, err := c.Collect(ctx)
 			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("tag", c.Tag()), zap.Int("count", len(alerts)), zap.Error(err))
 			collect <- result{
-				tag:    c.Tag(),
-				alerts: alerts,
-				error:  err,
+				tag:       c.Tag(),
+				alerts:    alerts,
+				error:     err,
+				connector: c,
 			}
 		}(c)
 	}
@@ -172,6 +176,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 			}
 
 			alert := Alert{
+				Id:      connectors.RandomAlertId(),
 				Where:   where,
 				Tag:     r.tag,
 				What:    al.Description,
@@ -180,6 +185,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				Status:  al.State.String(),
 				Links:   al.Links,
 				Labels:  al.Labels,
+				Silence: al.Silence,
 			}
 
 			if reason := a.allow(alert); reason == "" {
@@ -294,4 +300,20 @@ outside:
 	}
 
 	return ""
+}
+
+func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
+	var alert Alert
+
+	a.amu.RLock()
+	for _, a := range a.current.Alerts {
+		if a.Id == alertId {
+			alert = a
+		}
+	}
+	a.amu.RUnlock()
+
+	if alert.Silence != nil {
+		alert.Silence(ctx, 24*time.Hour, user)
+	}
 }

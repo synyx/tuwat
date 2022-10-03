@@ -69,6 +69,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 					"🏠": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=1&host=" + hostName,
 				},
 			}
+			alert.Silence = c.createSilencer(alert)
 			alerts = append(alerts, alert)
 			continue
 		}
@@ -105,6 +106,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 					"🏠": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=2&host=" + hostName + "&service=" + serviceName,
 				},
 			}
+			alert.Silence = c.createSilencer(alert)
 			alerts = append(alerts, alert)
 		}
 	}
