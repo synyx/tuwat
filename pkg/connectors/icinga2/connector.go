@@ -109,7 +109,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
-func (c *Connector) collectServices(ctx context.Context) ([]ServiceAttrs, error) {
+func (c *Connector) collectServices(ctx context.Context) ([]serviceAttrs, error) {
 	body, err := c.get("/v1/objects/services", ctx)
 	if err != nil {
 		return nil, err

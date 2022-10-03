@@ -1,6 +1,6 @@
 package patchman
 
-type Host struct {
+type host struct {
 	Hostname            string `json:"hostname"`
 	LastReport          string `json:"lastreport"`
 	RebootRequired      bool   `json:"reboot_required"`
@@ -13,15 +13,15 @@ type Host struct {
 	DomainURL           string `json:"domain"`
 }
 
-type OS struct {
+type os struct {
 	Name    string `json:"name"`
 	OSGroup string `json:"osgroup"`
 }
 
-type Arch struct {
+type arch struct {
 	Name string `json:"name"`
 }
 
-type Domain struct {
+type domain struct {
 	Name string `json:"name"`
 }

@@ -1,26 +1,26 @@
 package gitlabmr
 
-type Alert struct {
+type mergeRequest struct {
 	Title      string     `json:"title"`
 	Labels     []string   `json:"labels"`
 	UpdatedAt  string     `json:"updated_at"`
-	Author     Person     `json:"author"`
-	Assignee   Person     `json:"assignee"`
+	Author     person     `json:"author"`
+	Assignee   person     `json:"assignee"`
 	WebUrl     string     `json:"web_url"`
-	References References `json:"references"`
-	Milestone  Milestone  `json:"milestone"`
+	References references `json:"references"`
+	Milestone  milestone  `json:"milestone"`
 }
 
-type Person struct {
+type person struct {
 	Name string `json:"name"`
 }
 
-type References struct {
+type references struct {
 	Short    string `json:"short"`
 	Relative string `json:"relative"`
 	Full     string `json:"full"`
 }
 
-type Milestone struct {
+type milestone struct {
 	Title string `json:"title"`
 }

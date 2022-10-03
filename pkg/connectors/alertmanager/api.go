@@ -1,13 +1,13 @@
 package alertmanager
 
-type Alert struct {
+type alert struct {
 	Labels      map[string]string `json:"labels"`
 	StartsAt    string            `json:"startsAt"`
 	Annotations map[string]string `json:"annotations"`
-	Status      Status            `json:"status"`
+	Status      status            `json:"status"`
 }
 
-type Status struct {
+type status struct {
 	State      string   `json:"state"`
 	SilencedBy []string `json:"silencedBy"`
 }

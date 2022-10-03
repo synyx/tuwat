@@ -20,12 +20,12 @@ type Host struct {
 }
 
 type ServiceResponse struct {
-	Results []ServiceAttrs `json:"results"`
+	Results []serviceAttrs `json:"results"`
 }
-type ServiceAttrs struct {
-	Service Service `json:"attrs"`
+type serviceAttrs struct {
+	Service service `json:"attrs"`
 }
-type Service struct {
+type service struct {
 	HostName            string      `json:"host_name"`
 	Name                string      `json:"name"`
 	DisplayName         string      `json:"display_name"`
@@ -35,12 +35,12 @@ type Service struct {
 	Acknowledgement     int         `json:"acknowledgement"`
 	DowntimeDepth       int         `json:"downtime_depth"`
 	EnableNotifications bool        `json:"enable_notifications"`
-	LastCheckResult     CheckResult `json:"last_check_result"`
+	LastCheckResult     checkResult `json:"last_check_result"`
 	MaxCheckAttempts    int         `json:"max_check_attempts"`
 	CheckAttempt        int         `json:"check_attempt"`
 	Groups              []string    `json:"groups"`
 }
 
-type CheckResult struct {
+type checkResult struct {
 	Output string `json:"output"`
 }

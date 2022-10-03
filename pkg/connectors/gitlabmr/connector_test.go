@@ -36,7 +36,7 @@ func TestConnector(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	var foo []Alert
+	var foo []mergeRequest
 	err := json.Unmarshal([]byte(mockResponse), &foo)
 	if err != nil {
 		t.Fatal(err)

@@ -159,7 +159,7 @@ func k8sLabels(haystack map[string]string, needles ...string) []string {
 	return out
 }
 
-func (c *Connector) collectAlerts(ctx context.Context) ([]Alert, error) {
+func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 	body, err := c.get("/api/v2/alerts", ctx)
 	if err != nil {
 		return nil, err
@@ -168,7 +168,7 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]Alert, error) {
 
 	decoder := json.NewDecoder(body)
 
-	var response []Alert
+	var response []alert
 	err = decoder.Decode(&response)
 	if err != nil {
 		return nil, err

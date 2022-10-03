@@ -19,9 +19,9 @@ import (
 type Connector struct {
 	config Config
 
-	osCache     map[string]*OS
-	archCache   map[string]*Arch
-	domainCache map[string]*Domain
+	osCache     map[string]*os
+	archCache   map[string]*arch
+	domainCache map[string]*domain
 }
 
 type Config struct {
@@ -32,9 +32,9 @@ type Config struct {
 func NewConnector(cfg Config) *Connector {
 	return &Connector{
 		config:      cfg,
-		osCache:     make(map[string]*OS),
-		archCache:   make(map[string]*Arch),
-		domainCache: make(map[string]*Domain),
+		osCache:     make(map[string]*os),
+		archCache:   make(map[string]*arch),
+		domainCache: make(map[string]*domain),
 	}
 }
 
@@ -90,8 +90,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
-func (c *Connector) collectHosts(ctx context.Context) ([]Host, error) {
-	var response []Host
+func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
+	var response []host
 	next := "/api/host/"
 
 	for next != "" {
@@ -141,7 +141,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]Host, error) {
 
 		// while the array contains values
 		for decoder.More() {
-			var h Host
+			var h host
 			// decode an array value (Message)
 			err := decoder.Decode(&h)
 			if err != nil {

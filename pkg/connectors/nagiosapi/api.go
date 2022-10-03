@@ -1,11 +1,11 @@
 package nagiosapi
 
-type Response struct {
-	Content map[string]Host `json:"content"`
+type response struct {
+	Content map[string]host `json:"content"`
 	Success bool            `json:"success"`
 }
 
-type Host struct {
+type host struct {
 	NotificationsEnabled       string             `json:"notifications_enabled"`
 	CurrentState               string             `json:"current_state"`
 	PluginOutput               string             `json:"plugin_output"`
@@ -15,10 +15,10 @@ type Host struct {
 	CurrentAttempt             string             `json:"current_attempt"`
 	MaxAttempts                string             `json:"max_attempts"`
 	ScheduledDowntimeDepth     string             `json:"scheduled_downtime_depth"`
-	Services                   map[string]Service `json:"services"`
+	Services                   map[string]service `json:"services"`
 }
 
-type Service struct {
+type service struct {
 	CurrentState               string `json:"current_state"`
 	PluginOutput               string `json:"plugin_output"`
 	LastCheck                  string `json:"last_check"`

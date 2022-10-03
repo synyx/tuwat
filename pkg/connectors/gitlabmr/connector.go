@@ -71,7 +71,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
-func (c *Connector) collectMRs(ctx context.Context) ([]Alert, error) {
+func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
 	body, err := c.get("/api/v4/merge_requests", ctx)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (c *Connector) collectMRs(ctx context.Context) ([]Alert, error) {
 
 	decoder := json.NewDecoder(buf)
 
-	var response []Alert
+	var response []mergeRequest
 	err = decoder.Decode(&response)
 	if err != nil {
 		otelzap.Ctx(ctx).DPanic("Cannot parse",
