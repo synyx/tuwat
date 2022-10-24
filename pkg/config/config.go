@@ -120,6 +120,11 @@ func (cfg *Config) loadFile(file string) error {
 		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(connectorConfig))
 	}
 
+	whereTemplate := connectorConfigs.Main.WhereTemplate
+	if whereTemplate == "" {
+		whereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
+	}
+
 	cfg.WhereTemplate, err = template.New("where").
 		Funcs(map[string]any{
 			"first": func(m map[string]string, x ...string) string {
@@ -132,6 +137,9 @@ func (cfg *Config) loadFile(file string) error {
 			},
 		}).
 		Parse(connectorConfigs.Main.WhereTemplate)
+	if err != nil {
+		return err
+	}
 
 	if connectorConfigs.Main.Interval != "" {
 		if cfg.Interval, err = time.ParseDuration(connectorConfigs.Main.Interval); err != nil {
