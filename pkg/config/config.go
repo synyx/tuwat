@@ -129,7 +129,7 @@ func (cfg *Config) loadFile(file string) error {
 		Funcs(map[string]any{
 			"first": func(m map[string]string, x ...string) string {
 				for _, y := range x {
-					if z, ok := m[y]; ok {
+					if z, ok := m[y]; ok && z != "" {
 						return z
 					}
 				}
