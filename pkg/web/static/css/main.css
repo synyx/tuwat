@@ -54,6 +54,10 @@ th {
     white-space: break-spaces;
 }
 
+.filtered {
+    opacity: 60%;
+}
+
 .desc {
     font-size: 0.8em;
 }
@@ -156,6 +160,9 @@ details[open] summary::after {
     opacity: 0.8;
     width: 95%;
     font-weight: normal;
+}
+.status summary a {
+    text-decoration: none;
 }
 
 input.connection-state[type="checkbox"] {
