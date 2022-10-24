@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	html "html/template"
 	"io"
 	"math"
@@ -172,5 +173,24 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 		return nil, err
 	}
 
-	return res.Body, nil
+
+	if res.StatusCode >= 200 && res.StatusCode < 300 {
+		return res.Body, nil
+	}
+
+	if ct := res.Header.Get("Content-Type"); ct == "application/json" {
+		e := struct {
+			Error  int    `json:"error"`
+			Status string `json:"status"`
+		}{}
+		decoder := json.NewDecoder(res.Body)
+
+		err = decoder.Decode(&e)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("failed to get: %s", e.Status)
+	}
+
+	return nil, fmt.Errorf("failed to get, unknown status code: %d", res.StatusCode)
 }
