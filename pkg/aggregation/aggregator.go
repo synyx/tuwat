@@ -168,7 +168,14 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 		}
 
 		for _, al := range r.alerts {
-			where := al.Labels["Hostname"]
+			labels := make(map[string]string)
+			for k, v := range al.Labels {
+				if v != "" {
+					labels[k] = v
+				}
+			}
+
+			where := labels["Hostname"]
 			buf := new(strings.Builder)
 			err := whereTempl.ExecuteTemplate(buf, "where", al)
 			if err == nil {
