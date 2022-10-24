@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/synyx/gonagdash/pkg/config"
-	"github.com/synyx/gonagdash/pkg/web/actuator"
+	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/web/actuator"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

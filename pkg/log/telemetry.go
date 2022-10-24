@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/synyx/gonagdash/pkg/buildinfo"
-	"github.com/synyx/gonagdash/pkg/config"
-	propagation2 "github.com/synyx/gonagdash/pkg/log/propagation"
+	"github.com/synyx/tuwat/pkg/buildinfo"
+	"github.com/synyx/tuwat/pkg/config"
+	propagation2 "github.com/synyx/tuwat/pkg/log/propagation"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"

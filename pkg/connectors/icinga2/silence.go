@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/synyx/gonagdash/pkg/buildinfo"
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/buildinfo"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 func (c *Connector) createSilencer(alert connectors.Alert) connectors.SilencerFunc {

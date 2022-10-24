@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/synyx/gonagdash/pkg/buildinfo"
+	"github.com/synyx/tuwat/pkg/buildinfo"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )

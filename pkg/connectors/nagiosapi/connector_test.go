@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 func TestNagiosConnector(t *testing.T) {

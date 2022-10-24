@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 func TestConnector(t *testing.T) {

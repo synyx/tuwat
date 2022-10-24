@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/synyx/gonagdash/pkg/aggregation"
-	"github.com/synyx/gonagdash/pkg/buildinfo"
-	"github.com/synyx/gonagdash/pkg/config"
+	"github.com/synyx/tuwat/pkg/aggregation"
+	"github.com/synyx/tuwat/pkg/buildinfo"
+	"github.com/synyx/tuwat/pkg/config"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"

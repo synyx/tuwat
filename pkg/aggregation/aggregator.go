@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/synyx/gonagdash/pkg/config"
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
@@ -63,7 +63,7 @@ type result struct {
 
 var (
 	regCount = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "gonagdash_aggregator_registrations",
+		Name: "tuwat_aggregator_registrations",
 		Help: "Currently registered aggregation client.",
 	})
 )
@@ -158,7 +158,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	for _, r := range results {
 		if r.error != nil {
 			alert := Alert{
-				Where:   "gonagdash",
+				Where:   "tuwat",
 				Tag:     r.tag,
 				What:    "Collection Failure",
 				Details: r.error.Error(),

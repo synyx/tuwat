@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/synyx/gonagdash/pkg/config"
+	"github.com/synyx/tuwat/pkg/config"
 )
 
 //go:embed static

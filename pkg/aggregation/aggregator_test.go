@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/synyx/gonagdash/pkg/config"
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 func TestAggregation(t *testing.T) {

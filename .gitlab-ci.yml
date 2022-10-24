@@ -30,7 +30,7 @@ build:app:
   stage: build
   extends: .go:base
   script:
-    - go build -tags netgo -ldflags="${GO_LD_FLAGS}" -o ${BIN_NAME} ./cmd/gonagdash
+    - go build -tags netgo -ldflags="${GO_LD_FLAGS}" -o ${BIN_NAME} ./cmd/tuwat
   variables:
     GO_LD_FLAGS: "-extldflags -static -X '${GO_PROJECT}/pkg/buildinfo.GitSHA=${CI_COMMIT_SHA}'"
     CGO_ENABLED: '0'

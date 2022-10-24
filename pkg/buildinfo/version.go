@@ -1,7 +1,7 @@
 package buildinfo
 
 var (
-	Service = "gonagdash"
+	Service = "tuwat"
 	GitSHA  string
 	Version = "dev"
 )

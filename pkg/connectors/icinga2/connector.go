@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 type Connector struct {
@@ -172,7 +172,6 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	if err != nil {
 		return nil, err
 	}
-
 
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
 		return res.Body, nil

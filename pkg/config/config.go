@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/synyx/gonagdash/pkg/connectors"
-	"github.com/synyx/gonagdash/pkg/connectors/alertmanager"
-	"github.com/synyx/gonagdash/pkg/connectors/gitlabmr"
-	"github.com/synyx/gonagdash/pkg/connectors/icinga2"
-	"github.com/synyx/gonagdash/pkg/connectors/nagiosapi"
-	"github.com/synyx/gonagdash/pkg/connectors/patchman"
+	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
+	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
+	"github.com/synyx/tuwat/pkg/connectors/icinga2"
+	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
+	"github.com/synyx/tuwat/pkg/connectors/patchman"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -21,7 +21,7 @@ var fInstance = flag.String("instance", "0", "Running instance identifier")
 var fMode = flag.String("mode", "dev", "Mode to use (dev, prod)")
 var fEnvironment = flag.String("environment", "test", "(test, stage, prod)")
 var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application to port")
-var fConfigFile = flag.String("conf", "/etc/gonagdash.toml", "Configuration file")
+var fConfigFile = flag.String("conf", "/etc/tuwat.toml", "Configuration file")
 
 type Config struct {
 	WebAddr       string

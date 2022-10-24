@@ -1,4 +1,4 @@
-module github.com/synyx/gonagdash
+module github.com/synyx/tuwat
 
 go 1.19
 

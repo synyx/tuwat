@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/synyx/gonagdash/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 func TestIcinga2Connector(t *testing.T) {
