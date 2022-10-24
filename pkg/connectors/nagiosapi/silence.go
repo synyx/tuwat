@@ -23,7 +23,7 @@ func (c *Connector) createSilencer(alert connectors.Alert) connectors.SilencerFu
 func (c *Connector) Silence(ctx context.Context, alert connectors.Alert, duration time.Duration, user string) error {
 	payload := map[string]interface{}{
 		"host":    alert.Labels["Hostname"],
-		"service": alert.Details,
+		"service": alert.Description,
 		"comment": fmt.Sprintf("%s: silenced via %s", user, buildinfo.Service),
 		"author":  user,
 		"expire":  duration / time.Minute,
