@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	html "html/template"
 	"io"
 	"math"
 	"net/http"
@@ -68,8 +69,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.State(host.State),
 			Description: "Host down",
 			Details:     host.Output,
-			Links: map[string]string{
-				"🏠": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName,
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 			},
 		}
 		alert.Silence = c.createSilencer(alert)
@@ -102,8 +103,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.State(service.State),
 			Description: service.DisplayName,
 			Details:     service.LastCheckResult.Output,
-			Links: map[string]string{
-				"🏠": c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name,
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 			},
 		}
 		alert.Silence = c.createSilencer(alert)

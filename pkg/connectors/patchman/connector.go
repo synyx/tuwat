@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	html "html/template"
 	"io"
 	"net/http"
 	"net/url"
@@ -81,8 +82,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.Critical,
 			Description: "Host Security critical",
 			Details:     details,
-			Links: map[string]string{
-				"🏠": c.config.URL + "/host/" + host.Hostname + "/",
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + c.config.URL + "/host/" + url.QueryEscape(host.Hostname) + "/\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 			},
 		}
 		alerts = append(alerts, alert)

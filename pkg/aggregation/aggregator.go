@@ -2,11 +2,12 @@ package aggregation
 
 import (
 	"context"
+	html "html/template"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
-	"text/template"
+	text "text/template"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,7 +31,7 @@ type Alert struct {
 	Details string
 	When    time.Duration
 	Status  string
-	Links   map[string]string
+	Links   []html.HTML
 	Labels  map[string]string
 	Silence connectors.SilencerFunc
 }
@@ -45,7 +46,7 @@ type Aggregator struct {
 
 	current       Aggregate
 	connectors    []connectors.Connector
-	whereTempl    *template.Template
+	whereTempl    *text.Template
 	registrations map[any]chan<- bool
 	mu            *sync.RWMutex // Protecting Registrations
 	cmu           *sync.RWMutex // Protecting Configuration
@@ -191,7 +192,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				When:    time.Now().Sub(al.Start),
 				Status:  al.State.String(),
 				Links:   al.Links,
-				Labels:  al.Labels,
+				Labels:  labels,
 				Silence: al.Silence,
 			}
 

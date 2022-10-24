@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	html "html/template"
 	"net/http"
 	"strconv"
 	"time"
@@ -65,8 +66,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				State:       connectors.State(state),
 				Description: "Host down",
 				Details:     host.PluginOutput,
-				Links: map[string]string{
-					"🏠": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=1&host=" + hostName,
+				Links: []html.HTML{
+					html.HTML("<a href=\"" + c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=1&host=" + hostName + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 				},
 			}
 			alert.Silence = c.createSilencer(alert)
@@ -102,8 +103,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				State:       connectors.State(state),
 				Description: serviceName,
 				Details:     service.PluginOutput,
-				Links: map[string]string{
-					"🏠": c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=2&host=" + hostName + "&service=" + serviceName,
+				Links: []html.HTML{
+					html.HTML("<a href=\"" + c.config.NagiosURL + "/cgi-bin/extinfo.cgi?type=2&host=" + hostName + "&service=" + serviceName + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 				},
 			}
 			alert.Silence = c.createSilencer(alert)

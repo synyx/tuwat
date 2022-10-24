@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	html "html/template"
 	"io"
 	"net/http"
 	"strings"
@@ -62,8 +63,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       connectors.Warning,
 			Description: descr,
 			Details:     details,
-			Links: map[string]string{
-				"🏠": mr.WebUrl,
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + mr.WebUrl + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 			},
 		}
 		alerts = append(alerts, alert)

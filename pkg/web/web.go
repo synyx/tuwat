@@ -7,7 +7,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"html/template"
+	html "html/template"
 	"io/fs"
 	"net/http"
 	"os"
@@ -124,11 +124,11 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 	templateFiles = append([]string{"_base.gohtml"}, patterns...)
 	templateDefinition = "base"
 
-	funcs := template.FuncMap{
+	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
 		"json":         formatJson,
 	}
-	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
@@ -157,11 +157,11 @@ func (h *webHandler) partialRenderer(req *http.Request, patterns ...string) rend
 	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition = "base"
 
-	funcs := template.FuncMap{
+	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
 		"json":         formatJson,
 	}
-	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
@@ -192,11 +192,11 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition = "content-container"
 
-	funcs := template.FuncMap{
+	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
 		"json":         formatJson,
 	}
-	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
@@ -259,11 +259,11 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition = "content-container"
 
-	funcs := template.FuncMap{
+	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
 		"json":         formatJson,
 	}
-	tmpl := template.New(templateDefinition).Funcs(funcs)
+	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		otelzap.Ctx(s.Request().Context()).Error("compiling template failed", zap.Error(err))

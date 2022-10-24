@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	html "html/template"
 	"io"
 	"net/http"
 	"net/url"
@@ -105,16 +106,18 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
 		}
 
-		links := make(map[string]string)
+		var links []html.HTML
 		if rb, ok := sourceAlert.Annotations["runbook"]; ok {
-			links["📖"] = rb
+			link := url.QueryEscape(rb)
+			links = append(links, html.HTML("<a href=\""+link+"\" target=\"_blank\" alt=\"Runbook\">📖</a>"))
 		}
 
 		filterLabels := map[string]string{
 			"uid": sourceAlert.Labels["uid"],
 		}
 		if filter, err := json.Marshal(filterLabels); err == nil {
-			links["🏠"] = c.config.URL + "/#/alerts?filter=" + url.QueryEscape(string(filter))
+			link := c.config.URL + "/#/alerts?filter=" + url.QueryEscape(string(filter))
+			links = append(links, html.HTML("<a href=\""+link+"\" target=\"_blank\"  alt=\"Home\">🏠</a>"))
 		}
 
 		descr := sourceAlert.Labels["alertname"]

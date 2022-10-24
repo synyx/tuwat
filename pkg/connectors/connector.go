@@ -2,6 +2,7 @@ package connectors
 
 import (
 	"context"
+	html "html/template"
 	"time"
 )
 
@@ -22,7 +23,7 @@ type Alert struct {
 	State       State
 	Description string
 	Details     string
-	Links       map[string]string
+	Links       []html.HTML
 	Silence     SilencerFunc
 }
 
