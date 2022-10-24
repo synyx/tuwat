@@ -196,6 +196,11 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				Silence: al.Silence,
 			}
 
+			if alert.Silence != nil {
+				alert.Links = append(alert.Links,
+					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
+			}
+
 			if reason := a.allow(alert); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
