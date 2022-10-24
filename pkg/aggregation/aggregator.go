@@ -316,6 +316,7 @@ func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
 	for _, a := range a.current.Alerts {
 		if a.Id == alertId {
 			alert = a
+			break
 		}
 	}
 	a.amu.RUnlock()
