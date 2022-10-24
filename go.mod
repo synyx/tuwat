@@ -3,6 +3,7 @@ module github.com/synyx/gonagdash
 go 1.19
 
 require (
+	github.com/BurntSushi/toml v1.2.0
 	github.com/getkin/kin-openapi v0.101.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
@@ -16,10 +17,11 @@ require (
 	go.opentelemetry.io/otel/sdk v1.10.0
 	go.opentelemetry.io/otel/trace v1.10.0
 	go.uber.org/zap v1.23.0
+	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
+	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 )
 
 require (
-	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -36,8 +38,6 @@ require (
 	go.opentelemetry.io/otel/metric v0.31.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
-	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
