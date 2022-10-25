@@ -14,6 +14,7 @@ import (
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -183,15 +184,17 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 
 func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
 
-	var client *http.Client
+	var tr http.RoundTripper
 	if c.config.ClientId != "" {
-		client = c.oauth2.Client(ctx)
+		client := c.oauth2.Client(ctx)
+		tr = client.Transport
+		tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: c.config.Insecure}
 	} else {
-		tr := &http.Transport{
+		tr = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
 		}
-		client = &http.Client{Transport: tr}
 	}
+	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
