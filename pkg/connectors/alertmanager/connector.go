@@ -165,7 +165,7 @@ func k8sLabels(haystack map[string]string, needles ...string) []string {
 }
 
 func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
-	body, err := c.get("/api/v2/alerts", ctx)
+	body, err := c.get(ctx, "/api/v2/alerts")
 	if err != nil {
 		return nil, err
 	}
@@ -182,18 +182,13 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 	return response, nil
 }
 
-func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
 
-	var tr http.RoundTripper
+	tr := http.DefaultTransport
 	if c.config.ClientId != "" {
-		client := c.oauth2.Client(ctx)
-		tr = client.Transport
-		tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: c.config.Insecure}
-	} else {
-		tr = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
-		}
+		tr = c.oauth2.Client(ctx).Transport
 	}
+	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: c.config.Insecure}
 	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
