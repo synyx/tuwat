@@ -7,7 +7,7 @@ time and time again to provide accessors for an evolving infrastructure.
 
 The driving mindset for Tuwat (in German "tu was", meaning "do something")
 is to show actionable items.  This is a  slight departure of [Nagdash],
-which shows only shows Nagios `Hosts`/`Services`.
+which shows only Nagios `Hosts`/`Services`.
 
 [Nagdash]: https://github.com/lozzd/Nagdash
 
