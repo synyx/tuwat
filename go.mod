@@ -3,7 +3,7 @@ module github.com/synyx/tuwat
 go 1.19
 
 require (
-	github.com/BurntSushi/toml v1.2.0
+	github.com/BurntSushi/toml v1.2.1
 	github.com/getkin/kin-openapi v0.101.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
