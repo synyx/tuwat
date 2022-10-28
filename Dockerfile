@@ -1,9 +1,9 @@
 FROM gcr.io/distroless/static-debian11
 
 WORKDIR /go
-COPY ./tuwat /go/tuwat
+COPY ./tuwat /tuwat
 EXPOSE 8988
-ENTRYPOINT ["/go/tuwat"]
+ENTRYPOINT ["/tuwat"]
 
 LABEL org.opencontainers.image.authors="Jonathan Buch <jbuch@synyx.de>" \
       org.opencontainers.image.url="https://github.com/synyx/tuwat" \
