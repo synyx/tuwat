@@ -68,7 +68,7 @@ archives:
 
 dockers:
   - image_templates:
-      - "synyx/tuwat:{{ .Tag }}-amd64"
+      - "synyx/tuwat:{{ .Version }}-amd64"
     use: buildx
     goos: linux
     goarch: amd64
@@ -81,7 +81,7 @@ dockers:
       - "--label=org.opencontainers.image.source={{ .GitURL }}"
       - "--platform=linux/amd64"
   - image_templates:
-      - "synyx/tuwat:{{ .Tag }}-arm64"
+      - "synyx/tuwat:{{ .Version }}-arm64"
     use: buildx
     goos: linux
     goarch: arm64
@@ -95,15 +95,15 @@ dockers:
       - "--platform=linux/arm64"
 
 docker_manifests:
-  - name_template: 'synyx/tuwat:{{ .Tag }}'
+  - name_template: 'synyx/tuwat:{{ .Version }}'
     image_templates:
-      - 'synyx/tuwat:{{ .Tag }}-amd64'
-      - 'synyx/tuwat:{{ .Tag }}-arm64'
+      - 'synyx/tuwat:{{ .Version }}-amd64'
+      - 'synyx/tuwat:{{ .Version }}-arm64'
   # We also move the latest when publishing new images
   - name_template: 'synyx/tuwat:latest'
     image_templates:
-      - 'synyx/tuwat:{{ .Tag }}-amd64'
-      - 'synyx/tuwat:{{ .Tag }}-arm64'
+      - 'synyx/tuwat:{{ .Version }}-amd64'
+      - 'synyx/tuwat:{{ .Version }}-arm64'
 
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
