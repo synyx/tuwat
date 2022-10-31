@@ -23,8 +23,7 @@ func main() {
 	}
 
 	if cfg.PrintVersion {
-		fmt.Print(version.Info.HumanReadable())
-		fmt.Println()
+		fmt.Println(version.Info.HumanReadable())
 		return
 	}
 

@@ -1,10 +1,8 @@
 package version
 
 import (
-	"bytes"
+	"fmt"
 	"runtime"
-	"strings"
-	"text/template"
 )
 
 // These are mostly set during compilation from linker flags
@@ -27,20 +25,8 @@ type VersionInfo struct {
 	GoPlatform  string `json:"goPlatform"`
 }
 
-var versionInfoTmpl = `
-{{.Application}}, version {{.Version}} (branch: {{.Branch}}, revision: {{.Revision}})
-  release date:     {{.ReleaseDate}}
-  go version:       {{.GoVersion}}
-  platform:         {{.GoPlatform}}
-`
-
 func (v VersionInfo) HumanReadable() string {
-	t := template.Must(template.New("version").Parse(versionInfoTmpl))
-	var buf bytes.Buffer
-	if err := t.ExecuteTemplate(&buf, "version", v); err != nil {
-		panic(err)
-	}
-	return strings.TrimSpace(buf.String())
+	return fmt.Sprintf("%s v%s (release date: %s)", v.Application, v.Version, v.ReleaseDate)
 }
 
 var Info VersionInfo
