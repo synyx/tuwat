@@ -34,7 +34,7 @@ var versionInfoTmpl = `
   platform:         {{.GoPlatform}}
 `
 
-func (v VersionInfo) Print() string {
+func (v VersionInfo) HumanReadable() string {
 	t := template.Must(template.New("version").Parse(versionInfoTmpl))
 	var buf bytes.Buffer
 	if err := t.ExecuteTemplate(&buf, "version", v); err != nil {
