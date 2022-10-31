@@ -18,8 +18,8 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
-	"github.com/synyx/tuwat/pkg/buildinfo"
 	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/version"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -139,7 +139,7 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(statusCode)
 
-		data.Version = buildinfo.Version
+		data.Version = version.Info.Version
 		data.Environment = h.environment
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
@@ -172,7 +172,7 @@ func (h *webHandler) partialRenderer(req *http.Request, patterns ...string) rend
 		w.Header().Set("Content-Type", "text/vnd.turbo-stream.html")
 		w.WriteHeader(statusCode)
 
-		data.Version = buildinfo.Version
+		data.Version = version.Info.Version
 		data.Environment = h.environment
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
@@ -220,7 +220,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	flusher.Flush()
 
 	return func(data webContent) {
-		data.Version = buildinfo.Version
+		data.Version = version.Info.Version
 		data.Environment = h.environment
 
 		buf := new(bytes.Buffer)
@@ -276,7 +276,7 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 			panic(err)
 		}
 
-		data.Version = buildinfo.Version
+		data.Version = version.Info.Version
 		data.Environment = h.environment
 
 		buf := new(bytes.Buffer)

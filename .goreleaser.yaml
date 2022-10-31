@@ -16,6 +16,13 @@ builds:
         - CGO_ENABLED=0
       # We want our builds to be reproducible, so we use the commit time as timestamps
       mod_timestamp: '{{ .CommitTimestamp }}'
+      ldflags:
+        - -s -w
+        - -X {{.ModulePath}}/pkg/version.application={{.Binary}}
+        - -X {{.ModulePath}}/pkg/version.version={{.Version}}
+        - -X {{.ModulePath}}/pkg/version.revision={{.FullCommit}}
+        - -X {{.ModulePath}}/pkg/version.branch={{.Branch}}
+        - -X {{.ModulePath}}/pkg/version.buildDate={{.Date}}
     id: linux
     goos:
       - linux

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/buildinfo"
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/version"
 )
 
 func (c *Connector) createSilencer(alert connectors.Alert) connectors.SilencerFunc {
@@ -21,6 +21,7 @@ func (c *Connector) createSilencer(alert connectors.Alert) connectors.SilencerFu
 }
 
 func (c *Connector) Silence(ctx context.Context, alert connectors.Alert, duration time.Duration, user string) error {
+
 	payload := map[string]interface{}{
 		"matchers": map[string]interface{}{
 			"name":    "uid",
@@ -30,7 +31,7 @@ func (c *Connector) Silence(ctx context.Context, alert connectors.Alert, duratio
 		"startsAt":  time.Now().Format(time.RFC3339),
 		"endsAt":    time.Now().Add(duration).Format(time.RFC3339),
 		"createdBy": user,
-		"comment":   fmt.Sprintf("%s: silenced via %s", user, buildinfo.Service),
+		"comment":   fmt.Sprintf("%s: silenced via %s", user, version.Info.Application),
 	}
 	endpoint := "/api/v2/silences"
 

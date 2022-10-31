@@ -7,9 +7,9 @@ import (
 	"syscall"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
-	"github.com/synyx/tuwat/pkg/buildinfo"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/log"
+	"github.com/synyx/tuwat/pkg/version"
 	"github.com/synyx/tuwat/pkg/web"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
@@ -23,10 +23,7 @@ func main() {
 	}
 
 	if cfg.PrintVersion {
-		fmt.Print(buildinfo.Version)
-		if buildinfo.GitSHA != "" {
-			fmt.Printf(" (%s)", buildinfo.GitSHA)
-		}
+		fmt.Print(version.Info.Print())
 		fmt.Println()
 		return
 	}

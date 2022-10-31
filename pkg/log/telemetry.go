@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/buildinfo"
 	"github.com/synyx/tuwat/pkg/config"
 	propagation2 "github.com/synyx/tuwat/pkg/log/propagation"
+	"github.com/synyx/tuwat/pkg/version"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -56,8 +56,8 @@ func stdoutTracer(cfg *config.Config) (tp *tracesdk.TracerProvider) {
 		tracesdk.WithSyncer(exporter),
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(buildinfo.Service),
-			semconv.ServiceVersionKey.String(buildinfo.Version),
+			semconv.ServiceNameKey.String(version.Info.Application),
+			semconv.ServiceVersionKey.String(version.Info.Version),
 			attribute.String("environment", cfg.Environment),
 			attribute.String("instance", cfg.Instance),
 		)),
@@ -89,8 +89,8 @@ func jaegerTracer(cfg *config.Config) *tracesdk.TracerProvider {
 		// Record information about this application in a Resource.
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(buildinfo.Service),
-			semconv.ServiceVersionKey.String(buildinfo.Version),
+			semconv.ServiceNameKey.String(version.Info.Application),
+			semconv.ServiceVersionKey.String(version.Info.Version),
 			attribute.String("environment", cfg.Environment),
 			attribute.String("instance", cfg.Instance),
 		)),
