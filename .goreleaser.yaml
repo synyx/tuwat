@@ -1,0 +1,109 @@
+# Before building anything, we need to ensure that go modules and generators are setup correctly
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+# These are the final binaries, that we want to create
+builds:
+  # This first linux build also contains the defaults used for all other platforms
+  - <<: &build_defaults
+      binary: tuwat
+      # The single main entrypoint binary for tuwat
+      main: ./cmd/tuwat
+      env:
+        # We have no C dependencies
+        - CGO_ENABLED=0
+      # We want our builds to be reproducible, so we use the commit time as timestamps
+      mod_timestamp: '{{ .CommitTimestamp }}'
+    id: linux
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+  - <<: *build_defaults
+    id: darwin
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+  - <<: *build_defaults
+    id: windows
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+# For systems supporting universal binaries (hello Apple!) we ship a single binary
+universal_binaries:
+  - id: darwin
+    ids:
+      - darwin
+    replace: true
+
+# Configure how snapshots are versioned
+snapshot:
+  name_template: '{{ incpatch .Version }}-dev-{{ .ShortCommit }}'
+
+# Configure what goes into the archives
+archives:
+  - <<: &archive_defaults
+      name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+      # Additonally packaged files
+      files:
+        - LICENSE
+        - README*
+        - CHANGELOG*
+        - config.example.toml
+    id: nix
+    builds: [ linux, darwin ]
+    format: tar.gz
+  - <<: *archive_defaults
+    id: windows
+    builds: [ windows ]
+    format: zip
+
+dockers:
+  - image_templates:
+      - "synyx/tuwat:{{ .Version }}-amd64"
+    use: buildx
+    goos: linux
+    goarch: amd64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "synyx/tuwat:{{ .Version }}-arm64"
+    use: buildx
+    goos: linux
+    goarch: arm64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: 'synyx/tuwat:{{ .Version }}'
+    image_templates:
+      - 'synyx/tuwat:{{ .Version }}-amd64'
+      - 'synyx/tuwat:{{ .Version }}-arm64'
+  # We also move the latest when publishing new images
+  - name_template: 'synyx/tuwat:latest'
+    image_templates:
+      - 'synyx/tuwat:{{ .Version }}-amd64'
+      - 'synyx/tuwat:{{ .Version }}-arm64'
+
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
