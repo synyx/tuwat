@@ -3,11 +3,11 @@ package config
 import (
 	"flag"
 	"os"
-	"regexp"
 	"text/template"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/open-policy-agent/opa/rego"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
@@ -33,18 +33,12 @@ type Config struct {
 	Connectors    []connectors.Connector
 	WhereTemplate *template.Template
 	Interval      time.Duration
-	Filter        []Rule
+	Rego          *rego.Rego
 }
 
 type MainConfig struct {
 	WhereTemplate string `toml:"where"`
 	Interval      string `toml:"interval"`
-}
-
-type Rule struct {
-	Description string                    `toml:"description"`
-	What        *regexp.Regexp            `toml:"what"`
-	Labels      map[string]*regexp.Regexp `toml:"labels"`
 }
 
 type ConnectorConfig struct {
@@ -149,25 +143,29 @@ func (cfg *Config) loadFile(file string) error {
 		cfg.Interval = 1 * time.Minute
 	}
 
-	for _, r := range connectorConfigs.Rules {
-		labels := make(map[string]*regexp.Regexp)
-		if labelFilters, ok := r["label"]; ok {
-			for n, l := range labelFilters.(map[string]interface{}) {
-				labels[n] = regexp.MustCompile(l.(string))
-			}
-		}
-		var what *regexp.Regexp
-		if w, ok := r["what"]; ok {
-			what = regexp.MustCompile(w.(string))
-		}
+	// TODO: actually build a rego file
+	module := `
+package example.authz
 
-		br := Rule{
-			Description: r["description"].(string),
-			What:        what,
-			Labels:      labels,
-		}
-		cfg.Filter = append(cfg.Filter, br)
-	}
+import future.keywords.if
+import future.keywords.in
+
+default allow := false
+
+allow if {
+    input.method == "GET"
+    input.path == ["salary", input.subject.user]
+}
+
+allow if is_admin
+
+is_admin if "admin" in input.subject.groups
+`
+
+	cfg.Rego = rego.New(
+		rego.Query("x = data.example.authz.allow"),
+		rego.Module("example.rego", module),
+	)
 
 	return err
 }

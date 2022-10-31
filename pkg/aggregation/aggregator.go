@@ -2,14 +2,15 @@ package aggregation
 
 import (
 	"context"
+	"errors"
 	html "html/template"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
 	text "text/template"
 	"time"
 
+	"github.com/open-policy-agent/opa/rego"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
@@ -51,7 +52,7 @@ type Aggregator struct {
 	mu            *sync.RWMutex // Protecting Registrations
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
-	blockRules    []config.Rule
+	rego          *rego.Rego
 }
 
 type result struct {
@@ -78,7 +79,7 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 		interval:   cfg.Interval,
 		connectors: cfg.Connectors,
 		whereTempl: cfg.WhereTemplate,
-		blockRules: cfg.Filter,
+		rego:       cfg.Rego,
 
 		registrations: make(map[any]chan<- bool),
 		mu:            new(sync.RWMutex),
@@ -97,13 +98,15 @@ func (a *Aggregator) Run(ctx context.Context) {
 	otelzap.Ctx(ctx).Info("Collecting on Start")
 	go a.collect(ctx, collect)
 
+	rules, _ := a.rego.PrepareForEval(ctx)
+
 	for {
 		select {
 		case <-ticker.C:
 			go a.collect(ctx, collect)
 		case r, ok := <-collect:
 			if !ok {
-				a.aggregate(ctx, results)
+				a.aggregate(ctx, rules, results)
 				results = nil
 				collect = make(chan result, 20)
 			} else if ok {
@@ -145,7 +148,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	close(collect)
 }
 
-func (a *Aggregator) aggregate(ctx context.Context, results []result) {
+func (a *Aggregator) aggregate(ctx context.Context, rules rego.PreparedEvalQuery, results []result) {
 	otelzap.Ctx(ctx).Info("Aggregating results", zap.Int("count", len(results)))
 
 	a.cmu.RLock()
@@ -201,10 +204,10 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if reason := a.allow(alert); reason == "" {
+			if err := a.allow(ctx, rules, alert); err == nil {
 				alerts = append(alerts, alert)
 			} else {
-				blockedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: reason})
+				blockedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: err.Error()})
 			}
 		}
 	}
@@ -286,33 +289,19 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 
 	a.connectors = cfg.Connectors
 	a.whereTempl = cfg.WhereTemplate
-	a.blockRules = cfg.Filter
+	a.rego = cfg.Rego
 }
 
-func (a *Aggregator) allow(alert Alert) string {
-outside:
-	for _, rule := range a.blockRules {
-		if rule.What != nil && rule.What.MatchString(alert.What) {
-			return rule.Description
-		} else {
-			res := make(map[string]*regexp.Regexp)
-			for l, r := range rule.Labels {
-				if x, ok := alert.Labels[l]; !ok {
-					// if one label does not match, leave entry alone
-					continue outside
-				} else {
-					res[x] = r
-				}
-			}
-			for a, b := range res {
-				if b.MatchString(a) {
-					return rule.Description
-				}
-			}
-		}
+func (a *Aggregator) allow(ctx context.Context, rules rego.PreparedEvalQuery, alert Alert) error {
+	if results, err := rules.Eval(ctx, rego.EvalInput(alert)); err != nil {
+		return err
+	} else if len(results) == 0 {
+		return errors.New("undefined result")
+	} else if results.Allowed() {
+		return nil
+	} else {
+		return errors.New("not allowed")
 	}
-
-	return ""
 }
 
 func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
