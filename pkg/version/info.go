@@ -13,7 +13,7 @@ var (
 	version     = "dev"
 	revision    string
 	branch      string
-	buildDate   string
+	releaseDate string
 )
 
 // A rich representation of the version information which can also be readily serialized into a JSON representation
@@ -22,14 +22,14 @@ type VersionInfo struct {
 	Version     string `json:"version"`
 	Revision    string `json:"revision,omitempty"`
 	Branch      string `json:"branch,omitempty"`
-	BuildDate   string `json:"buildDate,omitempty"`
+	ReleaseDate string `json:"releaseDate,omitempty"`
 	GoVersion   string `json:"goVersion"`
 	GoPlatform  string `json:"goPlatform"`
 }
 
 var versionInfoTmpl = `
 {{.Application}}, version {{.Version}} (branch: {{.Branch}}, revision: {{.Revision}})
-  build date:       {{.BuildDate}}
+  release date:     {{.ReleaseDate}}
   go version:       {{.GoVersion}}
   platform:         {{.GoPlatform}}
 `
@@ -51,7 +51,7 @@ func init() {
 		Version:     version,
 		Revision:    revision,
 		Branch:      branch,
-		BuildDate:   buildDate,
+		ReleaseDate: releaseDate,
 		GoVersion:   runtime.Version(),
 		GoPlatform:  runtime.GOOS + "/" + runtime.GOARCH,
 	}

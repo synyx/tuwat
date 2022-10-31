@@ -22,7 +22,7 @@ builds:
         - -X {{.ModulePath}}/pkg/version.version={{.Version}}
         - -X {{.ModulePath}}/pkg/version.revision={{.FullCommit}}
         - -X {{.ModulePath}}/pkg/version.branch={{.Branch}}
-        - -X {{.ModulePath}}/pkg/version.buildDate={{.Date}}
+        - -X {{.ModulePath}}/pkg/version.releaseDate={{.Date}}
     id: linux
     goos:
       - linux
