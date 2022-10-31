@@ -1,8 +1,4 @@
-FROM scratch
-
-ARG CI_PROJECT_URL
-
-COPY --from=registry.synyx.cloud/gitlabci/golang:latest /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
+FROM gcr.io/distroless/static-debian11
 
 WORKDIR /go
 COPY ./tuwat /go/tuwat
@@ -10,7 +6,7 @@ EXPOSE 8988
 ENTRYPOINT ["/go/tuwat"]
 
 LABEL org.opencontainers.image.authors="Jonathan Buch <jbuch@synyx.de>" \
-      org.opencontainers.image.url=${CI_PROJECT_URL} \
+      org.opencontainers.image.url="https://github.com/synyx/tuwat" \
       org.opencontainers.image.vendor="synyx GmbH & Co. KG" \
       org.opencontainers.image.title="Tuwat Dashboard" \
       org.opencontainers.image.description="Tuwat Operations Dashboard"
