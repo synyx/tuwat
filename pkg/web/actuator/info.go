@@ -2,9 +2,9 @@ package actuator
 
 import (
 	"encoding/json"
-	"github.com/synyx/tuwat/pkg/version"
 	"net/http"
 
+	"github.com/synyx/tuwat/pkg/version"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
