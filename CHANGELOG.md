@@ -1,12 +1,12 @@
 # Releases
 
-## v0.9 - 2022-10-25 Open Source
+## v0.9 - 2022-10-31 Open Source
 
 * Open the source under a 3-Clause BSD License
-* Basic feature parity is reached, preparations for reaching 1.0
 * Preparations for releasing on GitHub
 * Rename project from a temporary `gonagdash` to a hopefully less
   temporary `tuwat`.
+* Revise output on `tuwat -version`
 
 ## v0.8 - 2022-10-24 Silencing
 
