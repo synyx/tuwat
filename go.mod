@@ -7,7 +7,7 @@ require (
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.13.1
 	github.com/streadway/amqp v1.0.0
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.1.17
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.36.4
