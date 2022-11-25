@@ -16,6 +16,7 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
@@ -184,11 +185,14 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 
 func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
 
-	tr := http.DefaultTransport
-	if c.config.ClientId != "" {
-		tr = c.oauth2.Client(ctx).Transport
-	}
+	var tr http.RoundTripper = http.DefaultTransport.(*http.Transport).Clone()
 	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: c.config.Insecure}
+
+	if c.config.ClientId != "" {
+		oauth2Transport := c.oauth2.Client(ctx).Transport
+		oauth2Transport.(*oauth2.Transport).Base = tr
+		tr = oauth2Transport
+	}
 	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
