@@ -14,6 +14,7 @@ import (
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -164,7 +165,7 @@ func k8sLabels(haystack map[string]string, needles ...string) []string {
 }
 
 func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
-	body, err := c.get("/api/v2/alerts", ctx)
+	body, err := c.get(ctx, "/api/v2/alerts")
 	if err != nil {
 		return nil, err
 	}
@@ -181,17 +182,14 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 	return response, nil
 }
 
-func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
 
-	var client *http.Client
+	tr := http.DefaultTransport
 	if c.config.ClientId != "" {
-		client = c.oauth2.Client(ctx)
-	} else {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
-		}
-		client = &http.Client{Transport: tr}
+		tr = c.oauth2.Client(ctx).Transport
 	}
+	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: c.config.Insecure}
+	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

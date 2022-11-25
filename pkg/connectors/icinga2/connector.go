@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Connector struct {
@@ -166,7 +167,7 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
 	}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
 
 	res, err := client.Do(req)
 	if err != nil {

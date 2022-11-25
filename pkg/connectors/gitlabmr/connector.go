@@ -3,6 +3,7 @@ package gitlabmr
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	html "html/template"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -116,7 +118,12 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	req.URL.RawQuery = q.Encode()
 	url := req.URL.String()
 
-	res, err := http.DefaultClient.Do(req)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
+	}
+	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
+
+	res, err := client.Do(req)
 	if err != nil {
 		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", url), zap.Error(err))
 		return nil, err
