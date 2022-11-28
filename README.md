@@ -29,7 +29,23 @@ Connectors for
 
 ## Development
 
+### Local Development
+
 ```shell
 go build -o tuwat ./cmd/tuwat
 ./tuwat -conf msis.toml -environment test -mode dev
 ```
+
+### JavaScript Development
+
+Updating the `main.js` used by the HTML code:
+
+* Update JavaScript dependencies in `package.json`/`package-lock.json`
+* Edit code in `pkg/web/static/js/index.js`
+
+```shell
+npm run build
+```
+
+Make sure to add the changed/generated files, so not everyone has to use
+nodejs.
