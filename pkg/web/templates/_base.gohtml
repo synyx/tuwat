@@ -10,49 +10,7 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 
     <link rel="stylesheet" href="/static/css/main.css" />
-    <script type="module" defer>
-        import * as Turbo from '/static/js/turbo.7.2.0.js';
-
-        function connect() {
-            if (window["WebSocket"] || window["EventSource"]) {
-                const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts"
-                const socket = window["WebSocket"] ? new WebSocket(wsUrl): new EventSource("/sse/alerts");
-                socket.addEventListener("close", function (ev) {
-                    console.log('Socket is closed. Reconnect will be attempted in 1 second.', ev.reason);
-                    Turbo.disconnectStreamSource(socket);
-                    setTimeout(function() {
-                        connect();
-                    }, 1000);
-                })
-                socket.addEventListener("error", function (ev) {
-                    console.error('Socket encountered error: ', ev.message, 'Closing socket');
-                    socket.close()
-                })
-                socket.addEventListener("open", function () {
-                    console.log('Socket is connected.  Enabling turbo.');
-                    Turbo.connectStreamSource(socket);
-                })
-
-                document.addEventListener("DOMContentLoaded", function() {
-                    const csEl = document.getElementById('connection-state');
-                    csEl.addEventListener("change", function (ev) {
-                        if (this.checked) {
-                            console.log('Manually connecting stream.');
-                            Turbo.disconnectStreamSource(socket);
-                        } else {
-                            console.log('Manually disconnecting stream.');
-                            Turbo.connectStreamSource(socket);
-                        }
-                    });
-                });
-            } else {
-                setTimeout(function () {
-                    location.reload();
-                }, 60000);
-            }
-        }
-        connect();
-    </script>
+    <script type="module" src="/static/js/main.js"></script>
     <noscript>
         <meta http-equiv="refresh" content="60; url=/alerts" />
     </noscript>
