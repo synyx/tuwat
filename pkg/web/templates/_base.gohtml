@@ -38,10 +38,10 @@
                     csEl.addEventListener("change", function (ev) {
                         if (this.checked) {
                             console.log('Manually connecting stream.');
-                            Turbo.disconnectStreamSource(socket);
+                            Turbo.connectStreamSource(socket);
                         } else {
                             console.log('Manually disconnecting stream.');
-                            Turbo.connectStreamSource(socket);
+                            Turbo.disconnectStreamSource(socket);
                         }
                     });
                 });
