@@ -31,5 +31,7 @@ Connectors for
 
 ```shell
 go build -o tuwat ./cmd/tuwat
-./tuwat -conf msis.toml -environment test -mode dev
+./tuwat -conf config.example.toml -environment test -mode dev
 ```
+
+* Open http://localhost:8988
