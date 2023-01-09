@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
+	"github.com/synyx/tuwat/pkg/clock"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/log"
 	"github.com/synyx/tuwat/pkg/version"
@@ -30,7 +31,8 @@ func main() {
 	log.Initialize(cfg)
 	log.InitializeTracer(appCtx, cfg)
 
-	aggregator := aggregation.NewAggregator(cfg)
+	clk := clock.NewClock()
+	aggregator := aggregation.NewAggregator(cfg, clk)
 	webHandler := web.WebHandler(cfg, aggregator)
 
 	go web.Handle(appCtx, cfg, webHandler)
