@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	text "text/template"
 	"time"
 
@@ -52,6 +53,8 @@ type Aggregator struct {
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
 	blockRules    []config.Rule
+
+	lastAccess atomic.Value
 }
 
 type result struct {
@@ -87,6 +90,16 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 	}
 }
 
+func (a *Aggregator) active() bool {
+	if la := a.lastAccess.Load(); la == nil {
+		return true
+	} else if t, ok := la.(time.Time); ok && t.Before(time.Now().Add(-a.interval*3)) {
+		return false
+	}
+
+	return true
+}
+
 func (a *Aggregator) Run(ctx context.Context) {
 	ticker := time.NewTicker(a.interval)
 	defer ticker.Stop()
@@ -116,6 +129,10 @@ func (a *Aggregator) Run(ctx context.Context) {
 }
 
 func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
+	if !a.active() {
+		return
+	}
+
 	var wg sync.WaitGroup
 
 	ctx, cancel := context.WithTimeout(ctx, a.interval/2)
@@ -225,6 +242,8 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 }
 
 func (a *Aggregator) Alerts() Aggregate {
+	a.lastAccess.Store(time.Now())
+
 	a.amu.RLock()
 	defer a.amu.RUnlock()
 
@@ -267,6 +286,9 @@ func (a *Aggregator) notify(ctx context.Context) {
 		select {
 		case r <- true:
 			otelzap.Ctx(ctx).Debug("Notified", zap.Any("thing", thing))
+
+			a.lastAccess.Store(time.Now())
+
 		case <-time.After(1 * time.Second):
 			toUnregister = append(toUnregister, thing)
 		}
