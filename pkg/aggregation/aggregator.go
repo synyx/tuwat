@@ -2,11 +2,13 @@ package aggregation
 
 import (
 	"context"
+	"fmt"
 	html "html/template"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	text "text/template"
 	"time"
 
@@ -41,8 +43,15 @@ type BlockedAlert struct {
 	Reason string
 }
 
+type Clock interface {
+	Now() time.Time
+	After(d time.Duration) <-chan time.Time
+	NewTicker(d time.Duration) *time.Ticker
+}
+
 type Aggregator struct {
 	interval time.Duration
+	clock    Clock
 
 	current       Aggregate
 	connectors    []connectors.Connector
@@ -52,6 +61,8 @@ type Aggregator struct {
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
 	blockRules    []config.Rule
+
+	lastAccess atomic.Value
 }
 
 type result struct {
@@ -72,9 +83,9 @@ func init() {
 	prometheus.MustRegister(regCount)
 }
 
-func NewAggregator(cfg *config.Config) *Aggregator {
+func NewAggregator(cfg *config.Config, clock Clock) *Aggregator {
 
-	return &Aggregator{
+	a := &Aggregator{
 		interval:   cfg.Interval,
 		connectors: cfg.Connectors,
 		whereTempl: cfg.WhereTemplate,
@@ -84,11 +95,30 @@ func NewAggregator(cfg *config.Config) *Aggregator {
 		mu:            new(sync.RWMutex),
 		cmu:           new(sync.RWMutex),
 		amu:           new(sync.RWMutex),
+
+		clock: clock,
 	}
+
+	a.lastAccess.Store(clock.Now())
+	if a.interval == 0 {
+		a.interval = 1 * time.Minute
+	}
+
+	return a
+}
+
+func (a *Aggregator) active() bool {
+	if la := a.lastAccess.Load(); la == nil {
+		return true
+	} else if t, ok := la.(time.Time); ok && t.Before(a.clock.Now().Add(-a.interval*3)) {
+		return false
+	}
+
+	return true
 }
 
 func (a *Aggregator) Run(ctx context.Context) {
-	ticker := time.NewTicker(a.interval)
+	ticker := a.clock.NewTicker(a.interval)
 	defer ticker.Stop()
 
 	collect := make(chan result, 20)
@@ -116,6 +146,11 @@ func (a *Aggregator) Run(ctx context.Context) {
 }
 
 func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
+	if !a.active() {
+		otelzap.Ctx(ctx).Debug("Skipping collection")
+		return
+	}
+
 	var wg sync.WaitGroup
 
 	ctx, cancel := context.WithTimeout(ctx, a.interval/2)
@@ -129,12 +164,30 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 			defer wg.Done()
 
 			alerts, err := c.Collect(ctx)
-			otelzap.Ctx(ctx).Info("Collected alerts", zap.String("tag", c.Tag()), zap.Int("count", len(alerts)), zap.Error(err))
-			collect <- result{
+
+			// Be graceful on errors accessing the handed-in channel
+			defer func() {
+				if e := recover(); e != nil {
+					err = fmt.Errorf("error delivering result %w", e.(error))
+				}
+				otelzap.Ctx(ctx).Info("Collected alerts",
+					zap.String("tag", c.Tag()),
+					zap.Int("count", len(alerts)),
+					zap.Error(err))
+			}()
+
+			r := result{
 				tag:       c.Tag(),
 				alerts:    alerts,
 				error:     err,
 				connector: c,
+			}
+			select {
+			case collect <- r:
+			// ok
+			case <-ctx.Done():
+				err = fmt.Errorf("timeout delivering result %w", err)
+				break
 			}
 		}(c)
 	}
@@ -189,7 +242,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 				Tag:     r.tag,
 				What:    al.Description,
 				Details: al.Details,
-				When:    time.Now().Sub(al.Start),
+				When:    a.clock.Now().Sub(al.Start),
 				Status:  al.State.String(),
 				Links:   al.Links,
 				Labels:  labels,
@@ -215,7 +268,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 
 	a.amu.Lock()
 	a.current = Aggregate{
-		CheckTime: time.Now(),
+		CheckTime: a.clock.Now(),
 		Alerts:    alerts,
 		Blocked:   blockedAlerts,
 	}
@@ -225,6 +278,8 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 }
 
 func (a *Aggregator) Alerts() Aggregate {
+	a.lastAccess.Store(a.clock.Now())
+
 	a.amu.RLock()
 	defer a.amu.RUnlock()
 
@@ -267,7 +322,10 @@ func (a *Aggregator) notify(ctx context.Context) {
 		select {
 		case r <- true:
 			otelzap.Ctx(ctx).Debug("Notified", zap.Any("thing", thing))
-		case <-time.After(1 * time.Second):
+
+			a.lastAccess.Store(a.clock.Now())
+
+		case <-a.clock.After(1 * time.Second):
 			toUnregister = append(toUnregister, thing)
 		}
 	}
