@@ -100,6 +100,9 @@ func NewAggregator(cfg *config.Config, clock Clock) *Aggregator {
 	}
 
 	a.lastAccess.Store(clock.Now())
+	if a.interval == 0 {
+		a.interval = 1 * time.Minute
+	}
 
 	return a
 }

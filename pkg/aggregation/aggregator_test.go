@@ -22,7 +22,13 @@ func TestAggregation(t *testing.T) {
 	cfg := &config.Config{Connectors: []connectors.Connector{connector}}
 	a := NewAggregator(cfg, clock.NewClock())
 	go a.collect(ctx, collect)
-	results = append(results, <-collect)
+
+	select {
+	case c := <-collect:
+		results = append(results, c)
+	case <-ctx.Done():
+		t.Error("timeout waiting for results")
+	}
 
 	if len(results) != 1 {
 		t.Error()
