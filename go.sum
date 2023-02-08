@@ -256,8 +256,8 @@ go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.37.0 h1:yt2NKzK
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.37.0/go.mod h1:+ARmXlUlc51J7sZeCBkBJNdHGySrdOzgzxp6VWRWM1U=
 go.opentelemetry.io/otel v1.13.0 h1:1ZAKnNQKwBBxFtww/GwxNUyTf0AxkZzrukO8MeXqe4Y=
 go.opentelemetry.io/otel v1.13.0/go.mod h1:FH3RtdZCzRkJYFTCsAKDy9l/XYjMdNv6QrkFFB8DvVg=
-go.opentelemetry.io/otel/exporters/jaeger v1.11.2 h1:ES8/j2+aB+3/BUw51ioxa50V9btN1eew/2J7N7n1tsE=
-go.opentelemetry.io/otel/exporters/jaeger v1.11.2/go.mod h1:nwcF/DK4Hk0auZ/a5vw20uMsaJSXbzeeimhN5f9d0Lc=
+go.opentelemetry.io/otel/exporters/jaeger v1.13.0 h1:VAMoGujbVV8Q0JNM/cEbhzUIWWBxnEqH45HP9iBKN04=
+go.opentelemetry.io/otel/exporters/jaeger v1.13.0/go.mod h1:fHwbmle6mBFJA1p2ZIhilvffCdq/dM5UTIiCOmEjS+w=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.13.0 h1:rs3xmoGZsuHJxUUzX2dwYNDc7S0L68oEo2L/MvG5cyc=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.13.0/go.mod h1:gr0y6t58jZxp9WtIAGKXxXenDWC91hmZivlGoOag3+4=
 go.opentelemetry.io/otel/metric v0.34.0 h1:MCPoQxcg/26EuuJwpYN1mZTeCYAUGx8ABxfW07YkjP8=
