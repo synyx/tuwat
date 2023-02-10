@@ -112,5 +112,24 @@ docker_manifests:
       - 'synyx/tuwat:{{ .Version }}-amd64'
       - 'synyx/tuwat:{{ .Version }}-arm64'
 
+nfpms:
+  - file_name_template: '{{ .ProjectName }}_{{ .Arch }}'
+    homepage: https://github.com/synyx/tuwat
+    description: |-
+      Simple, 0-dependencies, dashboard for Nagios/Alertmanager/GitLab...
+    maintainer: Jonathan Buch <jbuch@synyx.de>
+    license: BSD
+    vendor: synyx
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+    section: utils
+    contents:
+      - src: ./LICENSE
+        dst: /usr/share/doc/tuwat/copyright
+        file_info:
+          mode: 0644
+
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
