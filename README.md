@@ -27,6 +27,10 @@ Connectors for
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
 
+## License
+
+[BSD 3-Clause License](./LICENSE)
+
 ## Development
 
 ```shell
