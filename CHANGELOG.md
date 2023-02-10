@@ -1,5 +1,11 @@
 # Releases
 
+## v0.10 - 2023-02-10 Minimize Collections
+
+* Do not collect, if there is no-one subscribed to the dashboard to
+  avoid cpu/network activity
+* Propagate telemetry information to sources
+
 ## v0.9 - 2022-10-31 Open Source
 
 * Open the source under a 3-Clause BSD License
