@@ -10,12 +10,12 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/streadway/amqp v1.0.0
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.1.18
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.37.0
-	go.opentelemetry.io/otel v1.13.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.40.0
+	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.13.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.13.0
 	go.opentelemetry.io/otel/sdk v1.13.0
-	go.opentelemetry.io/otel/trace v1.13.0
+	go.opentelemetry.io/otel/trace v1.14.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
@@ -38,7 +38,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.18 // indirect
-	go.opentelemetry.io/otel/metric v0.34.0 // indirect
+	go.opentelemetry.io/otel/metric v0.37.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
