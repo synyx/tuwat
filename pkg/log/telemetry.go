@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/config"
-	propagation2 "github.com/synyx/tuwat/pkg/log/propagation"
 	"github.com/synyx/tuwat/pkg/version"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -31,10 +30,6 @@ func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {
 
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
-		propagation2.SleuthTraceContext{},
-		propagation2.SleuthCurrentTraceContext{},
-		propagation2.B3TraceContext{},
-		propagation2.XB3TraceContext{},
 		propagation.TraceContext{},
 		propagation.TraceContext{},
 		propagation.Baggage{}),
