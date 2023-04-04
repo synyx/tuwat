@@ -3,7 +3,7 @@ package propagation
 import (
 	"testing"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func TestCarrier(t *testing.T) {

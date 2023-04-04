@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // HeaderCarrier adapts amqp.Table to satisfy the TextMapCarrier interface.
