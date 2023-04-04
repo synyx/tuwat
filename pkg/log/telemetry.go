@@ -66,7 +66,7 @@ func noopTracer() *tracesdk.TracerProvider {
 	}
 
 	return tracesdk.NewTracerProvider(
-		tracesdk.WithSampler(tracesdk.AlwaysSample()),
+		tracesdk.WithSampler(tracesdk.NeverSample()),
 		tracesdk.WithBatcher(exporter),
 	)
 }
