@@ -41,7 +41,7 @@ func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {
 }
 
 func stdoutTracer(cfg *config.Config) (tp *tracesdk.TracerProvider) {
-	exporter, err := stdout.New(stdout.WithoutTimestamps())
+	exporter, err := stdout.New()
 	if err != nil {
 		log.Fatal(err)
 	}
