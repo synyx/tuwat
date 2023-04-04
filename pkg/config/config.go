@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"regexp"
 	"text/template"
@@ -97,6 +98,10 @@ func NewConfiguration() (*Config, error) {
 }
 
 func (cfg *Config) loadFile(file string) error {
+
+	if _, err := os.Stat(file); err != nil {
+		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
+	}
 
 	var connectorConfigs ConnectorConfig
 	_, err := toml.DecodeFile(file, &connectorConfigs)

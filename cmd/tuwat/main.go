@@ -20,7 +20,8 @@ func main() {
 	appCtx := ApplicationContext()
 	cfg, err := config.NewConfiguration()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	if cfg.PrintVersion {
