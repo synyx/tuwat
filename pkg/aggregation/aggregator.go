@@ -16,6 +16,8 @@ import (
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -52,6 +54,7 @@ type Clock interface {
 type Aggregator struct {
 	interval time.Duration
 	clock    Clock
+	tracer   trace.Tracer
 
 	current       Aggregate
 	connectors    []connectors.Connector
@@ -96,7 +99,8 @@ func NewAggregator(cfg *config.Config, clock Clock) *Aggregator {
 		cmu:           new(sync.RWMutex),
 		amu:           new(sync.RWMutex),
 
-		clock: clock,
+		clock:  clock,
+		tracer: otel.Tracer("aggregator"),
 	}
 
 	a.lastAccess.Store(clock.Now())
@@ -153,6 +157,9 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 
 	var wg sync.WaitGroup
 
+	startTime := time.Now()
+	ctx, span := a.tracer.Start(ctx, "collection", trace.WithTimestamp(startTime))
+
 	ctx, cancel := context.WithTimeout(ctx, a.interval/2)
 	defer cancel()
 
@@ -195,6 +202,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 
 	wg.Wait()
 	otelzap.Ctx(ctx).Debug("Collection end")
+	span.End(trace.WithTimestamp(time.Now()))
 	close(collect)
 }
 
