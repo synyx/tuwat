@@ -50,7 +50,8 @@ Updating the `main.js` used by the HTML code:
 * Edit code in `pkg/web/static/js/index.js`
 
 ```shell
-npm run build
+npm run build # to generate the bundled files
+npm run watch # to watch for changes and re-generate while developing
 ```
 
 Make sure to add the changed/generated files, so not everyone has to use
