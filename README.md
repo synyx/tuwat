@@ -33,9 +33,27 @@ Connectors for
 
 ## Development
 
+### Local Development
+
 ```shell
 go build -o tuwat ./cmd/tuwat
-./tuwat -conf config.example.toml -environment test -mode dev
+export TUWAT_TEMPLATEDIR= TUWAT_STATICDIR=
+./tuwat -conf config.example.toml -environment test
 ```
 
 * Open http://localhost:8988
+
+### JavaScript Development
+
+Updating the `main.js` used by the HTML code:
+
+* Update JavaScript dependencies in `package.json`/`package-lock.json`
+* Edit code in `pkg/web/static/js/index.js`
+
+```shell
+npm run build # to generate the bundled files
+npm run watch # to watch for changes and re-generate while developing
+```
+
+Make sure to add the changed/generated files, so not everyone has to use
+nodejs.

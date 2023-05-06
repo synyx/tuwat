@@ -1,6 +1,6 @@
 ---
 include:
-  # We include the default workflow for MR based pipelines (e.g build on default branch, tags and MR events)
+  # We include the default workflow for MR based pipelines (e.g. build on default branch, tags and MR events)
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
   # Import pre-fabricated Docker pipeline based on kaniko
   - project: 'gitlabci/gitlabci-templates'

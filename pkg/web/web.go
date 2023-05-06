@@ -49,10 +49,12 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 		environment: cfg.Environment,
 	}
 
-	if cfg.Mode == "dev" {
-		_, filename, _, _ := runtime.Caller(0)
-		templatespath := path.Join(path.Dir(filename), "/templates")
-		handler.fs = os.DirFS(templatespath)
+	if dir, ok := os.LookupEnv("TUWAT_TEMPLATEDIR"); ok {
+		if dir == "" {
+			_, filename, _, _ := runtime.Caller(0)
+			dir = path.Join(path.Dir(filename), "/templates")
+		}
+		handler.fs = os.DirFS(dir)
 	} else {
 		handler.fs, _ = fs.Sub(templates, "templates")
 	}
