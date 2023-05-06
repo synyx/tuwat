@@ -37,7 +37,8 @@ Connectors for
 
 ```shell
 go build -o tuwat ./cmd/tuwat
-./tuwat -conf config.example.toml -environment test -mode dev
+export TUWAT_TEMPLATEDIR= TUWAT_STATICDIR=
+./tuwat -conf config.example.toml -environment test
 ```
 
 * Open http://localhost:8988
