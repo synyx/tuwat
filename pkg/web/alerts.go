@@ -32,7 +32,7 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
-	otelzap.Ctx(s.Request().Context()).Info("Registering", zap.Any("thing", h))
+	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection")
 	update := h.aggregator.Register(h)
 	defer h.aggregator.Unregister(h)
 
@@ -68,7 +68,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 
 	renderer := h.sseRenderer(w, req, "alerts.gohtml")
 
-	otelzap.Ctx(req.Context()).Info("Registering", zap.Any("thing", h))
+	otelzap.Ctx(req.Context()).Info("Registering sse connection")
 	update := h.aggregator.Register(h)
 	defer h.aggregator.Unregister(h)
 

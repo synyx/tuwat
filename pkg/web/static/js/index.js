@@ -1,5 +1,28 @@
 import * as Turbo from '@hotwired/turbo';
 
+class SSEConn {
+    constructor(socketUrl) {
+        this.active = true;
+        this.socketUrl = socketUrl;
+    }
+    connect() {
+        this.socket = new EventSource(this.socketUrl);
+    }
+    disconnect() {
+        this.active = false;
+        if (this.socket) {
+            Turbo.disconnectStreamSource(this.socket);
+            this.socket.close();
+            this.socket = null;
+        }
+    }
+    reconnect() {
+        this.active = true;
+        if (!this.socket) {
+            this.connect();
+        }
+    }
+}
 class WebSocketConn {
     constructor(socketUrl) {
         this.active = true;
@@ -70,6 +93,8 @@ let conn = null;
 if (window["WebSocket"]) {
     const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts";
     conn = new WebSocketConn(wsUrl);
+} else if (window["EventSource"]) {
+    conn = new SSEConn(window.location.protocol + "//" + window.location.host + "/sse/alerts");
 } else {
     conn = new FallbackConn();
 }
