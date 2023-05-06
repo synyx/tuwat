@@ -1,5 +1,16 @@
 # Releases
 
+## v0.11 - 2023-05-06 GitHub Collector
+
+* Add a new GitHub collector showing open issues/pull requests
+* Breaking Configuration Changes:
+  * `GND_ENVIRONMENT` env var renamed to `TUWAT_ENVIRONMENT`
+  * `GND_INSTANCE` env var renamed to `TUWAT_INSTANCE`
+  * `GND_ADDR` env var renamed to `TUWAT_ADDR`
+  * `-mode dev|prod` removed in favour of `TUWAT_TEMPLATEDIR` and
+    `TUWAT_STATICDIR` env vars.
+* Added `TUWAT_CONF` env var for specifying the configuration file
+
 ## v0.10 - 2023-02-10 Minimize Collections
 
 * Do not collect, if there is no-one subscribed to the dashboard to
