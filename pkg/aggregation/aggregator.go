@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/synyx/tuwat/pkg/clock"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -45,15 +46,9 @@ type BlockedAlert struct {
 	Reason string
 }
 
-type Clock interface {
-	Now() time.Time
-	After(d time.Duration) <-chan time.Time
-	NewTicker(d time.Duration) *time.Ticker
-}
-
 type Aggregator struct {
 	interval time.Duration
-	clock    Clock
+	clock    clock.Clock
 	tracer   trace.Tracer
 
 	current       Aggregate
@@ -86,7 +81,7 @@ func init() {
 	prometheus.MustRegister(regCount)
 }
 
-func NewAggregator(cfg *config.Config, clock Clock) *Aggregator {
+func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 
 	a := &Aggregator{
 		interval:   cfg.Interval,

@@ -2,21 +2,21 @@ package clock
 
 import "time"
 
-type Clock struct {
+type RealClock struct {
 }
 
-func NewClock() *Clock {
-	return &Clock{}
+func NewClock() *RealClock {
+	return &RealClock{}
 }
 
-func (c *Clock) After(d time.Duration) <-chan time.Time {
+func (c *RealClock) After(d time.Duration) <-chan time.Time {
 	return time.After(d)
 }
 
-func (c *Clock) NewTicker(d time.Duration) *time.Ticker {
+func (c *RealClock) NewTicker(d time.Duration) *time.Ticker {
 	return time.NewTicker(d)
 }
 
-func (c *Clock) Now() time.Time {
+func (c *RealClock) Now() time.Time {
 	return time.Now()
 }

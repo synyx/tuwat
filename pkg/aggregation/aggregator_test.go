@@ -2,7 +2,6 @@ package aggregation
 
 import (
 	"context"
-	"sort"
 	"testing"
 	"time"
 
@@ -43,7 +42,7 @@ func TestSkippingAggregation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	clk := newMockClock(time.Now())
+	clk := clock.NewMockClock(time.Now())
 
 	connector := &mockConnector{}
 	cfg := &config.Config{Connectors: []connectors.Connector{connector}, Interval: 10 * time.Second}
@@ -71,75 +70,6 @@ func TestSkippingAggregation(t *testing.T) {
 	// after enough time, the collection should now run to completion without panicking due to the collection
 	// channel already being closed.
 	a.collect(ctx, collect)
-}
-
-type mockClock struct {
-	now    time.Time
-	timers []*struct {
-		t  time.Time
-		ch chan<- time.Time
-	}
-}
-
-func newMockClock(t time.Time) *mockClock {
-	return &mockClock{
-		now: t,
-		timers: make([]*struct {
-			t  time.Time
-			ch chan<- time.Time
-		}, 0),
-	}
-}
-
-func (c *mockClock) Progress(d time.Duration) {
-	i := 0
-	then := c.now.Add(d)
-	for _, s := range c.timers {
-		if s.t.Before(then) {
-			s.ch <- s.t
-			i++
-		} else {
-			break
-		}
-	}
-	c.timers = c.timers[i:]
-	c.now = then
-}
-
-func (c *mockClock) After(d time.Duration) <-chan time.Time {
-
-	ch := make(chan time.Time)
-	c.insertTimer(c.now.Add(d), ch)
-
-	return ch
-}
-
-func (c *mockClock) insertTimer(t time.Time, ch chan<- time.Time) {
-	i := sort.Search(len(c.timers), func(i int) bool {
-		return c.timers[i].t.After(t)
-	})
-	c.timers = append(c.timers, nil)
-	copy(c.timers[i+1:], c.timers[i:])
-
-	c.timers[i] = &struct {
-		t  time.Time
-		ch chan<- time.Time
-	}{
-		t,
-		ch,
-	}
-}
-
-// NOTE: NewTicker ticks only once
-func (c *mockClock) NewTicker(d time.Duration) *time.Ticker {
-	ch := make(chan time.Time)
-	c.insertTimer(c.now.Add(d), ch)
-
-	return &time.Ticker{C: ch}
-}
-
-func (c *mockClock) Now() time.Time {
-	return c.now
 }
 
 type mockConnector struct {
