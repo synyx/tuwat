@@ -36,13 +36,6 @@ builds:
     goarch:
       - amd64
       - arm64
-  - <<: *build_defaults
-    id: windows
-    goos:
-      - windows
-    goarch:
-      - amd64
-      - arm64
 
 # For systems supporting universal binaries (hello Apple!) we ship a single binary
 universal_binaries:
@@ -68,10 +61,6 @@ archives:
     id: nix
     builds: [ linux, darwin ]
     format: tar.gz
-  - <<: *archive_defaults
-    id: windows
-    builds: [ windows ]
-    format: zip
 
 dockers:
   - image_templates:
