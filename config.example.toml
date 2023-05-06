@@ -19,8 +19,8 @@ Tag = 'gh'
 
 #[[icinga2]]
 #Tag = "synyx"
-#URL = "https://icinga2.synyx.coffee:5665"
-#DashboardURL = "https://icinga2.synyx.coffee"
+#URL = "https://icinga2.example.com:5665"
+#DashboardURL = "https://icinga2.example.com"
 #Insecure = false
 #User = "icingaweb2"
 #Password = "aBaBaBaBaBaBaBaBaBaB"
