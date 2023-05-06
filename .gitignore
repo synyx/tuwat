@@ -2,9 +2,9 @@
 /tuwat
 
 # App configuration
-/config.toml
+/*.toml
+!/config.example.toml
 
 # JS
 node_modules/
 dist/
-node_modules/
