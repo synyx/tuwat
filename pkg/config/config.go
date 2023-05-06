@@ -64,13 +64,13 @@ func NewConfiguration() (*Config, error) {
 		PrintVersion: *fVersion,
 	}
 
-	if value, ok := os.LookupEnv("GND_ENVIRONMENT"); ok {
+	if value, ok := os.LookupEnv("TUWAT_ENVIRONMENT"); ok {
 		cfg.Environment = value
 	} else {
 		cfg.Environment = *fEnvironment
 	}
 
-	if value, ok := os.LookupEnv("GND_INSTANCE"); ok {
+	if value, ok := os.LookupEnv("TUWAT_INSTANCE"); ok {
 		cfg.Instance = value
 	} else if *fInstance != "" {
 		cfg.Instance = *fInstance
@@ -78,10 +78,14 @@ func NewConfiguration() (*Config, error) {
 		cfg.Instance = getHostname()
 	}
 
-	if value, ok := os.LookupEnv("GND_ADDR"); ok {
+	if value, ok := os.LookupEnv("TUWAT_ADDR"); ok {
 		cfg.WebAddr = value
 	} else {
 		cfg.WebAddr = *fAddr
+	}
+
+	if value, ok := os.LookupEnv("TUWAT_CONF"); ok {
+		*fConfigFile = value
 	}
 
 	err := cfg.loadFile(*fConfigFile)
