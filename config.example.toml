@@ -5,15 +5,17 @@ interval = "1m"
 
 
 [[rule]]
-description = "blocked because example cronjob"
+description = "Ignore Drafts"
 [rule.label]
-Namespace = "example"
-context = "cronjob"
+Draft = "true"
 
 [[rule]]
 description = "blocked because not needed"
 what = "fooo service"
 
+[[github]]
+Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
+Tag = 'gh'
 
 #[[icinga2]]
 #Tag = "synyx"
