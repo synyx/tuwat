@@ -3,8 +3,15 @@ name: Node.js CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - package*.json
+      - pkg/web/static/js/*.js
   pull_request:
     branches: [ main ]
+    paths:
+      - package*.json
+      - pkg/web/static/js/*.js
+      - webpack.config.js
 
 jobs:
   build:
@@ -12,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [16.x, 20.x]
 
     steps:
       - uses: actions/checkout@v3
