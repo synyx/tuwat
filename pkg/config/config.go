@@ -11,6 +11,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
+	"github.com/synyx/tuwat/pkg/connectors/github"
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
@@ -54,6 +55,7 @@ type ConnectorConfig struct {
 	Icinga2s      []icinga2.Config         `toml:"icinga2"`
 	NagiosAPIs    []nagiosapi.Config       `toml:"nagiosapi"`
 	Patchmans     []patchman.Config        `toml:"patchman"`
+	GitHubIssues  []github.Config          `toml:"github"`
 }
 
 func NewConfiguration() (*Config, error) {
@@ -119,6 +121,9 @@ func (cfg *Config) loadFile(file string) error {
 	}
 	for _, connectorConfig := range connectorConfigs.Patchmans {
 		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(connectorConfig))
+	}
+	for _, connectorConfig := range connectorConfigs.GitHubIssues {
+		cfg.Connectors = append(cfg.Connectors, github.NewConnector(connectorConfig))
 	}
 
 	whereTemplate := connectorConfigs.Main.WhereTemplate
