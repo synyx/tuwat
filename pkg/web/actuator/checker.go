@@ -3,28 +3,32 @@ package actuator
 import (
 	"context"
 	"time"
+
+	"github.com/synyx/tuwat/pkg/clock"
 )
 
 const checkInterval = time.Second * 10
 
 type HealthCheck func(ctx context.Context) (status Status, message string)
 
-type healthAccumulator struct {
+type HealthAccumulator struct {
+	clock        clock.Clock
 	healthChecks map[string]HealthCheck
 }
 
-func NewHealthAccumulator() *healthAccumulator {
-	return &healthAccumulator{
+func NewHealthAccumulator(clock clock.Clock) *HealthAccumulator {
+	return &HealthAccumulator{
+		clock:        clock,
 		healthChecks: make(map[string]HealthCheck),
 	}
 }
 
-func (h *healthAccumulator) Register(component string, check HealthCheck) {
+func (h *HealthAccumulator) Register(component string, check HealthCheck) {
 	h.healthChecks[component] = check
 }
 
-func (h *healthAccumulator) Run(appCtx context.Context) {
-	tick := time.NewTicker(checkInterval)
+func (h *HealthAccumulator) Run(appCtx context.Context) {
+	tick := h.clock.NewTicker(checkInterval)
 	defer tick.Stop()
 
 checker:
