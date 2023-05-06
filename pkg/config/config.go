@@ -19,14 +19,12 @@ import (
 
 var fVersion = flag.Bool("version", false, "Print version")
 var fInstance = flag.String("instance", "0", "Running instance identifier")
-var fMode = flag.String("mode", "dev", "Mode to use (dev, prod)")
 var fEnvironment = flag.String("environment", "test", "(test, stage, prod)")
 var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application to port")
 var fConfigFile = flag.String("conf", "/etc/tuwat.toml", "Configuration file")
 
 type Config struct {
 	WebAddr       string
-	Mode          string
 	Environment   string
 	JaegerUrl     string
 	Instance      string
@@ -64,12 +62,6 @@ func NewConfiguration() (*Config, error) {
 
 	cfg := &Config{
 		PrintVersion: *fVersion,
-	}
-
-	if value, ok := os.LookupEnv("GND_MODE"); ok {
-		cfg.Mode = value
-	} else {
-		cfg.Mode = *fMode
 	}
 
 	if value, ok := os.LookupEnv("GND_ENVIRONMENT"); ok {

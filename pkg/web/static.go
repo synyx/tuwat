@@ -18,10 +18,12 @@ var content embed.FS
 func newNoListingFileServer(cfg *config.Config) http.Handler {
 	var staticFS fs.FS
 
-	if cfg.Mode == "dev" {
-		_, filename, _, _ := runtime.Caller(1)
-		staticpath := path.Join(path.Dir(filename), "/static")
-		staticFS = os.DirFS(staticpath)
+	if dir, ok := os.LookupEnv("TUWAT_STATICDIR"); ok {
+		if dir == "" {
+			_, filename, _, _ := runtime.Caller(1)
+			dir = path.Join(path.Dir(filename), "/static")
+		}
+		staticFS = os.DirFS(dir)
 	} else {
 		staticFS, _ = fs.Sub(content, "static")
 	}
