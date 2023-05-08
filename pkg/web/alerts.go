@@ -66,7 +66,8 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	renderer := h.sseRenderer(w, req, "alerts.gohtml")
+	renderer, cancel := h.sseRenderer(w, req, "alerts.gohtml")
+	defer cancel()
 
 	otelzap.Ctx(req.Context()).Info("Registering sse connection")
 	update := h.aggregator.Register(h)
@@ -82,7 +83,10 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 
 			otelzap.Ctx(req.Context()).Debug("sending to sse client")
 			aggregate := h.aggregator.Alerts()
-			renderer(webContent{Content: aggregate})
+			if err := renderer(webContent{Content: aggregate}); err != nil {
+				otelzap.Ctx(req.Context()).Debug("stop sending to sse client", zap.Error(err))
+				return
+			}
 		case <-req.Context().Done():
 			otelzap.Ctx(req.Context()).Info("stop sending to sse client")
 			return

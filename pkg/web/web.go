@@ -185,9 +185,9 @@ func (h *webHandler) partialRenderer(req *http.Request, patterns ...string) rend
 	}
 }
 
-type sseRenderFunc func(data webContent)
+type sseRenderFunc func(data webContent) error
 
-func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) sseRenderFunc {
+func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) (sseRenderFunc, context.CancelFunc) {
 	var templateFiles []string
 	var templateDefinition string
 
@@ -206,8 +206,11 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	}
 
 	// prepare the flusher
-	flusher, _ := w.(http.Flusher)
-	ctx, _ := context.WithTimeout(req.Context(), 10*time.Minute)
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		panic("sse: response writer does not implement flush interface")
+	}
+	ctx, cancel := context.WithTimeout(req.Context(), 10*time.Minute)
 	req = req.WithContext(ctx)
 
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -217,39 +220,46 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	fmt.Fprint(w, "retry: 60000\n\n")
+	_, err = fmt.Fprint(w, "retry: 60000\n\n")
+	if err != nil {
+		return func(data webContent) error {
+			return err
+		}, cancel
+	}
 
 	flusher.Flush()
 
-	return func(data webContent) {
+	return func(data webContent) error {
 		data.Version = version.Info.Version
 		data.Environment = h.environment
 
 		buf := new(bytes.Buffer)
 
-		tr := trace.SpanFromContext(req.Context())
-		fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID())
-
-		fmt.Fprint(w, "event: message\n")
 		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
 		if err != nil {
 			otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
 			panic(err)
 		}
 
+		tr := trace.SpanFromContext(req.Context())
+		_, err = fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID())
+		_, err = fmt.Fprint(w, "event: message\n")
+
 		scanner := bufio.NewScanner(buf)
 		for scanner.Scan() {
 			_, err = w.Write([]byte("data: "))
 			_, err = w.Write(scanner.Bytes())
 			_, err = w.Write([]byte("\n"))
-			if err != nil {
-				otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
-				panic(err)
-			}
+
 		}
 		_, err = w.Write([]byte("\n"))
 		flusher.Flush()
-	}
+
+		if err != nil {
+			otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
+		}
+		return err
+	}, cancel
 }
 
 type wsRenderFunc func(data webContent)
