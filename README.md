@@ -17,12 +17,14 @@ Connectors for
 
 * Prometheus [Alertmanager]
 * [GitLab] MRs
+* [GitHub] PRs
 * [Icinga 2]
 * [Nagios API]
 * [Patchman]
 
 [Alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
 [GitLab]: https://www.gitlab.com
+[GitHub]: https://www.github.com
 [Icinga 2]: https://icinga.com
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
