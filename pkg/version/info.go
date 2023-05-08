@@ -14,7 +14,7 @@ var (
 	releaseDate string
 )
 
-// A rich representation of the version information which can also be readily serialized into a JSON representation
+// VersionInfo is a rich representation of the version information which can also be readily serialized into a JSON representation
 type VersionInfo struct {
 	Application string `json:"application"`
 	Version     string `json:"version"`

@@ -1,4 +1,4 @@
-# Before building anything, we need to ensure that go modules and generators are setup correctly
+# Before building anything, we need to ensure that go modules and generators are set up correctly
 before:
   hooks:
     - go mod tidy
@@ -50,7 +50,7 @@ snapshot:
 
 # Configure what goes into the archives
 archives:
-  - <<: &archive_defaults
+  - <<:
       name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
       # Additonally packaged files
       files:

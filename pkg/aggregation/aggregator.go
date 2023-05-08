@@ -389,6 +389,8 @@ func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
 	a.amu.RUnlock()
 
 	if alert.Silence != nil {
-		alert.Silence(ctx, 24*time.Hour, user)
+		if err := alert.Silence(ctx, 24*time.Hour, user); err != nil {
+			otelzap.Ctx(ctx).Info("error silencing", zap.Error(err))
+		}
 	}
 }

@@ -31,7 +31,7 @@ Connectors for
 
 ## License
 
-[BSD 3-Clause License](./LICENSE)
+[BSD 3-Clause License](LICENSE)
 
 ## Development
 
