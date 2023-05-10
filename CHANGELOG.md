@@ -1,5 +1,9 @@
 # Releases
 
+## v0.12 - 2023-05-10 SSE
+
+* Use SSE if Websockets are not available
+
 ## v0.11 - 2023-05-06 GitHub Collector
 
 * Add a new GitHub collector showing open issues/pull requests
