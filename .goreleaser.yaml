@@ -102,7 +102,7 @@ docker_manifests:
       - 'synyx/tuwat:{{ .Version }}-arm64'
 
 nfpms:
-  - file_name_template: '{{ .ProjectName }}_{{ .Arch }}'
+  - file_name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Arch }}'
     homepage: https://github.com/synyx/tuwat
     description: |-
       Simple, 0-dependencies, dashboard for Nagios/Alertmanager/GitLab...
