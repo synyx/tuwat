@@ -61,6 +61,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 
 	handler.routes = []route{
 		newRoute("GET", "/", handler.alerts),
+		newRoute("GET", "/foo.php", handler.alerts),
 		newRoute("GET", "/alerts", handler.alerts),
 		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
 		newRoute("GET", "/ws/alerts", websocket.Handler(handler.wsalerts).ServeHTTP),
