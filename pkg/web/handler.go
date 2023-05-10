@@ -19,6 +19,7 @@ func Handle(appCtx context.Context, cfg *config.Config, webHandler http.Handler)
 	muxer.Handle("actuator", "/actuator/prometheus", promhttp.Handler())
 	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer(cfg)))
 	muxer.Handle("web", "/", webHandler)
+	muxer.Handle("web", "/foo.php", webHandler)
 
 	Serve(appCtx, cfg.WebAddr, muxer.handler)
 }
