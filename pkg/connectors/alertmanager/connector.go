@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	html "html/template"
 	"io"
 	"net/http"
@@ -153,6 +154,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	return alerts, nil
+}
+
+func (c *Connector) String() string {
+	return fmt.Sprintf("Alertmanager (%s)", c.config.URL)
 }
 
 func k8sLabels(haystack map[string]string, needles ...string) []string {

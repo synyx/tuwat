@@ -88,6 +88,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
+func (c *Connector) String() string {
+	return fmt.Sprintf("GitHub (%s)", c.config.URL)
+}
+
 func (c *Connector) collectIssues(ctx context.Context, repo string) ([]issue, error) {
 	body, err := c.get(ctx, c.config.URL+"/repos/"+repo+"/issues")
 	if err != nil {

@@ -13,6 +13,7 @@ type Connector interface {
 
 type Collector interface {
 	Collect(ctx context.Context) ([]Alert, error)
+	String() string
 }
 
 type SilencerFunc func(ctx context.Context, duration time.Duration, user string) error

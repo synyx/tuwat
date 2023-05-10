@@ -216,7 +216,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 			alert := Alert{
 				Where:   "tuwat",
 				Tag:     r.tag,
-				What:    "Collection Failure",
+				What:    "Collection Failure: " + r.connector.String(),
 				Details: r.error.Error(),
 				When:    0 * time.Second,
 				Status:  connectors.Critical.String(),

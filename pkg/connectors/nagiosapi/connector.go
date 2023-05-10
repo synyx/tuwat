@@ -117,6 +117,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
+func (c *Connector) String() string {
+	return fmt.Sprintf("NagiosAPI (%s)", c.config.URL)
+}
+
 func (c *Connector) collectHosts(ctx context.Context) (map[string]host, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+"/state", nil)

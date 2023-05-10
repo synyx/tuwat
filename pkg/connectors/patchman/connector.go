@@ -92,6 +92,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
+func (c *Connector) String() string {
+	return fmt.Sprintf("Patchman (%s)", c.config.URL)
+}
+
 func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 	var response []host
 	next := "/api/host/"

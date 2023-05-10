@@ -75,6 +75,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
+func (c *Connector) String() string {
+	return fmt.Sprintf("GitLab MRs (%s)", c.config.URL)
+}
+
 func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
 	body, err := c.get("/api/v4/merge_requests", ctx)
 	if err != nil {
