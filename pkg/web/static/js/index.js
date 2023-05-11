@@ -1,4 +1,5 @@
 import * as Turbo from '@hotwired/turbo';
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 class SSEConn {
     constructor(socketUrl) {
@@ -25,25 +26,13 @@ class SSEConn {
 }
 class WebSocketConn {
     constructor(socketUrl) {
-        this.active = true;
         this.socketUrl = socketUrl;
     }
     connect() {
         let conn = this;
-        let socket = new WebSocket(this.socketUrl);
-        socket.addEventListener("close", function (ev) {
-            console.log('Socket is closed. Reconnect will be attempted in 1 second: ', ev.code, ev.reason);
-            Turbo.disconnectStreamSource(socket);
-            conn.socket = null;
-            setTimeout(function () {
-                if (conn.active) {
-                    conn.reconnect();
-                }
-            }, 1000);
-        })
+        let socket = new ReconnectingWebSocket(this.socketUrl);
         socket.addEventListener("error", function (ev) {
             console.error('Socket encountered error: ', ev.message, 'Closing socket');
-            socket.close()
         })
         socket.addEventListener("open", function () {
             console.log('Socket is connected.  Enabling turbo.');
@@ -52,7 +41,6 @@ class WebSocketConn {
         this.socket = socket;
     }
     disconnect() {
-        this.active = false;
         if (this.socket) {
             Turbo.disconnectStreamSource(this.socket);
             this.socket.close(3001, "Human disconnect");
@@ -60,7 +48,6 @@ class WebSocketConn {
         }
     }
     reconnect() {
-        this.active = true;
         if (!this.socket) {
             this.connect();
         }

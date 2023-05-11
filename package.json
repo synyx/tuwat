@@ -4,7 +4,8 @@
   "description": "Tuwat Operations Dashboard",
   "private": true,
   "dependencies": {
-    "@hotwired/turbo": "^7.3.0"
+    "@hotwired/turbo": "^7.3.0",
+    "reconnecting-websocket": "^4.4.0"
   },
   "devDependencies": {
     "webpack": "^5.82.0",
