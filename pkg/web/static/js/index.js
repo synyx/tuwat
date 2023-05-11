@@ -61,10 +61,14 @@ class FallbackConn {
         let conn = this;
         this.timerId = setTimeout(function reload() {
             if (conn.active) {
-                location.reload();
-                conn.timerId = setTimeout(reload, 60000);
+                let lastRefresh = Date.parse(document.querySelector("#last_refresh").dateTime);
+                if (Date.now() - lastRefresh > 70000) {
+                    console.log("Force reloading, last refresh too old: " + (Date.now() - lastRefresh))
+                    location.reload();
+                }
+                conn.timerId = setTimeout(reload, 10000);
             }
-        }, 60000);
+        }, 10000);
     }
     disconnect() {
         this.active = false;
@@ -76,6 +80,7 @@ class FallbackConn {
     }
 }
 
+let fallback = new FallbackConn(window.location.protocol + "//" + window.location.host + "/sse/alerts");
 let conn = null;
 if (window["WebSocket"]) {
     const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts";
@@ -83,8 +88,9 @@ if (window["WebSocket"]) {
 } else if (window["EventSource"]) {
     conn = new SSEConn(window.location.protocol + "//" + window.location.host + "/sse/alerts");
 } else {
-    conn = new FallbackConn();
+    conn = fallback;
 }
+fallback.connect();
 conn.connect();
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -94,9 +100,11 @@ document.addEventListener("DOMContentLoaded", function() {
         if (this.checked) {
             console.log('Manually connecting stream.');
             conn.reconnect();
+            fallback.reconnect();
         } else {
             console.log('Manually disconnecting stream.');
             conn.disconnect();
+            fallback.disconnect();
         }
     });
 });

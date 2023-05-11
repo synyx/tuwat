@@ -2,7 +2,7 @@
 {{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
 <h3>
     Alerts
-    <time datetime="{{.Content.CheckTime.Format "2006-01-02T15:04:05+07:00"}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
+    <time id="last_refresh" datetime="{{.Content.CheckTime.Format "2006-01-02T15:04:05Z07:00"}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
 </h3>
 
 <table class="widetable">
