@@ -54,7 +54,7 @@ type Aggregator struct {
 	current       Aggregate
 	connectors    []connectors.Connector
 	whereTempl    *text.Template
-	registrations map[any]chan<- bool
+	registrations map[string]chan<- bool
 	mu            *sync.RWMutex // Protecting Registrations
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
@@ -89,7 +89,7 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 		whereTempl: cfg.WhereTemplate,
 		blockRules: cfg.Filter,
 
-		registrations: make(map[any]chan<- bool),
+		registrations: make(map[string]chan<- bool),
 		mu:            new(sync.RWMutex),
 		cmu:           new(sync.RWMutex),
 		amu:           new(sync.RWMutex),
@@ -216,7 +216,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 			alert := Alert{
 				Where:   "tuwat",
 				Tag:     r.tag,
-				What:    "Collection Failure: " + r.connector.String(),
+				What:    "Collection Failure on " + r.connector.String(),
 				Details: r.error.Error(),
 				When:    0 * time.Second,
 				Status:  connectors.Critical.String(),
@@ -289,7 +289,7 @@ func (a *Aggregator) Alerts() Aggregate {
 	return a.current
 }
 
-func (a *Aggregator) Register(handler any) <-chan bool {
+func (a *Aggregator) Register(handler string) <-chan bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -300,10 +300,13 @@ func (a *Aggregator) Register(handler any) <-chan bool {
 
 	r := make(chan bool, 1)
 	a.registrations[handler] = r
+
+	regCount.Set(float64(len(a.registrations)))
+
 	return r
 }
 
-func (a *Aggregator) Unregister(handler any) {
+func (a *Aggregator) Unregister(handler string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -311,6 +314,8 @@ func (a *Aggregator) Unregister(handler any) {
 		close(r)
 		delete(a.registrations, handler)
 	}
+
+	regCount.Set(float64(len(a.registrations)))
 }
 
 func (a *Aggregator) notify(ctx context.Context) {
@@ -319,7 +324,7 @@ func (a *Aggregator) notify(ctx context.Context) {
 
 	otelzap.Ctx(ctx).Debug("Notifying", zap.Any("count", len(a.registrations)))
 
-	var toUnregister []any
+	var toUnregister []string
 
 	for thing, r := range a.registrations {
 		select {
@@ -337,8 +342,6 @@ func (a *Aggregator) notify(ctx context.Context) {
 		otelzap.Ctx(ctx).Debug("Force unregistering", zap.Any("thing", thing))
 		a.Unregister(thing)
 	}
-
-	regCount.Set(float64(len(a.registrations)))
 }
 
 func (a *Aggregator) Reconfigure(cfg *config.Config) {

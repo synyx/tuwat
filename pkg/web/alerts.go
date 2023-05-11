@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 )
@@ -36,23 +37,24 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
-	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection")
-	update := h.aggregator.Register(h)
-	defer h.aggregator.Unregister(h)
+	tr := trace.SpanFromContext(s.Request().Context()).SpanContext().TraceID().String()
+	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection", zap.String("id", tr))
+	update := h.aggregator.Register(tr)
+	defer h.aggregator.Unregister(tr)
 
 	for {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client")
-				return
+				otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, update channel closed")
+				update = nil
 			}
 
 			otelzap.Ctx(s.Request().Context()).Debug("sending to websocket client")
 			aggregate := h.aggregator.Alerts()
 			renderer(webContent{Content: aggregate})
 		case <-s.Request().Context().Done():
-			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client")
+			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, req ctx done")
 			return
 		}
 	}
@@ -73,9 +75,10 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 	renderer, cancel := h.sseRenderer(w, req, "alerts.gohtml")
 	defer cancel()
 
-	otelzap.Ctx(req.Context()).Info("Registering sse connection")
-	update := h.aggregator.Register(h)
-	defer h.aggregator.Unregister(h)
+	tr := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String()
+	otelzap.Ctx(req.Context()).Info("Registering sse connection", zap.String("id", tr))
+	update := h.aggregator.Register(tr)
+	defer h.aggregator.Unregister(tr)
 
 	for {
 		select {
