@@ -65,6 +65,9 @@ class FallbackConn {
                 if (Date.now() - lastRefresh > 70000) {
                     console.log("Force reloading, last refresh too old: " + (Date.now() - lastRefresh))
                     location.reload();
+                } else if (Date.now() - lastRefresh > 60000) {
+                    console.log("Reloading, last refresh too old: " + (Date.now() - lastRefresh))
+                    location.reload(); // TODO: make a request to get a partial
                 }
                 conn.timerId = setTimeout(reload, 10000);
             }
