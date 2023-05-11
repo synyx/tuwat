@@ -101,6 +101,7 @@ if (window["WebSocket"]) {
 conn.connect();
 
 document.addEventListener("DOMContentLoaded", function() {
+    console.log('Adding handler for manual disconnect.');
     const csEl = document.getElementById('connection-state');
     csEl.addEventListener("change", function () {
         if (this.checked) {
