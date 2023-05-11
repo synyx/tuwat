@@ -75,6 +75,10 @@ func TestSkippingAggregation(t *testing.T) {
 type mockConnector struct {
 }
 
+func (m *mockConnector) String() string {
+	return "mock"
+}
+
 func (m *mockConnector) Tag() string {
 	return "mock"
 }
