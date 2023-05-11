@@ -1,5 +1,10 @@
 # Releases
 
+## v0.13 - 2023-05-11 Multiple Users
+
+* Fix websocket/sse registrations
+* Make event source selectable via /alerts?eventSource=sse|websocket|fallback
+
 ## v0.12 - 2023-05-10 SSE
 
 * Use SSE if Websockets are not available
