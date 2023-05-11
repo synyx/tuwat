@@ -10,11 +10,15 @@ import (
 
 func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 
-	renderer := h.baseRenderer(req, "alerts.gohtml")
-
 	aggregate := h.aggregator.Alerts()
 
-	renderer(w, 200, webContent{Content: aggregate})
+	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
+		renderer := h.partialRenderer(req, "alerts.gohtml")
+		renderer(w, 200, webContent{Content: aggregate})
+	} else {
+		renderer := h.baseRenderer(req, "alerts.gohtml")
+		renderer(w, 200, webContent{Content: aggregate})
+	}
 }
 
 func (h *webHandler) wsalerts(s *websocket.Conn) {
