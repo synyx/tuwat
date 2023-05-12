@@ -12,6 +12,7 @@ import (
 	"github.com/synyx/tuwat/pkg/log"
 	"github.com/synyx/tuwat/pkg/version"
 	"github.com/synyx/tuwat/pkg/web"
+	"github.com/synyx/tuwat/pkg/web/actuator"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
@@ -36,8 +37,12 @@ func main() {
 	aggregator := aggregation.NewAggregator(cfg, clk)
 	webHandler := web.WebHandler(cfg, aggregator)
 
+	acc := actuator.NewHealthAccumulator(clk)
+	acc.Register("aggregation", aggregation.NewAggregatorHealthCheck(aggregator))
+
 	go web.Handle(appCtx, cfg, webHandler)
 	go aggregator.Run(appCtx)
+	go acc.Run(appCtx)
 
 	reconfigure := make(chan os.Signal, 1)
 	signal.Notify(reconfigure, syscall.SIGHUP)
