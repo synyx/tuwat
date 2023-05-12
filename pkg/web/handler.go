@@ -16,6 +16,7 @@ func Handle(appCtx context.Context, cfg *config.Config, webHandler http.Handler)
 
 	muxer.Handle("actuator", "/actuator/health", actuator.HealthAggregator)
 	muxer.Handle("actuator", "/actuator/info", actuator.NewVersionHandler())
+	muxer.Handle("actuator", "/actuator/debug", actuator.NewDebugHandler())
 	muxer.Handle("actuator", "/actuator/prometheus", promhttp.Handler())
 	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer(cfg)))
 	muxer.Handle("web", "/", webHandler)
