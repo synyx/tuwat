@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	pprofhttp "net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/synyx/tuwat/pkg/config"
@@ -16,7 +17,11 @@ func Handle(appCtx context.Context, cfg *config.Config, webHandler http.Handler)
 
 	muxer.Handle("actuator", "/actuator/health", actuator.HealthAggregator)
 	muxer.Handle("actuator", "/actuator/info", actuator.NewVersionHandler())
-	muxer.Handle("actuator", "/actuator/debug", actuator.NewDebugHandler())
+	muxer.Handle("actuator", "/actuator/pprof/cmdline", http.HandlerFunc(pprofhttp.Cmdline))
+	muxer.Handle("actuator", "/actuator/pprof/profile", http.HandlerFunc(pprofhttp.Profile))
+	muxer.Handle("actuator", "/actuator/pprof/symbol", http.HandlerFunc(pprofhttp.Symbol))
+	muxer.Handle("actuator", "/actuator/pprof/trace", http.HandlerFunc(pprofhttp.Trace))
+	muxer.Handle("actuator", "/actuator/pprof/", http.HandlerFunc(pprofhttp.Index))
 	muxer.Handle("actuator", "/actuator/prometheus", promhttp.Handler())
 	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer(cfg)))
 	muxer.Handle("web", "/", webHandler)
