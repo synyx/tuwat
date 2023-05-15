@@ -107,12 +107,18 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 }
 
 func (a *Aggregator) active() bool {
-	if la := a.lastAccess.Load(); la == nil {
+	if len(a.registrations) > 0 {
+		// As long as there are open connections, we should be active
+		return true
+	} else if la := a.lastAccess.Load(); la == nil {
+		// On startup, we should be active
 		return true
 	} else if t, ok := la.(time.Time); ok && t.Before(a.clock.Now().Add(-a.interval*3)) {
+		// The last access was more than 3 intervals ago, we should be inactive
 		return false
 	}
 
+	// The last access was very recent, we should be active
 	return true
 }
 
