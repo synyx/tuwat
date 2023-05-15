@@ -3,25 +3,25 @@ package web
 import (
 	"context"
 	"net/http"
-	pprofhttp "net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/web/actuator"
+	"github.com/synyx/tuwat/pkg/web/actuator/pprofhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func Handle(appCtx context.Context, cfg *config.Config, webHandler http.Handler) {
-
+	http.Handle()
 	muxer := newTracedMuxer()
 
 	muxer.Handle("actuator", "/actuator/health", actuator.HealthAggregator)
 	muxer.Handle("actuator", "/actuator/info", actuator.NewVersionHandler())
-	muxer.Handle("actuator", "/actuator/pprof/cmdline", http.HandlerFunc(pprofhttp.Cmdline))
-	muxer.Handle("actuator", "/actuator/pprof/profile", http.HandlerFunc(pprofhttp.Profile))
-	muxer.Handle("actuator", "/actuator/pprof/symbol", http.HandlerFunc(pprofhttp.Symbol))
-	muxer.Handle("actuator", "/actuator/pprof/trace", http.HandlerFunc(pprofhttp.Trace))
-	muxer.Handle("actuator", "/actuator/pprof/", http.HandlerFunc(pprofhttp.Index))
+	muxer.Handle("actuator", "/actuator/pprof/cmdline", http.HandlerFunc(pprofhttp.CmdlineHandler))
+	muxer.Handle("actuator", "/actuator/pprof/profile", http.HandlerFunc(pprofhttp.ProfileHandler))
+	muxer.Handle("actuator", "/actuator/pprof/symbol", http.HandlerFunc(pprofhttp.SymbolHandler))
+	muxer.Handle("actuator", "/actuator/pprof/trace", http.HandlerFunc(pprofhttp.TraceHandler))
+	muxer.Handle("actuator", "/actuator/pprof/", http.HandlerFunc(pprofhttp.IndexHandler))
 	muxer.Handle("actuator", "/actuator/prometheus", promhttp.Handler())
 	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer(cfg)))
 	muxer.Handle("web", "/", webHandler)
