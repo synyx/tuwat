@@ -9,15 +9,15 @@ import (
 	"go.uber.org/zap"
 )
 
-type VersionHandler struct {
+type InfoHandler struct {
 	versionInfo *version.VersionInfo
 }
 
-func NewVersionHandler() *VersionHandler {
-	return &VersionHandler{versionInfo: &version.Info}
+func NewInfoHandler() *InfoHandler {
+	return &InfoHandler{versionInfo: &version.Info}
 }
 
-func (v *VersionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (v *InfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	encoder := json.NewEncoder(w)

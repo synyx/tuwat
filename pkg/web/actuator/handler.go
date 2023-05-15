@@ -25,7 +25,7 @@ func Handle(ctx context.Context, cfg *config.Config) {
 	muxer := http.DefaultServeMux
 
 	muxer.Handle("/actuator/health", HealthAggregator)
-	muxer.Handle("/actuator/info", NewVersionHandler())
+	muxer.Handle("/actuator/info", NewInfoHandler())
 	muxer.Handle("/actuator/prometheus", promhttp.Handler())
 
 	common.Serve(ctx, cfg.ManagementAddr, muxer)

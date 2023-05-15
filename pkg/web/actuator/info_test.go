@@ -8,7 +8,7 @@ import (
 )
 
 func TestInfoReq(t *testing.T) {
-	vh := NewVersionHandler()
+	vh := NewInfoHandler()
 
 	req, err := http.NewRequest("GET", "/actuator/info", nil)
 	if err != nil {
