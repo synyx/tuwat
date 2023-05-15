@@ -21,19 +21,21 @@ import (
 var fVersion = flag.Bool("version", false, "Print version")
 var fInstance = flag.String("instance", "0", "Running instance identifier")
 var fEnvironment = flag.String("environment", "test", "(test, stage, prod)")
-var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application to port")
+var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application port")
+var fMgmtAddr = flag.String("mgmtAddr", "127.0.0.1:8987", "Bind management port")
 var fConfigFile = flag.String("conf", "/etc/tuwat.toml", "Configuration file")
 
 type Config struct {
-	WebAddr       string
-	Environment   string
-	JaegerUrl     string
-	Instance      string
-	PrintVersion  bool
-	Connectors    []connectors.Connector
-	WhereTemplate *template.Template
-	Interval      time.Duration
-	Filter        []Rule
+	WebAddr        string
+	ManagementAddr string
+	Environment    string
+	JaegerUrl      string
+	Instance       string
+	PrintVersion   bool
+	Connectors     []connectors.Connector
+	WhereTemplate  *template.Template
+	Interval       time.Duration
+	Filter         []Rule
 }
 
 type MainConfig struct {
@@ -84,6 +86,12 @@ func NewConfiguration() (*Config, error) {
 		cfg.WebAddr = value
 	} else {
 		cfg.WebAddr = *fAddr
+	}
+
+	if value, ok := os.LookupEnv("TUWAT_MANAGEMENT_ADDR"); ok {
+		cfg.ManagementAddr = value
+	} else {
+		cfg.ManagementAddr = *fMgmtAddr
 	}
 
 	if value, ok := os.LookupEnv("TUWAT_CONF"); ok {

@@ -43,6 +43,7 @@ func main() {
 	go web.Handle(appCtx, cfg, webHandler)
 	go aggregator.Run(appCtx)
 	go acc.Run(appCtx)
+	go actuator.Handle(appCtx, cfg)
 
 	reconfigure := make(chan os.Signal, 1)
 	signal.Notify(reconfigure, syscall.SIGHUP)
