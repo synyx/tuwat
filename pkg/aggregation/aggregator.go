@@ -126,9 +126,22 @@ func (a *Aggregator) Run(ctx context.Context) {
 	otelzap.Ctx(ctx).Info("Collecting on Start")
 	go a.collect(ctx, collect)
 
+	active := true
 	for {
 		select {
 		case <-ticker.C:
+			if active && !a.active() {
+				otelzap.Ctx(ctx).Info("Deactivating collection due to inactivity")
+				active = false
+				continue
+			} else if !a.active() {
+				otelzap.Ctx(ctx).Debug("Skipping collection")
+				continue
+			} else if !active && a.active() {
+				otelzap.Ctx(ctx).Info("Reactivating collection due to activity")
+				active = true
+			}
+
 			go a.collect(ctx, collect)
 		case r, ok := <-collect:
 			if !ok {
@@ -145,11 +158,6 @@ func (a *Aggregator) Run(ctx context.Context) {
 }
 
 func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
-	if !a.active() {
-		otelzap.Ctx(ctx).Debug("Skipping collection")
-		return
-	}
-
 	var wg sync.WaitGroup
 
 	startTime := time.Now()
