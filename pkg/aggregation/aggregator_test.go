@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/clock"
+	"github.com/benbjohnson/clock"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/log"
@@ -19,7 +19,7 @@ func TestAggregation(t *testing.T) {
 
 	connector := &mockConnector{}
 	cfg := &config.Config{Connectors: []connectors.Connector{connector}}
-	a := NewAggregator(cfg, clock.NewClock())
+	a := NewAggregator(cfg, clock.NewMock())
 	go a.collect(ctx, collect)
 
 	select {
@@ -42,7 +42,7 @@ func TestSkippingAggregation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	clk := clock.NewMockClock(time.Now())
+	clk := clock.NewMock()
 
 	connector := &mockConnector{}
 	cfg := &config.Config{Connectors: []connectors.Connector{connector}, Interval: 10 * time.Second}
@@ -65,7 +65,7 @@ func TestSkippingAggregation(t *testing.T) {
 		a.collect(ctx, collect)
 	}()
 
-	clk.Progress(cfg.Interval * 5)
+	clk.Add(cfg.Interval * 5)
 
 	// after enough time, the collection should now run to completion without panicking due to the collection
 	// channel already being closed.

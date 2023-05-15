@@ -12,8 +12,8 @@ import (
 	text "text/template"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/synyx/tuwat/pkg/clock"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -123,7 +123,7 @@ func (a *Aggregator) active() bool {
 }
 
 func (a *Aggregator) Run(ctx context.Context) {
-	ticker := a.clock.NewTicker(a.interval)
+	ticker := a.clock.Ticker(a.interval)
 	defer ticker.Stop()
 
 	collect := make(chan result, 20)

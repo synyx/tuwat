@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/clock"
+	"github.com/benbjohnson/clock"
 )
 
 func TestNewHealthAccumulator(t *testing.T) {
-	mockClock := clock.NewMockClock(time.Unix(0, 0))
+	mockClock := clock.NewMock()
 	acc := NewHealthAccumulator(mockClock)
 
 	acc.Register("test", testCheck)
@@ -17,7 +17,7 @@ func TestNewHealthAccumulator(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go acc.Run(ctx)
-	mockClock.Progress(checkInterval * 2)
+	mockClock.Add(checkInterval * 2)
 	time.Sleep(20 * time.Millisecond)
 	cancel()
 }

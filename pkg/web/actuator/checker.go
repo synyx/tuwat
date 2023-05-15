@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/clock"
+	"github.com/benbjohnson/clock"
 )
 
 const checkInterval = time.Second * 10
@@ -28,7 +28,7 @@ func (h *HealthAccumulator) Register(component string, check HealthCheck) {
 }
 
 func (h *HealthAccumulator) Run(appCtx context.Context) {
-	tick := h.clock.NewTicker(checkInterval)
+	tick := h.clock.Ticker(checkInterval)
 	defer tick.Stop()
 
 checker:
