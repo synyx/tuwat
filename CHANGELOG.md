@@ -1,5 +1,16 @@
 # Releases
 
+## v0.14 - 2023-05-16 Stability
+
+* Make management port configurable via `-mgmtAddr :8987`
+* Add net/pprof for debugging, see http://127.0.0.1:8987/debug/pprof
+* Add Down state for health endpoint if last collection too old
+
+Breaking Changes:
+
+* actuator endpoints now on different port, no longer on main port (`8988` by default)
+  * http://127.0.0.1:8987/actuator/health (`/info`, `/prometheus`)
+
 ## v0.13 - 2023-05-11 Multiple Users
 
 * Fix websocket/sse registrations
