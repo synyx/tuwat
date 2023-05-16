@@ -54,8 +54,7 @@ type Aggregator struct {
 	current       Aggregate
 	connectors    []connectors.Connector
 	whereTempl    *text.Template
-	registrations map[string]chan<- bool
-	mu            *sync.RWMutex // Protecting Registrations
+	registrations sync.Map
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
 	blockRules    []config.Rule
@@ -89,8 +88,7 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 		whereTempl: cfg.WhereTemplate,
 		blockRules: cfg.Filter,
 
-		registrations: make(map[string]chan<- bool),
-		mu:            new(sync.RWMutex),
+		registrations: sync.Map{},
 		cmu:           new(sync.RWMutex),
 		amu:           new(sync.RWMutex),
 
@@ -106,8 +104,17 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 	return a
 }
 
+func (a *Aggregator) nrRegistrations() int {
+	nrRegistrations := 0
+	a.registrations.Range(func(key, value any) bool {
+		nrRegistrations += 1
+		return true
+	})
+	return nrRegistrations
+}
+
 func (a *Aggregator) active() bool {
-	if len(a.registrations) > 0 {
+	if a.nrRegistrations() > 0 {
 		// As long as there are open connections, we should be active
 		return true
 	} else if la := a.lastAccess.Load(); la == nil {
@@ -304,53 +311,44 @@ func (a *Aggregator) Alerts() Aggregate {
 }
 
 func (a *Aggregator) Register(handler string) <-chan bool {
-	a.mu.Lock()
-	defer a.mu.Unlock()
 
-	if r, ok := a.registrations[handler]; ok {
-		close(r)
-		delete(a.registrations, handler)
+	if r, ok := a.registrations.LoadAndDelete(handler); ok {
+		close(r.(chan bool))
 	}
 
 	r := make(chan bool, 1)
-	a.registrations[handler] = r
+	a.registrations.Store(handler, r)
 
-	regCount.Set(float64(len(a.registrations)))
+	regCount.Set(float64(a.nrRegistrations()))
 
 	return r
 }
 
 func (a *Aggregator) Unregister(handler string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	if r, ok := a.registrations[handler]; ok {
-		close(r)
-		delete(a.registrations, handler)
+	if r, ok := a.registrations.LoadAndDelete(handler); ok {
+		close(r.(chan bool))
 	}
 
-	regCount.Set(float64(len(a.registrations)))
+	regCount.Set(float64(a.nrRegistrations()))
 }
 
 func (a *Aggregator) notify(ctx context.Context) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	otelzap.Ctx(ctx).Debug("Notifying", zap.Any("count", len(a.registrations)))
+	otelzap.Ctx(ctx).Debug("Notifying", zap.Any("count", a.nrRegistrations()))
 
 	var toUnregister []string
 
-	for thing, r := range a.registrations {
+	a.registrations.Range(func(key, value any) bool {
+		r := value.(chan bool)
 		select {
 		case r <- true:
-			otelzap.Ctx(ctx).Debug("Notified", zap.Any("thing", thing))
+			otelzap.Ctx(ctx).Debug("Notified", zap.Any("thing", key))
 
 			a.lastAccess.Store(a.clock.Now())
-
-		case <-a.clock.After(1 * time.Second):
-			toUnregister = append(toUnregister, thing)
+		default:
+			toUnregister = append(toUnregister, key.(string))
 		}
-	}
+		return true
+	})
 
 	for _, thing := range toUnregister {
 		otelzap.Ctx(ctx).Debug("Force unregistering", zap.Any("thing", thing))
