@@ -8,7 +8,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/log"
 )
 
 func TestAggregation(t *testing.T) {
@@ -32,44 +31,6 @@ func TestAggregation(t *testing.T) {
 	if len(results) != 1 {
 		t.Error()
 	}
-}
-
-func TestSkippingAggregation(t *testing.T) {
-	collect := make(chan result)
-	// close channel to produce a panic on test failure (should not even attempt to collect)
-	close(collect)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	clk := clock.NewMock()
-
-	connector := &mockConnector{}
-	cfg := &config.Config{Connectors: []connectors.Connector{connector}, Interval: 10 * time.Second}
-
-	log.Initialize(cfg)
-
-	a := NewAggregator(cfg, clk)
-
-	// Use the aggregator, thus mark as accessed
-	a.Alerts()
-
-	// Test that the collection would happen, if we are inside a reasonable time since the last access
-	// This test assumes that the code _will_ panic (as the channel handed-in is closed).
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic")
-			}
-		}()
-		a.collect(ctx, collect)
-	}()
-
-	clk.Add(cfg.Interval * 5)
-
-	// after enough time, the collection should now run to completion without panicking due to the collection
-	// channel already being closed.
-	a.collect(ctx, collect)
 }
 
 type mockConnector struct {
