@@ -1,5 +1,9 @@
 # Releases
 
+## v0.15 - 2023-05-26 GitLab MR flood
+
+* Handle more open merge requests from GitLab
+
 ## v0.14 - 2023-05-16 Stability
 
 * Make management port configurable via `-mgmtAddr :8987`
