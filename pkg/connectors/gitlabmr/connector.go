@@ -79,46 +79,75 @@ func (c *Connector) String() string {
 	return fmt.Sprintf("GitLab MRs (%s)", c.config.URL)
 }
 
+// collectMRs will collect GitLab merge requests.
+//
+// see https://docs.gitlab.com/ee/api/merge_requests.html for more information.
 func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
-	body, err := c.get("/api/v4/merge_requests", ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer body.Close()
-
-	b, _ := io.ReadAll(body)
-	buf := bytes.NewBuffer(b)
-
-	decoder := json.NewDecoder(buf)
-
-	var response []mergeRequest
-	err = decoder.Decode(&response)
-	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse",
-			zap.String("url", c.config.URL),
-			zap.String("data", buf.String()),
-			zap.Error(err))
-		return nil, err
+	query := map[string]string{
+		"wip":      "no",
+		"state":    "opened",
+		"order_by": "updated_at",
+		"sort":     "desc",
+		"scope":    "all",
 	}
 
-	return response, nil
+	var mergeRequests []mergeRequest
+
+	for {
+		body, next, err := c.get(ctx, "/api/v4/merge_requests", query)
+		if err != nil {
+			return nil, err
+		}
+		defer body.Close()
+
+		b, _ := io.ReadAll(body)
+		buf := bytes.NewBuffer(b)
+
+		decoder := json.NewDecoder(buf)
+
+		var mrs []mergeRequest
+		err = decoder.Decode(&mrs)
+		if err != nil {
+			otelzap.Ctx(ctx).DPanic("Cannot parse",
+				zap.String("url", c.config.URL),
+				zap.String("data", buf.String()),
+				zap.Error(err))
+			return nil, err
+		}
+		mergeRequests = append(mergeRequests, mrs...)
+
+		if next != "" {
+			query["page"] = next
+			continue
+		} else {
+			break
+		}
+	}
+
+	return mergeRequests, nil
 }
 
-func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+// get a single page from GitLab API.
+//
+// Besides the obvious body and an error it will return a number (as a string)
+// to be used for pulling the next page in case of pagination.  By default, it
+// will get 100 results.  The calling code is responsible for collecting more
+// results.
+func (c *Connector) get(ctx context.Context, endpoint string, query map[string]string) (io.ReadCloser, string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.config.BearerToken)
 
 	q := req.URL.Query()
-	q.Add("wip", "no")
-	q.Add("state", "opened")
-	q.Add("order_by", "updated_at")
-	q.Add("sort", "desc")
-	q.Add("scope", "all")
+	q.Set("per_age", "100")
+	q.Set("page", "1")
+	for k, v := range query {
+		q.Set(k, v)
+	}
 	req.URL.RawQuery = q.Encode()
 	url := req.URL.String()
 
@@ -130,8 +159,8 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	res, err := client.Do(req)
 	if err != nil {
 		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", url), zap.Error(err))
-		return nil, err
+		return nil, "", err
 	}
 
-	return res.Body, nil
+	return res.Body, res.Header.Get("x-next-page"), nil
 }
