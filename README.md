@@ -29,6 +29,37 @@ Connectors for
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
 
+## Configuration
+
+See the [Example Config](./config.example.toml) for configuration.
+
+### Rules
+
+The rule-system works via an exclude list, rules simply exclude items.
+
+For example:
+
+```toml
+[[rule]]
+description = "blocked because not needed"
+what = "fooo service"
+```
+
+* The `description` field provides a visible explanation, why the item is
+  excluded.
+* The `what` field selects all items where the `What` matches the given
+  regular expression.
+
+```toml
+[[rule]]
+description = "Ignore Drafts"
+[rule.label]
+Draft = "true"
+```
+
+* The `label` section selects items via labels.  In this example it would match
+  an item which has the label `Draft` which matches the given regular expression.
+
 ## License
 
 [BSD 3-Clause License](LICENSE)
