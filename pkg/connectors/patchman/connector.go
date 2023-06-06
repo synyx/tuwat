@@ -13,12 +13,14 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
 type Connector struct {
-	config Config
+	config *Config
+	client *http.Client
 
 	osCache     map[string]*os
 	archCache   map[string]*arch
@@ -27,12 +29,13 @@ type Connector struct {
 
 type Config struct {
 	Tag string
-	connectors.HTTPConfig
+	common.HTTPConfig
 }
 
-func NewConnector(cfg Config) *Connector {
+func NewConnector(cfg *Config) *Connector {
 	return &Connector{
 		config:      cfg,
+		client:      cfg.HTTPConfig.Client(),
 		osCache:     make(map[string]*os),
 		archCache:   make(map[string]*arch),
 		domainCache: make(map[string]*domain),

@@ -2,7 +2,6 @@ package icinga2
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	html "html/template"
@@ -13,21 +12,22 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 type Connector struct {
-	config Config
+	config *Config
+	client *http.Client
 }
 
 type Config struct {
 	Tag          string
 	DashboardURL string
-	connectors.HTTPConfig
+	common.HTTPConfig
 }
 
-func NewConnector(cfg Config) *Connector {
-	return &Connector{cfg}
+func NewConnector(cfg *Config) *Connector {
+	return &Connector{cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -164,20 +164,11 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 
 	req.Header.Set("Accept", "application/json")
-	if c.config.Username != "" {
-		req.SetBasicAuth(c.config.Username, c.config.Password)
-	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
-	}
-	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
-
-	res, err := client.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
 		return res.Body, nil
 	}

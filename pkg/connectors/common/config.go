@@ -1,4 +1,8 @@
-package connectors
+package common
+
+import (
+	"golang.org/x/oauth2/clientcredentials"
+)
 
 type HTTPConfig struct {
 	URL string
@@ -11,9 +15,7 @@ type HTTPConfig struct {
 	Password string
 
 	// OAuth2
-	ClientId     string
-	ClientSecret string
-	TokenURL     string
+	OAuth2Creds clientcredentials.Config
 
 	// Bearer Token
 	BearerToken string
