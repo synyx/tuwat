@@ -42,6 +42,7 @@ Tag = 'gh'
 #Tag = "sysops"
 #URL = "https://gitlab.example.com"
 #BearerToken = "aBaBaBaBaBaBaBaBaBaB"
+##Projects = ["group/project"]
 #
 #[[patchman]]
 #Tag = "dev"
