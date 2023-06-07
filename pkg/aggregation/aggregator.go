@@ -374,10 +374,15 @@ nextRule:
 		// `what` contains a description what is being alerted and should be a
 		// human understandable description.  The rule simply matches against
 		// that.
-		// Continue with other matchers if there is no wat rule, or it doesn't
+		// Continue with other matchers if there is no `what` rule, or it doesn't
 		// match, thus combining with other matchers via OR.
 		if rule.What != nil && rule.What.MatchString(alert.What) {
 			return rule.Description
+		}
+
+		// If there are no label rules, skip label matching
+		if len(rule.Labels) == 0 {
+			continue nextRule
 		}
 
 		res := make(map[string]*regexp.Regexp)
@@ -393,14 +398,18 @@ nextRule:
 			}
 		}
 
-		// all fields of the rule exist as labels on the alert
-		// if any of the labels match the rule, return the match.
+		// All fields of the rule exist as labels on the alert:
+		// If all the labels match the rule, a match is found,
+		// meaning the rules are combined via `AND`.
+		matchCount := 0
 		for a, b := range res {
 			if b.MatchString(a) {
-				return rule.Description
+				matchCount++
 			}
 		}
-
+		if matchCount == len(res) {
+			return rule.Description
+		}
 	}
 
 	return ""

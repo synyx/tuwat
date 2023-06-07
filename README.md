@@ -59,7 +59,7 @@ Draft = "true"
 
 * The `label` section selects items via labels.  In this example it would match
   an item which has the label `Draft` which matches the given regular expression.
-* The label rules will combine as `OR`.
+* The label rules will combine as `AND`.
 * `what` rules will combine as `OR` with label rules.
 
 ## License
