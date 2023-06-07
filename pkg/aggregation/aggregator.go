@@ -365,26 +365,50 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 	a.blockRules = cfg.Filter
 }
 
+// allow will allow anything which does not match against any of the
+// configured rules.
 func (a *Aggregator) allow(alert Alert) string {
-outside:
+nextRule:
 	for _, rule := range a.blockRules {
+		// if it's a rule working on the `what`:
+		// `what` contains a description what is being alerted and should be a
+		// human understandable description.  The rule simply matches against
+		// that.
+		// Continue with other matchers if there is no `what` rule, or it doesn't
+		// match, thus combining with other matchers via OR.
 		if rule.What != nil && rule.What.MatchString(alert.What) {
 			return rule.Description
-		} else {
-			res := make(map[string]*regexp.Regexp)
-			for l, r := range rule.Labels {
-				if x, ok := alert.Labels[l]; !ok {
-					// if one label does not match, leave entry alone
-					continue outside
-				} else {
-					res[x] = r
-				}
+		}
+
+		// If there are no label rules, skip label matching
+		if len(rule.Labels) == 0 {
+			continue nextRule
+		}
+
+		res := make(map[string]*regexp.Regexp)
+
+		// Test if the rule is applicable to the given alert
+		for l, r := range rule.Labels {
+			if x, ok := alert.Labels[l]; !ok {
+				// if the label does not exist on the alert, it cannot match
+				// thus skip this rule and try the next one
+				continue nextRule
+			} else {
+				res[x] = r
 			}
-			for a, b := range res {
-				if b.MatchString(a) {
-					return rule.Description
-				}
+		}
+
+		// All fields of the rule exist as labels on the alert:
+		// If all the labels match the rule, a match is found,
+		// meaning the rules are combined via `AND`.
+		matchCount := 0
+		for a, b := range res {
+			if b.MatchString(a) {
+				matchCount++
 			}
+		}
+		if matchCount == len(res) {
+			return rule.Description
 		}
 	}
 

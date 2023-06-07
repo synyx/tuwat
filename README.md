@@ -35,7 +35,7 @@ See the [Example Config](./config.example.toml) for configuration.
 
 ### Rules
 
-The rule-system works via an exclude list, rules simply exclude items.
+The rule-system works via an exclude list, matching rules simply exclude items.
 
 For example:
 
@@ -59,6 +59,8 @@ Draft = "true"
 
 * The `label` section selects items via labels.  In this example it would match
   an item which has the label `Draft` which matches the given regular expression.
+* The label rules will combine as `AND`.
+* `what` rules will combine as `OR` with label rules.
 
 ## License
 
