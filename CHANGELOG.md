@@ -1,5 +1,14 @@
 # Releases
 
+## v0.16 - 2023-06-12 Resource Consumption
+
+* To not display all merge requests, you can now specify the projects via
+  `Projects = []`
+* Fixes connection leak in nagios-api connector
+* Breaking Configuration Changes:
+  * Change parsing of rules, so that label matchers are combined with `AND`
+    instead of `OR`.
+
 ## v0.15 - 2023-05-26 GitLab MR flood
 
 * Handle more open merge requests from GitLab
