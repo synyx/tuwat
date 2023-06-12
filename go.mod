@@ -3,7 +3,7 @@ module github.com/synyx/tuwat
 go 1.20
 
 require (
-	github.com/BurntSushi/toml v1.3.0
+	github.com/BurntSushi/toml v1.3.2
 	github.com/benbjohnson/clock v1.3.5
 	github.com/go-logr/logr v1.2.4
 	github.com/go-logr/stdr v1.2.2
