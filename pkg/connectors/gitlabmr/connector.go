@@ -92,7 +92,7 @@ func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
 	for _, id := range c.config.Projects {
 		id := url.PathEscape(id)
 
-		if m, err := c.collectMRsFrom(ctx, fmt.Sprintf("/projects/%s/merge_requests", id)); err != nil {
+		if m, err := c.collectMRsFrom(ctx, fmt.Sprintf("/api/v4/projects/%s/merge_requests", id)); err != nil {
 			return mrs, err
 		} else {
 			mrs = append(mrs, m...)
@@ -132,7 +132,7 @@ func (c *Connector) collectMRsFrom(ctx context.Context, from string) ([]mergeReq
 		err = decoder.Decode(&mrs)
 		if err != nil {
 			otelzap.Ctx(ctx).DPanic("Cannot parse",
-				zap.String("url", c.config.URL),
+				zap.String("url", c.config.URL+from),
 				zap.String("data", buf.String()),
 				zap.Error(err))
 			return nil, err
