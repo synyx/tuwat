@@ -9,6 +9,7 @@ import (
 	html "html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -23,7 +24,8 @@ type Connector struct {
 }
 
 type Config struct {
-	Tag string
+	Tag      string
+	Projects []string
 	connectors.HTTPConfig
 }
 
@@ -79,10 +81,31 @@ func (c *Connector) String() string {
 	return fmt.Sprintf("GitLab MRs (%s)", c.config.URL)
 }
 
-// collectMRs will collect GitLab merge requests.
+// collectMRs collects merge requests from GitLab.  It either gets all available merge requests
+// from the whole instance, or only selected projects.
+func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
+	if c.config.Projects == nil {
+		return c.collectMRsFrom(ctx, "/api/v4/merge_requests")
+	}
+
+	var mrs []mergeRequest
+	for _, id := range c.config.Projects {
+		id := url.PathEscape(id)
+
+		if m, err := c.collectMRsFrom(ctx, fmt.Sprintf("/api/v4/projects/%s/merge_requests", id)); err != nil {
+			return mrs, err
+		} else {
+			mrs = append(mrs, m...)
+		}
+	}
+
+	return mrs, nil
+}
+
+// collectMRsFrom will collect GitLab merge requests.
 //
 // see https://docs.gitlab.com/ee/api/merge_requests.html for more information.
-func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
+func (c *Connector) collectMRsFrom(ctx context.Context, from string) ([]mergeRequest, error) {
 	query := map[string]string{
 		"wip":      "no",
 		"state":    "opened",
@@ -94,7 +117,7 @@ func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
 	var mergeRequests []mergeRequest
 
 	for {
-		body, next, err := c.get(ctx, "/api/v4/merge_requests", query)
+		body, next, err := c.get(ctx, from, query)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +132,7 @@ func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
 		err = decoder.Decode(&mrs)
 		if err != nil {
 			otelzap.Ctx(ctx).DPanic("Cannot parse",
-				zap.String("url", c.config.URL),
+				zap.String("url", c.config.URL+from),
 				zap.String("data", buf.String()),
 				zap.Error(err))
 			return nil, err
@@ -149,7 +172,7 @@ func (c *Connector) get(ctx context.Context, endpoint string, query map[string]s
 		q.Set(k, v)
 	}
 	req.URL.RawQuery = q.Encode()
-	url := req.URL.String()
+	reqUrl := req.URL.String()
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
@@ -158,7 +181,7 @@ func (c *Connector) get(ctx context.Context, endpoint string, query map[string]s
 
 	res, err := client.Do(req)
 	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", url), zap.Error(err))
+		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", reqUrl), zap.Error(err))
 		return nil, "", err
 	}
 
