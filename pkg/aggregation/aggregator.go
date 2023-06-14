@@ -341,7 +341,7 @@ func (a *Aggregator) notify(ctx context.Context) {
 		r := value.(chan bool)
 		select {
 		case r <- true:
-			otelzap.Ctx(ctx).Debug("Notified", zap.Any("thing", key))
+			otelzap.Ctx(ctx).Debug("Notified", zap.Any("client", key))
 
 			a.lastAccess.Store(a.clock.Now())
 		default:
@@ -351,7 +351,7 @@ func (a *Aggregator) notify(ctx context.Context) {
 	})
 
 	for _, thing := range toUnregister {
-		otelzap.Ctx(ctx).Debug("Force unregistering", zap.Any("thing", thing))
+		otelzap.Ctx(ctx).Debug("Force unregistering", zap.Any("client", thing))
 		a.Unregister(thing)
 	}
 }
