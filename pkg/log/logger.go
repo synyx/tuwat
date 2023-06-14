@@ -43,6 +43,9 @@ func Initialize(cfg *config.Config) func() {
 	otel.SetLogger(logrLogger)
 	reversionFunctions = append(reversionFunctions, func() { otel.SetLogger(stdr.New(log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile))) })
 
+	stdLogger := newStdLoggerBridge(logger)
+	reversionFunctions = append(reversionFunctions, stdLogger.ReplaceGlobals())
+
 	otelLogger := otelzap.New(
 		logger,
 		otelzap.WithMinLevel(zap.DebugLevel),
