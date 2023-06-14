@@ -2,6 +2,8 @@ package web
 
 import (
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
@@ -11,7 +13,9 @@ import (
 
 func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 
-	aggregate := h.aggregator.Alerts()
+	dashboardName := filepath.Base(req.URL.Path)
+
+	aggregate := h.aggregator.Alerts(dashboardName)
 
 	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
 		renderer := h.partialRenderer(req, "alerts.gohtml")
@@ -35,10 +39,17 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		_ = s.Close()
 	}()
 
+	// get dashboard name from /ws/alerts/... directly from path, as information gets lost from the websocket upgrade.
+	dashboardName := filepath.Base(s.Request().URL.Path)
+	dashboardName = strings.TrimPrefix(dashboardName, "ws")
+	dashboardName = strings.TrimPrefix(dashboardName, "/")
+
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
 	tr := trace.SpanFromContext(s.Request().Context()).SpanContext().TraceID().String()
-	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection", zap.String("id", tr))
+	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection",
+		zap.String("id", tr),
+		zap.String("dashboard", dashboardName))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
 
@@ -51,7 +62,7 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 			}
 
 			otelzap.Ctx(s.Request().Context()).Debug("sending to websocket client")
-			aggregate := h.aggregator.Alerts()
+			aggregate := h.aggregator.Alerts(dashboardName)
 			renderer(webContent{Content: aggregate})
 		case <-s.Request().Context().Done():
 			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, req ctx done")
@@ -72,6 +83,8 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
+	dashboardName := getField(req, 0)
+
 	renderer, cancel := h.sseRenderer(w, req, "alerts.gohtml")
 	defer cancel()
 
@@ -89,7 +102,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 			}
 
 			otelzap.Ctx(req.Context()).Debug("sending to sse client")
-			aggregate := h.aggregator.Alerts()
+			aggregate := h.aggregator.Alerts(dashboardName)
 			if err := renderer(webContent{Content: aggregate}); err != nil {
 				otelzap.Ctx(req.Context()).Debug("stop sending to sse client", zap.Error(err))
 				return

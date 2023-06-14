@@ -3,7 +3,6 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 class SSEConn {
     constructor(socketUrl) {
-        this.active = true;
         this.socketUrl = socketUrl;
     }
 
@@ -21,7 +20,6 @@ class SSEConn {
     }
 
     reconnect() {
-        this.active = true;
         if (!this.socket) {
             this.connect();
         }
@@ -34,7 +32,6 @@ class WebSocketConn {
     }
 
     connect() {
-        let conn = this;
         let socket = new ReconnectingWebSocket(this.socketUrl);
         socket.addEventListener("error", function (ev) {
             console.error('Socket encountered error: ', ev.message, 'Closing socket');
@@ -107,12 +104,17 @@ let fallback = new FallbackConn();
 let conn = null;
 switch (eventSource) {
     case "websocket": {
-        const wsUrl = ((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws/alerts";
+        const protocol = ((window.location.protocol === "https:") ? "wss://" : "ws://");
+        const dashboard = window.location.pathname;
+        const wsUrl = protocol + window.location.host + "/ws" + dashboard;
         conn = new WebSocketConn(wsUrl);
         break;
     }
     case "sse": {
-        conn = new SSEConn(window.location.protocol + "//" + window.location.host + "/sse/alerts");
+        const protocol = window.location.protocol;
+        const dashboard = window.location.pathname;
+        const sseUrl = protocol + "//" + window.location.host + "/sse" + dashboard;
+        conn = new SSEConn(sseUrl);
         break;
     }
     default:

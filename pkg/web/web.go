@@ -35,6 +35,7 @@ type webHandler struct {
 
 	aggregator  *aggregation.Aggregator
 	environment string
+	dashboards  map[string]*config.Dashboard
 }
 
 type webContent struct {
@@ -47,6 +48,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 	handler := &webHandler{
 		aggregator:  aggregator,
 		environment: cfg.Environment,
+		dashboards:  cfg.Dashboards,
 	}
 
 	if dir, ok := os.LookupEnv("TUWAT_TEMPLATEDIR"); ok {
@@ -60,12 +62,11 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 	}
 
 	handler.routes = []route{
-		newRoute("GET", "/", handler.alerts),
-		newRoute("GET", "/foo.php", handler.alerts),
-		newRoute("GET", "/alerts", handler.alerts),
+		newRoute("GET", "/", handler.index),
+		newRoute("GET", "/alerts/([^/]+)", handler.alerts),
+		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
+		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
 		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
-		newRoute("GET", "/ws/alerts", websocket.Handler(handler.wsalerts).ServeHTTP),
-		newRoute("GET", "/sse/alerts", handler.ssealerts),
 	}
 
 	return handler

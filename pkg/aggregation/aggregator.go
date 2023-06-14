@@ -51,15 +51,17 @@ type Aggregator struct {
 	clock    clock.Clock
 	tracer   trace.Tracer
 
-	current       Aggregate
 	connectors    []connectors.Connector
 	whereTempl    *text.Template
 	registrations sync.Map
 	cmu           *sync.RWMutex // Protecting Configuration
 	amu           *sync.RWMutex // Protecting current Aggregate
-	blockRules    []config.Rule
+	current       map[string]Aggregate
+	dashboards    map[string]*config.Dashboard
 
 	lastAccess atomic.Value
+
+	CheckTime time.Time
 }
 
 type result struct {
@@ -86,7 +88,8 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 		interval:   cfg.Interval,
 		connectors: cfg.Connectors,
 		whereTempl: cfg.WhereTemplate,
-		blockRules: cfg.Filter,
+		current:    make(map[string]Aggregate),
+		dashboards: cfg.Dashboards,
 
 		registrations: sync.Map{},
 		cmu:           new(sync.RWMutex),
@@ -158,7 +161,9 @@ func (a *Aggregator) Run(ctx context.Context) {
 			go a.collect(ctx, collect)
 		case r, ok := <-collect:
 			if !ok {
-				a.aggregate(ctx, results)
+				for _, dashboard := range a.dashboards {
+					a.aggregate(ctx, dashboard, results)
+				}
 				results = nil
 				collect = make(chan result, 20)
 			} else if ok {
@@ -222,8 +227,8 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	close(collect)
 }
 
-func (a *Aggregator) aggregate(ctx context.Context, results []result) {
-	otelzap.Ctx(ctx).Info("Aggregating results", zap.Int("count", len(results)))
+func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard, results []result) {
+	otelzap.Ctx(ctx).Info("Aggregating results", zap.String("dashboard", dashboard.Name), zap.Int("count", len(results)))
 
 	a.cmu.RLock()
 	whereTempl := a.whereTempl
@@ -278,7 +283,7 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if reason := a.allow(alert); reason == "" {
+			if reason := a.allow(dashboard, alert); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
 				blockedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: reason})
@@ -291,8 +296,9 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	})
 
 	a.amu.Lock()
-	a.current = Aggregate{
-		CheckTime: a.clock.Now(),
+	a.CheckTime = a.clock.Now()
+	a.current[dashboard.Name] = Aggregate{
+		CheckTime: a.CheckTime,
 		Alerts:    alerts,
 		Blocked:   blockedAlerts,
 	}
@@ -301,13 +307,13 @@ func (a *Aggregator) aggregate(ctx context.Context, results []result) {
 	a.notify(ctx)
 }
 
-func (a *Aggregator) Alerts() Aggregate {
+func (a *Aggregator) Alerts(dashboardName string) Aggregate {
 	a.lastAccess.Store(a.clock.Now())
 
 	a.amu.RLock()
 	defer a.amu.RUnlock()
 
-	return a.current
+	return a.current[dashboardName]
 }
 
 func (a *Aggregator) Register(handler string) <-chan bool {
@@ -362,14 +368,14 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 
 	a.connectors = cfg.Connectors
 	a.whereTempl = cfg.WhereTemplate
-	a.blockRules = cfg.Filter
+	a.dashboards = cfg.Dashboards
 }
 
 // allow will allow anything which does not match against any of the
 // configured rules.
-func (a *Aggregator) allow(alert Alert) string {
+func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
 nextRule:
-	for _, rule := range a.blockRules {
+	for _, rule := range dashboard.Filter {
 		// if it's a rule working on the `what`:
 		// `what` contains a description what is being alerted and should be a
 		// human understandable description.  The rule simply matches against
@@ -419,10 +425,13 @@ func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
 	var alert Alert
 
 	a.amu.RLock()
-	for _, a := range a.current.Alerts {
-		if a.Id == alertId {
-			alert = a
-			break
+all:
+	for _, dashboard := range a.dashboards {
+		for _, a := range a.current[dashboard.Name].Alerts {
+			if a.Id == alertId {
+				alert = a
+				break all
+			}
 		}
 	}
 	a.amu.RUnlock()

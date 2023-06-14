@@ -1,0 +1,12 @@
+{{define "content"}}
+    {{- /*gotype: github.com/synyx/tuwat/pkg/web.indexContent*/ -}}
+    <h3>
+        Dashboards
+    </h3>
+
+    <ul>
+        {{range .Dashboards}}
+            <li><a href="/alerts/{{.Name}}">{{.Name}}</a></li>
+        {{end}}
+    </ul>
+{{end}}

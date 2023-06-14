@@ -1,10 +1,14 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"text/template"
 	"time"
 
@@ -24,6 +28,7 @@ var fEnvironment = flag.String("environment", "test", "(test, stage, prod)")
 var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application port")
 var fMgmtAddr = flag.String("mgmtAddr", "127.0.0.1:8987", "Bind management port")
 var fConfigFile = flag.String("conf", "/etc/tuwat.toml", "Configuration file")
+var fDashboardDir = flag.String("dashboards", "/etc/tuwat.d", "Dashboard Configuration Directory")
 
 type Config struct {
 	WebAddr        string
@@ -35,7 +40,7 @@ type Config struct {
 	Connectors     []connectors.Connector
 	WhereTemplate  *template.Template
 	Interval       time.Duration
-	Filter         []Rule
+	Dashboards     map[string]*Dashboard
 }
 
 type MainConfig struct {
@@ -43,10 +48,19 @@ type MainConfig struct {
 	Interval      string `toml:"interval"`
 }
 
+type Dashboard struct {
+	Name   string
+	Filter []Rule
+}
+
 type Rule struct {
 	Description string                    `toml:"description"`
 	What        *regexp.Regexp            `toml:"what"`
 	Labels      map[string]*regexp.Regexp `toml:"labels"`
+}
+
+type DashboardConfig struct {
+	Rules []map[string]interface{} `toml:"rule"`
 }
 
 type ConnectorConfig struct {
@@ -98,12 +112,27 @@ func NewConfiguration() (*Config, error) {
 		*fConfigFile = value
 	}
 
-	err := cfg.loadFile(*fConfigFile)
+	if value, ok := os.LookupEnv("TUWAT_DASHBOARD_DIR"); ok {
+		*fDashboardDir = value
+	}
+
+	err := cfg.loadMainConfig(*fConfigFile)
+
+	err = filepath.WalkDir(*fDashboardDir, func(path string, d fs.DirEntry, err error) error {
+		if err == nil && !d.IsDir() && filepath.Ext(path) == ".toml" {
+			return cfg.loadDashboardConfig(path)
+		} else {
+			return err
+		}
+	})
+	if errors.Is(err, os.ErrNotExist) {
+		err = nil
+	}
 
 	return cfg, err
 }
 
-func (cfg *Config) loadFile(file string) error {
+func (cfg *Config) loadMainConfig(file string) error {
 
 	if _, err := os.Stat(file); err != nil {
 		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
@@ -163,27 +192,60 @@ func (cfg *Config) loadFile(file string) error {
 		cfg.Interval = 1 * time.Minute
 	}
 
+	cfg.Dashboards = make(map[string]*Dashboard)
+	var dashboard Dashboard
 	for _, r := range connectorConfigs.Rules {
-		labels := make(map[string]*regexp.Regexp)
-		if labelFilters, ok := r["label"]; ok {
-			for n, l := range labelFilters.(map[string]interface{}) {
-				labels[n] = regexp.MustCompile(l.(string))
-			}
-		}
-		var what *regexp.Regexp
-		if w, ok := r["what"]; ok {
-			what = regexp.MustCompile(w.(string))
-		}
-
-		br := Rule{
-			Description: r["description"].(string),
-			What:        what,
-			Labels:      labels,
-		}
-		cfg.Filter = append(cfg.Filter, br)
+		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
+	dashboard.Name = ""
+	cfg.Dashboards[dashboard.Name] = &dashboard
 
 	return err
+}
+
+func (cfg *Config) loadDashboardConfig(file string) error {
+
+	if _, err := os.Stat(file); err != nil {
+		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
+	}
+
+	var dashboard Dashboard
+	var dashboardConfig DashboardConfig
+	_, err := toml.DecodeFile(file, &dashboardConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, r := range dashboardConfig.Rules {
+		dashboard.Filter = append(dashboard.Filter, parseRule(r))
+	}
+
+	name := filepath.Base(file)
+	name = strings.TrimSuffix(name, ".toml")
+	dashboard.Name = name
+	cfg.Dashboards[name] = &dashboard
+
+	return err
+}
+
+func parseRule(r map[string]interface{}) Rule {
+	labels := make(map[string]*regexp.Regexp)
+	if labelFilters, ok := r["label"]; ok {
+		for n, l := range labelFilters.(map[string]interface{}) {
+			labels[n] = regexp.MustCompile(l.(string))
+		}
+	}
+	var what *regexp.Regexp
+	if w, ok := r["what"]; ok {
+		what = regexp.MustCompile(w.(string))
+	}
+
+	br := Rule{
+		Description: r["description"].(string),
+		What:        what,
+		Labels:      labels,
+	}
+	return br
 }
 
 func getHostname() string {
