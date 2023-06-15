@@ -197,8 +197,6 @@ func (cfg *Config) loadMainConfig(file string) error {
 	for _, r := range connectorConfigs.Rules {
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
-	dashboard.Name = ""
-	cfg.Dashboards[dashboard.Name] = &dashboard
 
 	return err
 }

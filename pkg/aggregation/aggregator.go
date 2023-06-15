@@ -313,7 +313,16 @@ func (a *Aggregator) Alerts(dashboardName string) Aggregate {
 	a.amu.RLock()
 	defer a.amu.RUnlock()
 
-	return a.current[dashboardName]
+	if db, ok := a.current[dashboardName]; ok {
+		return db
+	} else if len(a.current) == 1 && dashboardName == "" {
+		// use the only current dashboard as default
+		for _, db := range a.current {
+			return db
+		}
+	}
+
+	return Aggregate{}
 }
 
 func (a *Aggregator) Register(handler string) <-chan bool {

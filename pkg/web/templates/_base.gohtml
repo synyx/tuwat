@@ -1,4 +1,5 @@
 {{define "base"}}
+    {{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +17,16 @@
     </noscript>
 </head>
 <body>
+<nav id="menu">
+    <ul id="menu-closed">
+        <li class="mobile-nav"><a href="/">Home</a></li>
+        {{range .Dashboards}}
+        <li class="mobile-nav"><a href="/alerts/{{.Name}}">{{.Name}}</a></li>
+        {{end}}
+        <li class="mobile-nav"><a href="#menu-closed">&#215; Close</a></li>
+        <li class="mobile-nav"><a href="#menu">&#9776; Menu</a></li>
+    </ul>
+</nav>
 <main id="app">
     <section>
     <form>

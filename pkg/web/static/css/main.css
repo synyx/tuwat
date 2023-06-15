@@ -226,3 +226,113 @@ button.txtbtn {
 form.txtform {
     display: inline;
 }
+
+
+nav#menu {
+    font-size: 14px;
+    /*background-color: #fff; */
+    margin: 0;
+    position: absolute;
+    left: 200px;
+    /*height: 60px;
+    padding: 0 1em;*/
+    overflow: hidden;
+}
+
+nav#menu ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    max-height: 120px;
+    position: relative;
+}
+
+nav#menu ul li {
+    display: inline-block;
+}
+
+nav#menu ul li:last-child {
+    position: absolute;
+    right: 0;
+    bottom: 60px;
+    background-image: linear-gradient(to right, rgba(236, 240, 241, 0) 0, #fff 2em);
+    padding-left: 3em;
+}
+
+nav#menu ul li:nth-last-child(2) {
+    display: none;
+}
+
+nav#menu ul li a {
+    display: inline-block;
+    padding: 0 1vw;
+    color: #0023d9;
+    font-size: calc(14px + .1vw);
+    font-weight: 300;
+    text-decoration: none;
+    letter-spacing: -.1px;
+    white-space: nowrap;
+}
+
+nav#menu ul li a:hover {
+    background-color: rgba(50, 51, 51, 0.08);
+}
+
+nav#menu:target {
+    height: auto;
+    padding: 0;
+}
+
+nav#menu:target ul {
+    max-height: none;
+}
+
+nav#menu:target ul li {
+    display: block;
+}
+
+nav#menu:target ul li:last-child {
+    display: none;
+}
+
+nav#menu:target ul li:nth-last-child(2) {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    border-left: 2px solid #dde4e6;
+}
+
+nav#menu:target ul li a {
+    display: block;
+    padding: 0 2em;
+    background-color: rgba(51, 51, 51, 0.05);
+}
+
+nav#menu:target ul li a:hover {
+    background-color: rgba(51, 51, 51, 0.08);
+}
+
+.mobile-nav {
+    margin-bottom: 0 !important;
+}
+
+@media all and (max-width: 640px) {
+
+    form.search-form > label {
+        min-width: 120px;
+    }
+
+    .logo {
+        min-width: 160px;
+    }
+
+    nav#menu:target ul li:not(:first-child) {
+        margin-top: 0;
+    }
+
+    .primary-navigation {
+        margin-top: 1vw;
+    }
+}

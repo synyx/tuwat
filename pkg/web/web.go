@@ -42,6 +42,7 @@ type webContent struct {
 	Version     string
 	Environment string
 	Content     any
+	Dashboards  map[string]*config.Dashboard
 }
 
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
@@ -62,7 +63,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 	}
 
 	handler.routes = []route{
-		newRoute("GET", "/", handler.index),
+		newRoute("GET", "/", handler.alerts),
 		newRoute("GET", "/alerts/([^/]+)", handler.alerts),
 		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
 		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
@@ -145,6 +146,7 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Dashboards = h.dashboards
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
