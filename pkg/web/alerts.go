@@ -48,7 +48,7 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 	tr := trace.SpanFromContext(s.Request().Context()).SpanContext().TraceID().String()
 	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection",
-		zap.String("id", tr),
+		zap.String("client", tr),
 		zap.String("dashboard", dashboardName))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
@@ -57,15 +57,18 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, update channel closed")
+				otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, update channel closed",
+					zap.String("client", tr))
 				update = nil
 			}
 
-			otelzap.Ctx(s.Request().Context()).Debug("sending to websocket client")
+			otelzap.Ctx(s.Request().Context()).Debug("sending to websocket client",
+				zap.String("client", tr))
 			aggregate := h.aggregator.Alerts(dashboardName)
 			renderer(webContent{Content: aggregate})
 		case <-s.Request().Context().Done():
-			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, req ctx done")
+			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, req ctx done",
+				zap.String("client", tr))
 			return
 		}
 	}
@@ -89,7 +92,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 	defer cancel()
 
 	tr := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String()
-	otelzap.Ctx(req.Context()).Info("Registering sse connection", zap.String("id", tr))
+	otelzap.Ctx(req.Context()).Info("Registering sse connection", zap.String("client", tr))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
 
@@ -97,18 +100,20 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				otelzap.Ctx(req.Context()).Debug("stop sending to sse client")
+				otelzap.Ctx(req.Context()).Debug("stop sending to sse client", zap.String("client", tr))
 				return
 			}
 
-			otelzap.Ctx(req.Context()).Debug("sending to sse client")
+			otelzap.Ctx(req.Context()).Debug("sending to sse client", zap.String("client", tr))
 			aggregate := h.aggregator.Alerts(dashboardName)
 			if err := renderer(webContent{Content: aggregate}); err != nil {
-				otelzap.Ctx(req.Context()).Debug("stop sending to sse client", zap.Error(err))
+				otelzap.Ctx(req.Context()).Debug("stop sending to sse client",
+					zap.String("client", tr),
+					zap.Error(err))
 				return
 			}
 		case <-req.Context().Done():
-			otelzap.Ctx(req.Context()).Info("stop sending to sse client")
+			otelzap.Ctx(req.Context()).Info("stop sending to sse client", zap.String("client", tr))
 			return
 		}
 	}
