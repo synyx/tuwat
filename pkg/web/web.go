@@ -64,6 +64,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 
 	handler.routes = []route{
 		newRoute("GET", "/", handler.alerts),
+		newRoute("GET", "/foo.php", http.RedirectHandler("/alerts/foo.php", http.StatusSeeOther).ServeHTTP),
 		newRoute("GET", "/alerts/([^/]+)", handler.alerts),
 		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
 		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
