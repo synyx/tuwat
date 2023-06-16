@@ -35,18 +35,21 @@ type webHandler struct {
 
 	aggregator  *aggregation.Aggregator
 	environment string
+	dashboards  map[string]*config.Dashboard
 }
 
 type webContent struct {
 	Version     string
 	Environment string
 	Content     any
+	Dashboards  map[string]*config.Dashboard
 }
 
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
 	handler := &webHandler{
 		aggregator:  aggregator,
 		environment: cfg.Environment,
+		dashboards:  cfg.Dashboards,
 	}
 
 	if dir, ok := os.LookupEnv("TUWAT_TEMPLATEDIR"); ok {
@@ -61,11 +64,10 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 
 	handler.routes = []route{
 		newRoute("GET", "/", handler.alerts),
-		newRoute("GET", "/foo.php", handler.alerts),
-		newRoute("GET", "/alerts", handler.alerts),
+		newRoute("GET", "/alerts/([^/]+)", handler.alerts),
+		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
+		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
 		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
-		newRoute("GET", "/ws/alerts", websocket.Handler(handler.wsalerts).ServeHTTP),
-		newRoute("GET", "/sse/alerts", handler.ssealerts),
 	}
 
 	return handler
@@ -144,6 +146,7 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Dashboards = h.dashboards
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {

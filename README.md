@@ -33,6 +33,16 @@ Connectors for
 
 See the [Example Config](./config.example.toml) for configuration.
 
+### Dashboards
+
+The main configuration can contain `Rules`, but if multiple rule-sets/dashboards
+are needed, dashboards can be added to a folder.
+
+The `-dashboards` flag can be used to specify the folder, by default it looks
+at `/etc/tuwat.d`.
+
+The files have to end with `.toml`, the basename will be used as dashboard name.
+
 ### Rules
 
 The rule-system works via an exclude list, matching rules simply exclude items.

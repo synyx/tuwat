@@ -1,5 +1,15 @@
 # Releases
 
+## next release
+
+* Adds possibility of having multiple dashboards/rule-sets
+* Breaking behavioural changes:
+  * If observability depends on the label `thing` for websocket connections,
+    this has been renamed to `client`.
+  * If `/foo.php` has been used as entrypoint, this is no longer available.
+    Replace with a dashboard called `foo.php.toml` in the dashboard folder
+    if necessary.
+
 ## v0.16 - 2023-06-12 Resource Consumption
 
 * To not display all merge requests, you can now specify the projects via
