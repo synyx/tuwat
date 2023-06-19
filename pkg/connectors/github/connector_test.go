@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 func TestConnector(t *testing.T) {
@@ -20,12 +21,12 @@ func TestConnector(t *testing.T) {
 	cfg := Config{
 		Tag:   "test",
 		Repos: []string{"test/test"},
-		HTTPConfig: connectors.HTTPConfig{
+		HTTPConfig: common.HTTPConfig{
 			URL: testServer.URL,
 		},
 	}
 
-	var connector connectors.Connector = NewConnector(cfg)
+	var connector connectors.Connector = NewConnector(&cfg)
 	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
