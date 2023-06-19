@@ -145,22 +145,22 @@ func (cfg *Config) loadMainConfig(file string) error {
 	}
 
 	for _, connectorConfig := range connectorConfigs.Alertmanagers {
-		cfg.Connectors = append(cfg.Connectors, alertmanager.NewConnector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, alertmanager.NewConnector(&connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.GitlabMRs {
-		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewConnector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewConnector(&connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.Icinga2s {
-		cfg.Connectors = append(cfg.Connectors, icinga2.NewConnector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, icinga2.NewConnector(&connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.NagiosAPIs {
-		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewConnector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewConnector(&connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.Patchmans {
-		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(&connectorConfig))
 	}
 	for _, connectorConfig := range connectorConfigs.GitHubIssues {
-		cfg.Connectors = append(cfg.Connectors, github.NewConnector(connectorConfig))
+		cfg.Connectors = append(cfg.Connectors, github.NewConnector(&connectorConfig))
 	}
 
 	whereTemplate := connectorConfigs.Main.WhereTemplate

@@ -3,7 +3,6 @@ package gitlabmr
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	html "html/template"
@@ -14,23 +13,24 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
 type Connector struct {
-	config Config
+	config *Config
+	client *http.Client
 }
 
 type Config struct {
 	Tag      string
 	Projects []string
-	connectors.HTTPConfig
+	common.HTTPConfig
 }
 
-func NewConnector(cfg Config) *Connector {
-	return &Connector{cfg}
+func NewConnector(cfg *Config) *Connector {
+	return &Connector{cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -163,7 +163,6 @@ func (c *Connector) get(ctx context.Context, endpoint string, query map[string]s
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.config.BearerToken)
 
 	q := req.URL.Query()
 	q.Set("per_age", "100")
@@ -174,12 +173,7 @@ func (c *Connector) get(ctx context.Context, endpoint string, query map[string]s
 	req.URL.RawQuery = q.Encode()
 	reqUrl := req.URL.String()
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
-	}
-	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
-
-	res, err := client.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", reqUrl), zap.Error(err))
 		return nil, "", err

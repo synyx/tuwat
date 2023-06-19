@@ -2,7 +2,6 @@ package nagiosapi
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	html "html/template"
@@ -11,23 +10,24 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
 type Connector struct {
-	config Config
+	config *Config
+	client *http.Client
 }
 
 type Config struct {
 	Tag       string
 	NagiosURL string
-	connectors.HTTPConfig
+	common.HTTPConfig
 }
 
-func NewConnector(cfg Config) *Connector {
-	return &Connector{cfg}
+func NewConnector(cfg *Config) *Connector {
+	return &Connector{cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -128,12 +128,7 @@ func (c *Connector) collectHosts(ctx context.Context) (map[string]host, error) {
 		return nil, err
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
-	}
-	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
-
-	res, err := client.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

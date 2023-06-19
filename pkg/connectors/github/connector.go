@@ -3,7 +3,6 @@ package github
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	html "html/template"
@@ -12,26 +11,27 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
 type Connector struct {
-	config Config
+	config *Config
+	client *http.Client
 }
 
 type Config struct {
-	connectors.HTTPConfig
+	common.HTTPConfig
 	Tag   string
 	Repos []string
 }
 
-func NewConnector(cfg Config) *Connector {
+func NewConnector(cfg *Config) *Connector {
 	if cfg.URL == "" {
 		cfg.URL = "https://api.github.com"
 	}
-	return &Connector{cfg}
+	return &Connector{cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -126,12 +126,6 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
-	if c.config.BearerToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.config.BearerToken)
-	} else if c.config.Username != "" {
-		req.SetBasicAuth(c.config.Username, c.config.Password)
-	}
-
 	q := req.URL.Query()
 	q.Add("state", "open")
 	q.Add("per_page", "100")
@@ -139,12 +133,7 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 	req.URL.RawQuery = q.Encode()
 	url := req.URL.String()
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.Insecure},
-	}
-	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
-
-	res, err := client.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", url), zap.Error(err))
 		return nil, err

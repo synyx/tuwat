@@ -1,8 +1,8 @@
 package alertmanager
 
 import (
+	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	html "html/template"
@@ -14,37 +14,24 @@ import (
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 type Connector struct {
-	config Config
-	oauth2 clientcredentials.Config
+	config *Config
+	client *http.Client
 }
 
 type Config struct {
 	Tag     string
 	Cluster string
-	connectors.HTTPConfig
+	common.HTTPConfig
 }
 
-func NewConnector(cfg Config) *Connector {
-	c := &Connector{config: cfg}
-
-	if cfg.ClientId != "" {
-		c.oauth2 = clientcredentials.Config{
-			ClientID:       cfg.ClientId,
-			ClientSecret:   cfg.ClientSecret,
-			TokenURL:       cfg.TokenURL,
-			Scopes:         nil,
-			EndpointParams: nil,
-			AuthStyle:      0,
-		}
-	}
+func NewConnector(cfg *Config) *Connector {
+	c := &Connector{config: cfg, client: cfg.HTTPConfig.Client()}
 
 	return c
 }
@@ -171,34 +158,32 @@ func k8sLabels(haystack map[string]string, needles ...string) []string {
 }
 
 func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
-	body, err := c.get(ctx, "/api/v2/alerts")
+	res, err := c.get(ctx, "/api/v2/alerts")
 	if err != nil {
 		return nil, err
 	}
-	defer body.Close()
+	defer res.Body.Close()
 
-	decoder := json.NewDecoder(body)
+	b, _ := io.ReadAll(res.Body)
+	buf := bytes.NewBuffer(b)
+
+	decoder := json.NewDecoder(buf)
 
 	var response []alert
 	err = decoder.Decode(&response)
 	if err != nil {
+		otelzap.Ctx(ctx).DPanic("Cannot parse",
+			zap.String("url", c.config.URL),
+			zap.String("data", buf.String()),
+			zap.Any("status", res.StatusCode),
+			zap.Error(err))
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
-
-	var tr http.RoundTripper = http.DefaultTransport.(*http.Transport).Clone()
-	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: c.config.Insecure}
-
-	if c.config.ClientId != "" {
-		oauth2Transport := c.oauth2.Client(ctx).Transport
-		oauth2Transport.(*oauth2.Transport).Base = tr
-		tr = oauth2Transport
-	}
-	client := &http.Client{Transport: otelhttp.NewTransport(tr)}
+func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
@@ -207,10 +192,10 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 
 	req.Header.Set("Accept", "application/json")
 
-	res, err := client.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.Body, nil
+	return res, nil
 }
