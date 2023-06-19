@@ -17,8 +17,8 @@ h3 {
 
 table, td {
     border: none;
-    padding: 2px;
-    border-spacing: 2px;
+    border-collapse: collapse;
+    padding: 3px;
     font-size: 1.1em;
 }
 
@@ -91,39 +91,41 @@ th {
 
 .status {
     font-weight: bold;
+    padding: 0;
 }
 
-.status.green {
+.status.green, .status.green summary, .status.green details {
     background-color: #269926;
     color: white;
-    padding: 3px;
     opacity: 0.75;
 }
 
-.status.red {
+.status.red, .status.red summary, .status.red details {
     background-color: #FF4040;
     color: white;
-    padding: 3px;
     opacity: 0.75;
 }
 
-.status.yellow {
-    background-color: #FFDE40;
+.status.yellow, .status.yellow summary, .status.yellow details {
+    background-color: #C8AF38;
     color: black;
-    padding: 3px;
-    opacity: 0.75;
 }
 
-.status.grey {
+.status.grey, .status.grey summary, .status.grey details {
     background-color: #444444;
     color: white;
-    padding: 3px;
-    opacity: 0.90;
 }
 
 summary {
     list-style: none;
+    padding: 3px;
+    cursor: pointer;
 }
+
+summary:hover {
+    filter: brightness(110%) !important;
+}
+
 summary::-webkit-details-marker {
     display: none;
 }
@@ -134,7 +136,11 @@ details[open] summary::after {
     content: "⮾";
 }
 
-.status details div, .status details pre  {
+details .content {
+    padding: 3px;
+}
+
+.status details .content  {
     font-size: 0.75em;
     opacity: 0.8;
     width: 95%;
@@ -142,10 +148,6 @@ details[open] summary::after {
 }
 .status summary a {
     text-decoration: none;
-}
-
-.status summary {
-    cursor: pointer;
 }
 
 input.connection-state[type="checkbox"] {
