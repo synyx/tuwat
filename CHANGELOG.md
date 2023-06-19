@@ -3,6 +3,10 @@
 ## next release
 
 * Adds possibility of having multiple dashboards/rule-sets
+* Breaking configuration changes:
+  * OAuth2 configuration is now a subsection named `OAuth2Creds`
+  * BasicAuth Username now configured with key `Username` instead of `User`
+    for all connectors.
 * Breaking behavioural changes:
   * If observability depends on the label `thing` for websocket connections,
     this has been renamed to `client`.

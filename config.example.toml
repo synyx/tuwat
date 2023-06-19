@@ -22,7 +22,7 @@ Tag = 'gh'
 #URL = "https://icinga2.example.com:5665"
 #DashboardURL = "https://icinga2.example.com"
 #Insecure = false
-#User = "icingaweb2"
+#Username = "icingaweb2"
 #Password = "aBaBaBaBaBaBaBaBaBaB"
 #
 #[[nagiosapi]]
@@ -34,6 +34,7 @@ Tag = 'gh'
 #Tag = "test"
 #Cluster = "test"
 #URL = "https://alertmanager.example.com"
+#[alertmanager.OAuth2Creds]
 #ClientID = "client"
 #ClientSecret = "1f8867ff-eaeb-4451-926e-2643c07b91b1"
 #TokenURL = "https://login.example.com/auth/realms/realm/protocol/openid-connect/token"
@@ -48,5 +49,5 @@ Tag = 'gh'
 #Tag = "dev"
 #URL = "https://patchman.example.com"
 #Insecure = true
-#User = "user"
+#Username = "user"
 #Password = "password"
