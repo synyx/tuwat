@@ -45,6 +45,7 @@ type Config struct {
 
 type Dashboard struct {
 	Name   string
+	Mode   DashboardMode
 	Filter []Rule
 }
 
@@ -59,7 +60,12 @@ type mainConfig struct {
 	Interval      string `toml:"interval"`
 }
 
+type mainDashboardConfig struct {
+	Mode DashboardMode `toml:"mode"`
+}
+
 type dashboardConfig struct {
+	Main  mainDashboardConfig      `toml:"main"`
 	Rules []map[string]interface{} `toml:"rule"`
 }
 
@@ -214,7 +220,13 @@ func (cfg *Config) loadDashboardConfig(file string) error {
 		panic(err)
 	}
 
+	// Excluding is the default mode, this mirrors a mindset of "everything
+	// new has to be looked at, at least once".
+	// `0` is the empty value, so in case Main.Mode is unset, it will still
+	// be the default.
+	dashboard.Mode = Excluding
 	for _, r := range dashboardConfig.Rules {
+		dashboard.Mode = dashboardConfig.Main.Mode
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
 

@@ -380,9 +380,70 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 	a.dashboards = cfg.Dashboards
 }
 
-// allow will allow anything which does not match against any of the
-// configured rules.
+// allow will match rules against the ruleset.
 func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
+	switch dashboard.Mode {
+	case config.Including:
+		return a.allowIncluding(dashboard, alert)
+	case config.Excluding:
+		return a.allowExcluding(dashboard, alert)
+	}
+	panic("unknown mode: " + dashboard.Mode.String())
+}
+
+// allowIncluding will allow anything which matches the configured rules.
+func (a *Aggregator) allowIncluding(dashboard *config.Dashboard, alert Alert) string {
+nextRule:
+	for _, rule := range dashboard.Filter {
+		// if it's a rule working on the `what`:
+		// `what` contains a description what is being alerted and should be a
+		// human understandable description.  The rule simply matches against
+		// that.
+		// A match in including mode means, that this should be shown.
+		if rule.What != nil && rule.What.MatchString(alert.What) {
+			return ""
+		}
+
+		// If there are no label rules, skip label matching
+		if len(rule.Labels) == 0 {
+			continue nextRule
+		}
+
+		res := make(map[string]*regexp.Regexp)
+
+		// Test if the rule is applicable to the given alert
+		for l, r := range rule.Labels {
+			if x, ok := alert.Labels[l]; !ok {
+				// if the label does not exist on the alert, it cannot match
+				// thus skip this rule and try the next one
+				continue nextRule
+			} else {
+				res[x] = r
+			}
+		}
+
+		// All fields of the rule exist as labels on the alert:
+		// If all the labels match the rule, a match is found,
+		// meaning the rules are combined via `AND`.
+		matchCount := 0
+		for a, b := range res {
+			if b.MatchString(a) {
+				matchCount++
+			}
+		}
+		if matchCount == len(res) {
+			return ""
+		}
+	}
+
+	// getting here in including mode means that no rule matched, thus
+	// the item should not be shown.
+	return "unmatched"
+}
+
+// allowExcluding will allow anything which does not match against any of the
+// // configured rules.
+func (a *Aggregator) allowExcluding(dashboard *config.Dashboard, alert Alert) string {
 nextRule:
 	for _, rule := range dashboard.Filter {
 		// if it's a rule working on the `what`:
