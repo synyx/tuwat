@@ -43,28 +43,28 @@ type Config struct {
 	Dashboards     map[string]*Dashboard
 }
 
-type MainConfig struct {
-	WhereTemplate string `toml:"where"`
-	Interval      string `toml:"interval"`
-}
-
 type Dashboard struct {
 	Name   string
 	Filter []Rule
 }
 
 type Rule struct {
-	Description string                    `toml:"description"`
-	What        *regexp.Regexp            `toml:"what"`
-	Labels      map[string]*regexp.Regexp `toml:"labels"`
+	Description string
+	What        *regexp.Regexp
+	Labels      map[string]*regexp.Regexp
 }
 
-type DashboardConfig struct {
+type mainConfig struct {
+	WhereTemplate string `toml:"where"`
+	Interval      string `toml:"interval"`
+}
+
+type dashboardConfig struct {
 	Rules []map[string]interface{} `toml:"rule"`
 }
 
-type RootConfig struct {
-	Main          MainConfig               `toml:"main"`
+type rootConfig struct {
+	Main          mainConfig               `toml:"main"`
 	Rules         []map[string]interface{} `toml:"rule"`
 	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
 	GitlabMRs     []gitlabmr.Config        `toml:"gitlabmr"`
@@ -138,7 +138,7 @@ func (cfg *Config) loadMainConfig(file string) error {
 		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
 	}
 
-	var rootConfig RootConfig
+	var rootConfig rootConfig
 	_, err := toml.DecodeFile(file, &rootConfig)
 	if err != nil {
 		panic(err)
@@ -208,7 +208,7 @@ func (cfg *Config) loadDashboardConfig(file string) error {
 	}
 
 	var dashboard Dashboard
-	var dashboardConfig DashboardConfig
+	var dashboardConfig dashboardConfig
 	_, err := toml.DecodeFile(file, &dashboardConfig)
 	if err != nil {
 		panic(err)
