@@ -20,9 +20,9 @@
             {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
         </td>
         <td class="status {{.Status}}">
-            {{.What}}
             <details>
                 <summary>
+                    {{.What}}
                     {{range .Links}}
                         {{.}}
                     {{end}}
@@ -54,10 +54,10 @@
                 {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
             </td>
             <td class="status {{.Status}}">
-                {{.What}}
-                <span><i>({{.Reason}})</i></span>
                 <details>
                     <summary>
+                        {{.What}}
+                        <span><i>({{.Reason}})</i></span>
                         {{range .Links}}
                             {{.}}
                         {{end}}
