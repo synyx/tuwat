@@ -63,7 +63,7 @@ type DashboardConfig struct {
 	Rules []map[string]interface{} `toml:"rule"`
 }
 
-type ConnectorConfig struct {
+type RootConfig struct {
 	Main          MainConfig               `toml:"main"`
 	Rules         []map[string]interface{} `toml:"rule"`
 	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
@@ -138,32 +138,32 @@ func (cfg *Config) loadMainConfig(file string) error {
 		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
 	}
 
-	var connectorConfigs ConnectorConfig
-	_, err := toml.DecodeFile(file, &connectorConfigs)
+	var rootConfig RootConfig
+	_, err := toml.DecodeFile(file, &rootConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, connectorConfig := range connectorConfigs.Alertmanagers {
+	for _, connectorConfig := range rootConfig.Alertmanagers {
 		cfg.Connectors = append(cfg.Connectors, alertmanager.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.GitlabMRs {
+	for _, connectorConfig := range rootConfig.GitlabMRs {
 		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.Icinga2s {
+	for _, connectorConfig := range rootConfig.Icinga2s {
 		cfg.Connectors = append(cfg.Connectors, icinga2.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.NagiosAPIs {
+	for _, connectorConfig := range rootConfig.NagiosAPIs {
 		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.Patchmans {
+	for _, connectorConfig := range rootConfig.Patchmans {
 		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.GitHubIssues {
+	for _, connectorConfig := range rootConfig.GitHubIssues {
 		cfg.Connectors = append(cfg.Connectors, github.NewConnector(&connectorConfig))
 	}
 
-	whereTemplate := connectorConfigs.Main.WhereTemplate
+	whereTemplate := rootConfig.Main.WhereTemplate
 	if whereTemplate == "" {
 		whereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
 	}
@@ -179,13 +179,13 @@ func (cfg *Config) loadMainConfig(file string) error {
 				return "NOT_FOUND"
 			},
 		}).
-		Parse(connectorConfigs.Main.WhereTemplate)
+		Parse(rootConfig.Main.WhereTemplate)
 	if err != nil {
 		return err
 	}
 
-	if connectorConfigs.Main.Interval != "" {
-		if cfg.Interval, err = time.ParseDuration(connectorConfigs.Main.Interval); err != nil {
+	if rootConfig.Main.Interval != "" {
+		if cfg.Interval, err = time.ParseDuration(rootConfig.Main.Interval); err != nil {
 			return err
 		}
 	} else {
@@ -194,7 +194,7 @@ func (cfg *Config) loadMainConfig(file string) error {
 
 	cfg.Dashboards = make(map[string]*Dashboard)
 	var dashboard Dashboard
-	for _, r := range connectorConfigs.Rules {
+	for _, r := range rootConfig.Rules {
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
 
