@@ -321,3 +321,11 @@ nav#menu:target ul li a:hover {
         margin-top: 1vw;
     }
 }
+
+h3.filtered {
+    margin-top: 119px;
+}
+
+.hidden {
+    display: none;
+}

@@ -1,5 +1,8 @@
 import * as Turbo from '@hotwired/turbo';
 import ReconnectingWebSocket from 'reconnecting-websocket';
+import { toggleFilteredStatus } from "./toggle-filtered";
+
+toggleFilteredStatus();
 
 class SSEConn {
     constructor(socketUrl) {
