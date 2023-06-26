@@ -1,7 +1,8 @@
 # Releases
 
-## next release
+## v0.17 - 2023-06-26 Multiple Dashboards
 
+* UX change: Full row for items now clickable for details
 * Adds possibility of having multiple dashboards/rule-sets
 * Breaking configuration changes:
   * OAuth2 configuration is now a subsection named `OAuth2Creds`
