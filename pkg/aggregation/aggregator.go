@@ -199,6 +199,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 					err = fmt.Errorf("error delivering result %w", e.(error))
 				}
 				otelzap.Ctx(ctx).Info("Collected alerts",
+					zap.String("collector", c.String()),
 					zap.String("tag", c.Tag()),
 					zap.Int("count", len(alerts)),
 					zap.Error(err))
