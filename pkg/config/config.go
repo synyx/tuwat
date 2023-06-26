@@ -20,6 +20,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
+	"go.uber.org/zap"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -37,34 +38,42 @@ type Config struct {
 	JaegerUrl      string
 	Instance       string
 	PrintVersion   bool
+	Logger         zap.Config
 	Connectors     []connectors.Connector
 	WhereTemplate  *template.Template
 	Interval       time.Duration
 	Dashboards     map[string]*Dashboard
 }
 
-type MainConfig struct {
-	WhereTemplate string `toml:"where"`
-	Interval      string `toml:"interval"`
-}
-
 type Dashboard struct {
 	Name   string
+	Mode   DashboardMode
 	Filter []Rule
 }
 
 type Rule struct {
-	Description string                    `toml:"description"`
-	What        *regexp.Regexp            `toml:"what"`
-	Labels      map[string]*regexp.Regexp `toml:"labels"`
+	Description string
+	What        *regexp.Regexp
+	Labels      map[string]*regexp.Regexp
 }
 
-type DashboardConfig struct {
+type mainConfig struct {
+	WhereTemplate string `toml:"where"`
+	Interval      string `toml:"interval"`
+}
+
+type mainDashboardConfig struct {
+	Mode DashboardMode `toml:"mode"`
+}
+
+type dashboardConfig struct {
+	Main  mainDashboardConfig      `toml:"main"`
 	Rules []map[string]interface{} `toml:"rule"`
 }
 
-type ConnectorConfig struct {
-	Main          MainConfig               `toml:"main"`
+type rootConfig struct {
+	Main          mainConfig               `toml:"main"`
+	Logger        zap.Config               `toml:"logger"`
 	Rules         []map[string]interface{} `toml:"rule"`
 	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
 	GitlabMRs     []gitlabmr.Config        `toml:"gitlabmr"`
@@ -138,36 +147,48 @@ func (cfg *Config) loadMainConfig(file string) error {
 		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
 	}
 
-	var connectorConfigs ConnectorConfig
-	_, err := toml.DecodeFile(file, &connectorConfigs)
+	var rootConfig rootConfig
+
+	// Defaults for configuration
+	rootConfig.Main.WhereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
+
+	if cfg.Environment == "prod" {
+		rootConfig.Logger = zap.NewProductionConfig()
+	} else {
+		rootConfig.Logger = zap.NewDevelopmentConfig()
+	}
+
+	rootConfig.Main.Interval = "1m"
+
+	// Fill configuration
+	_, err := toml.DecodeFile(file, &rootConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, connectorConfig := range connectorConfigs.Alertmanagers {
+	cfg.Logger = rootConfig.Logger
+
+	// Add connectors
+	for _, connectorConfig := range rootConfig.Alertmanagers {
 		cfg.Connectors = append(cfg.Connectors, alertmanager.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.GitlabMRs {
+	for _, connectorConfig := range rootConfig.GitlabMRs {
 		cfg.Connectors = append(cfg.Connectors, gitlabmr.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.Icinga2s {
+	for _, connectorConfig := range rootConfig.Icinga2s {
 		cfg.Connectors = append(cfg.Connectors, icinga2.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.NagiosAPIs {
+	for _, connectorConfig := range rootConfig.NagiosAPIs {
 		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.Patchmans {
+	for _, connectorConfig := range rootConfig.Patchmans {
 		cfg.Connectors = append(cfg.Connectors, patchman.NewConnector(&connectorConfig))
 	}
-	for _, connectorConfig := range connectorConfigs.GitHubIssues {
+	for _, connectorConfig := range rootConfig.GitHubIssues {
 		cfg.Connectors = append(cfg.Connectors, github.NewConnector(&connectorConfig))
 	}
 
-	whereTemplate := connectorConfigs.Main.WhereTemplate
-	if whereTemplate == "" {
-		whereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
-	}
-
+	// Add template for
 	cfg.WhereTemplate, err = template.New("where").
 		Funcs(map[string]any{
 			"first": func(m map[string]string, x ...string) string {
@@ -179,23 +200,23 @@ func (cfg *Config) loadMainConfig(file string) error {
 				return "NOT_FOUND"
 			},
 		}).
-		Parse(connectorConfigs.Main.WhereTemplate)
+		Parse(rootConfig.Main.WhereTemplate)
 	if err != nil {
 		return err
 	}
 
-	if connectorConfigs.Main.Interval != "" {
-		if cfg.Interval, err = time.ParseDuration(connectorConfigs.Main.Interval); err != nil {
-			return err
-		}
-	} else {
-		cfg.Interval = 1 * time.Minute
+	if cfg.Interval, err = time.ParseDuration(rootConfig.Main.Interval); err != nil {
+		return err
 	}
 
+	// Add default dashboard if specified in main config file
 	cfg.Dashboards = make(map[string]*Dashboard)
 	var dashboard Dashboard
-	for _, r := range connectorConfigs.Rules {
+	for _, r := range rootConfig.Rules {
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
+	}
+	if len(dashboard.Filter) > 0 {
+		cfg.Dashboards[""] = &dashboard
 	}
 
 	return err
@@ -208,13 +229,19 @@ func (cfg *Config) loadDashboardConfig(file string) error {
 	}
 
 	var dashboard Dashboard
-	var dashboardConfig DashboardConfig
+	var dashboardConfig dashboardConfig
 	_, err := toml.DecodeFile(file, &dashboardConfig)
 	if err != nil {
 		panic(err)
 	}
 
+	// Excluding is the default mode, this mirrors a mindset of "everything
+	// new has to be looked at, at least once".
+	// `0` is the empty value, so in case Main.Mode is unset, it will still
+	// be the default.
+	dashboard.Mode = Excluding
 	for _, r := range dashboardConfig.Rules {
+		dashboard.Mode = dashboardConfig.Main.Mode
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
 

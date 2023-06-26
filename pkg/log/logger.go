@@ -13,16 +13,10 @@ import (
 )
 
 func Initialize(cfg *config.Config) func() {
-	var logger *zap.Logger
-	var err error
-	if cfg.Environment == "prod" {
-		logger, err = zap.NewProduction()
-	} else {
-		logger, err = zap.NewDevelopment(
-			zap.WithCaller(true),
-			zap.AddStacktrace(zap.ErrorLevel),
-		)
-	}
+	logger, err := cfg.Logger.Build(
+		zap.WithCaller(true),
+		zap.AddStacktrace(zap.ErrorLevel),
+	)
 	if err != nil {
 		fmt.Println("failed to set up logging system", err)
 		os.Exit(1)
@@ -54,6 +48,8 @@ func Initialize(cfg *config.Config) func() {
 		otelzap.WithTraceIDField(true),
 	)
 	reversionFunctions = append(reversionFunctions, otelzap.ReplaceGlobals(otelLogger))
+
+	otelLogger.Info("initialized logger", zap.String("environment", cfg.Environment))
 
 	return revert(reversionFunctions)
 }

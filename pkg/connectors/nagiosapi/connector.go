@@ -16,7 +16,7 @@ import (
 )
 
 type Connector struct {
-	config *Config
+	config Config
 	client *http.Client
 }
 
@@ -27,7 +27,7 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
-	return &Connector{cfg, cfg.HTTPConfig.Client()}
+	return &Connector{*cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -122,6 +122,7 @@ func (c *Connector) String() string {
 }
 
 func (c *Connector) collectHosts(ctx context.Context) (map[string]host, error) {
+	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+"/state"))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+"/state", nil)
 	if err != nil {

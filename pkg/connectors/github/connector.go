@@ -17,7 +17,7 @@ import (
 )
 
 type Connector struct {
-	config *Config
+	config Config
 	client *http.Client
 }
 
@@ -31,7 +31,7 @@ func NewConnector(cfg *Config) *Connector {
 	if cfg.URL == "" {
 		cfg.URL = "https://api.github.com"
 	}
-	return &Connector{cfg, cfg.HTTPConfig.Client()}
+	return &Connector{*cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -118,6 +118,8 @@ func (c *Connector) collectIssues(ctx context.Context, repo string) ([]issue, er
 }
 
 func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
+	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", endpoint))
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err

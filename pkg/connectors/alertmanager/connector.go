@@ -20,7 +20,7 @@ import (
 )
 
 type Connector struct {
-	config *Config
+	config Config
 	client *http.Client
 }
 
@@ -31,7 +31,7 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
-	c := &Connector{config: cfg, client: cfg.HTTPConfig.Client()}
+	c := &Connector{config: *cfg, client: cfg.HTTPConfig.Client()}
 
 	return c
 }
@@ -184,6 +184,8 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 }
 
 func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, error) {
+
+	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
