@@ -20,6 +20,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
+	"go.uber.org/zap"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -37,6 +38,7 @@ type Config struct {
 	JaegerUrl      string
 	Instance       string
 	PrintVersion   bool
+	Logger         zap.Config
 	Connectors     []connectors.Connector
 	WhereTemplate  *template.Template
 	Interval       time.Duration
@@ -71,6 +73,7 @@ type dashboardConfig struct {
 
 type rootConfig struct {
 	Main          mainConfig               `toml:"main"`
+	Logger        zap.Config               `toml:"logger"`
 	Rules         []map[string]interface{} `toml:"rule"`
 	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
 	GitlabMRs     []gitlabmr.Config        `toml:"gitlabmr"`
@@ -145,11 +148,27 @@ func (cfg *Config) loadMainConfig(file string) error {
 	}
 
 	var rootConfig rootConfig
+
+	// Defaults for configuration
+	rootConfig.Main.WhereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
+
+	if cfg.Environment == "prod" {
+		rootConfig.Logger = zap.NewProductionConfig()
+	} else {
+		rootConfig.Logger = zap.NewDevelopmentConfig()
+	}
+
+	rootConfig.Main.Interval = "1m"
+
+	// Fill configuration
 	_, err := toml.DecodeFile(file, &rootConfig)
 	if err != nil {
 		panic(err)
 	}
 
+	cfg.Logger = rootConfig.Logger
+
+	// Add connectors
 	for _, connectorConfig := range rootConfig.Alertmanagers {
 		cfg.Connectors = append(cfg.Connectors, alertmanager.NewConnector(&connectorConfig))
 	}
@@ -169,11 +188,7 @@ func (cfg *Config) loadMainConfig(file string) error {
 		cfg.Connectors = append(cfg.Connectors, github.NewConnector(&connectorConfig))
 	}
 
-	whereTemplate := rootConfig.Main.WhereTemplate
-	if whereTemplate == "" {
-		whereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
-	}
-
+	// Add template for
 	cfg.WhereTemplate, err = template.New("where").
 		Funcs(map[string]any{
 			"first": func(m map[string]string, x ...string) string {
@@ -190,18 +205,18 @@ func (cfg *Config) loadMainConfig(file string) error {
 		return err
 	}
 
-	if rootConfig.Main.Interval != "" {
-		if cfg.Interval, err = time.ParseDuration(rootConfig.Main.Interval); err != nil {
-			return err
-		}
-	} else {
-		cfg.Interval = 1 * time.Minute
+	if cfg.Interval, err = time.ParseDuration(rootConfig.Main.Interval); err != nil {
+		return err
 	}
 
+	// Add default dashboard if specified in main config file
 	cfg.Dashboards = make(map[string]*Dashboard)
 	var dashboard Dashboard
 	for _, r := range rootConfig.Rules {
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
+	}
+	if len(dashboard.Filter) > 0 {
+		cfg.Dashboards[""] = &dashboard
 	}
 
 	return err
