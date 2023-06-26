@@ -14,6 +14,7 @@ import (
 func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 
 	dashboardName := filepath.Base(req.URL.Path)
+	dashboardName = strings.TrimPrefix(dashboardName, "/")
 
 	aggregate := h.aggregator.Alerts(dashboardName)
 
