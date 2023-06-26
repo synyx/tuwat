@@ -20,15 +20,17 @@
             {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
         </td>
         <td class="status {{.Status}}">
-            {{.What}}
             <details>
                 <summary>
+                    {{.What}}
                     {{range .Links}}
                         {{.}}
                     {{end}}
                 </summary>
-                <div>{{.Details}}</div>
-                <pre>{{json .Labels}}</pre>
+                <div class="content">
+                    <div>{{.Details}}</div>
+                    <pre>{{json .Labels}}</pre>
+                </div>
             </details>
         </td>
         <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
@@ -54,16 +56,18 @@
                 {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
             </td>
             <td class="status {{.Status}}">
-                {{.What}}
-                <span><i>({{.Reason}})</i></span>
                 <details>
                     <summary>
+                        {{.What}}
+                        <span><i>({{.Reason}})</i></span>
                         {{range .Links}}
                             {{.}}
                         {{end}}
                     </summary>
-                    <div>{{.Details}}</div>
-                    <pre>{{json .Labels}}</pre>
+                    <div class="content">
+                        <div>{{.Details}}</div>
+                        <pre>{{json .Labels}}</pre>
+                    </div>
                 </details>
             </td>
             <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
