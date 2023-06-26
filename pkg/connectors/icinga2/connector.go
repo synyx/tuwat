@@ -13,10 +13,12 @@ import (
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 type Connector struct {
-	config *Config
+	config Config
 	client *http.Client
 }
 
@@ -27,7 +29,7 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
-	return &Connector{cfg, cfg.HTTPConfig.Client()}
+	return &Connector{*cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -157,6 +159,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]HostAttrs, error) {
 }
 
 func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
+	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

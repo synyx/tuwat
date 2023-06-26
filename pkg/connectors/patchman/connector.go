@@ -19,7 +19,7 @@ import (
 )
 
 type Connector struct {
-	config *Config
+	config Config
 	client *http.Client
 
 	osCache     map[string]*os
@@ -34,7 +34,7 @@ type Config struct {
 
 func NewConnector(cfg *Config) *Connector {
 	return &Connector{
-		config:      cfg,
+		config:      *cfg,
 		client:      cfg.HTTPConfig.Client(),
 		osCache:     make(map[string]*os),
 		archCache:   make(map[string]*arch),
@@ -167,7 +167,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 			return nil, err
 		}
 
-		otelzap.Ctx(ctx).Info("Would pull next", zap.String("url", next))
+		otelzap.Ctx(ctx).Debug("Would pull next", zap.String("url", next))
 	}
 
 	return response, nil
@@ -200,6 +200,7 @@ func getCached[T any](ctx context.Context, c *Connector, cache map[string]*T, ra
 }
 
 func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
+	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

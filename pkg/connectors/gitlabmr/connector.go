@@ -19,7 +19,7 @@ import (
 )
 
 type Connector struct {
-	config *Config
+	config Config
 	client *http.Client
 }
 
@@ -30,7 +30,7 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
-	return &Connector{cfg, cfg.HTTPConfig.Client()}
+	return &Connector{*cfg, cfg.HTTPConfig.Client()}
 }
 
 func (c *Connector) Tag() string {
@@ -157,6 +157,8 @@ func (c *Connector) collectMRsFrom(ctx context.Context, from string) ([]mergeReq
 // will get 100 results.  The calling code is responsible for collecting more
 // results.
 func (c *Connector) get(ctx context.Context, endpoint string, query map[string]string) (io.ReadCloser, string, error) {
+	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
 		return nil, "", err
