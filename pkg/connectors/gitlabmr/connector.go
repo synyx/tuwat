@@ -173,11 +173,9 @@ func (c *Connector) get(ctx context.Context, endpoint string, query map[string]s
 		q.Set(k, v)
 	}
 	req.URL.RawQuery = q.Encode()
-	reqUrl := req.URL.String()
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", reqUrl), zap.Error(err))
 		return nil, "", err
 	}
 
