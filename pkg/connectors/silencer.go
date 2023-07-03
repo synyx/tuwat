@@ -1,5 +1,7 @@
 package connectors
 
+import "context"
+
 type ExternalSilencer interface {
 	String() string
 
@@ -9,6 +11,7 @@ type ExternalSilencer interface {
 	Silences() []Silence
 	SetSilence(id string, labels map[string]string)
 	DeleteSilence(id string)
+	Refresh(ctx context.Context) error
 }
 
 type Silence struct {

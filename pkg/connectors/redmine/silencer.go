@@ -81,16 +81,20 @@ func (s *Silencer) DeleteSilence(id string) {
 	delete(s.silences, id)
 }
 
-func (s *Silencer) RefreshCache(ctx context.Context) {
+func (s *Silencer) Refresh(ctx context.Context) error {
 	silenced := make(map[string]connectors.Silence)
 
 	for k, _ := range s.silences {
-		if silence, err := s.getSilence(ctx, k); err != nil {
+		if silence, err := s.getSilence(ctx, k); err == nil {
+			return err
+		} else {
 			silenced[k] = silence
 		}
 	}
 
 	s.silenced = silenced
+
+	return nil
 }
 
 func (s *Silencer) getSilence(ctx context.Context, id string) (connectors.Silence, error) {

@@ -11,6 +11,10 @@
         <input type="submit" name="submit">
     </form>
 
+    <form action="/silences/{{.ExternalId}}/refresh" method="post">
+        <input type="submit" name="refresh">
+    </form>
+
     <table>
         {{range .Content.Silences}}
             <tr>

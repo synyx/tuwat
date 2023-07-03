@@ -48,8 +48,16 @@ func (h *webHandler) silences(w http.ResponseWriter, req *http.Request) {
 	}
 
 	renderer(w, http.StatusOK, webContent{Content: content})
-
 }
+
+func (h *webHandler) refreshSilence(w http.ResponseWriter, req *http.Request) {
+
+	h.silencer.Refresh(req.Context())
+
+	w.Header().Set("Location", "/silences")
+	w.WriteHeader(http.StatusSeeOther)
+}
+
 func (h *webHandler) addSilence(w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		return
