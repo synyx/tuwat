@@ -13,7 +13,9 @@ which shows only Nagios `Hosts`/`Services`.
 
 ## Features
 
-Connectors for
+### Connectors
+
+Connectors are data collectors for actionable items.
 
 * Prometheus [Alertmanager]
 * [GitLab] MRs
@@ -29,7 +31,16 @@ Connectors for
 [Icinga 2]: https://icinga.com
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
-[Redmine]: https://redmine.org/
+[Redmine]: https://www.redmine.org
+
+### External Silencers
+
+External Silencers are ways to hide items persistently in a different system.
+This can be used to hide long-running items without resolutions.
+
+* [Redmine]
+
+[Redmine]: https://www.redmine.org
 
 ## Configuration
 

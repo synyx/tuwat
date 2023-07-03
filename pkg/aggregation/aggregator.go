@@ -44,6 +44,7 @@ type Alert struct {
 type BlockedAlert struct {
 	Alert
 	Reason string
+	Link   html.HTML
 }
 
 type Aggregator struct {
@@ -52,6 +53,7 @@ type Aggregator struct {
 	tracer   trace.Tracer
 
 	connectors    []connectors.Connector
+	silencer      connectors.ExternalSilencer
 	whereTempl    *text.Template
 	registrations sync.Map
 	cmu           *sync.RWMutex // Protecting Configuration
@@ -87,6 +89,7 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 	a := &Aggregator{
 		interval:   cfg.Interval,
 		connectors: cfg.Connectors,
+		silencer:   cfg.Silencer,
 		whereTempl: cfg.WhereTemplate,
 		current:    make(map[string]Aggregate),
 		dashboards: cfg.Dashboards,
@@ -284,7 +287,13 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if reason := a.allow(dashboard, alert); reason == "" {
+			if e := a.externallySilenced(alert.Labels); e.Silenced {
+				blockedAlerts = append(blockedAlerts, BlockedAlert{
+					Alert:  alert,
+					Reason: "Externally Silenced",
+					Link:   html.HTML(`<a href="` + e.URL + `">#` + e.ExternalId + `</a>`),
+				})
+			} else if reason := a.allow(dashboard, alert); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
 				blockedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: reason})
@@ -516,4 +525,12 @@ all:
 			otelzap.Ctx(ctx).Info("error silencing", zap.Error(err))
 		}
 	}
+}
+
+func (a *Aggregator) externallySilenced(labels map[string]string) connectors.Silence {
+	if a.silencer == nil {
+		return connectors.Silence{}
+	}
+
+	return a.silencer.Silenced(labels)
 }
