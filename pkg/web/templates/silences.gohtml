@@ -1,0 +1,27 @@
+{{define "content"}}
+    <h1>Silences</h1>
+
+    <form action="/silences" method="post">
+        <label for="externalId">ID</label>
+        <input type="text" id="externalId" name="externalId" value="{{.Content.ExternalId}}">
+
+        <label for="labels">ID</label>
+        <textarea id="labels" name="labels">{{.Content.Labels}}</textarea>
+
+        <input type="submit" name="submit">
+    </form>
+
+    <table>
+        {{range .Content.Silences}}
+            <tr>
+                <td><a href="{{.URL}}">#{{.ExternalId}}</a></td>
+                <td>{{range $k, $v := .Labels}}{{$k}}={{$v}},{{end}}</td>
+                <td>
+                    <form action="/silences/{{.ExternalId}}/delete" method="post">
+                        <input type="submit" name="delete">
+                    </form>
+                </td>
+            </tr>
+        {{end}}
+    </table>
+{{end}}

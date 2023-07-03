@@ -31,15 +31,15 @@ func NewSilencer(cfg *Config) *Silencer {
 	}
 }
 
-func (s *Silencer) Silence(labels map[string]string, externalId string) error {
-	s.silences[externalId] = labels
+func (s *Silencer) Silence(labels map[string]string, id string) error {
+	s.silences[id] = labels
 
 	return nil
 }
 
 func (s *Silencer) Silenced(labels map[string]string) connectors.Silence {
 	// look for the labels inside the known silences
-	for externalId, l := range s.silences {
+	for id, l := range s.silences {
 		found := 0
 		for k, v := range labels {
 			if v2, ok := l[k]; ok && v2 == v {
@@ -50,7 +50,7 @@ func (s *Silencer) Silenced(labels map[string]string) connectors.Silence {
 		// allowing for broader silences than the handed in set of labels
 		if found >= len(l) {
 			// get cached silence, or pretend we're not silenced even having a matched silence
-			if silence, ok := s.silenced[externalId]; ok {
+			if silence, ok := s.silenced[id]; ok {
 				return silence
 			} else {
 				return connectors.Silence{}
@@ -65,6 +65,22 @@ func (s *Silencer) String() string {
 	return fmt.Sprintf("Redmine Silencer (%s)", s.config.URL)
 }
 
+func (s *Silencer) Silences() []connectors.Silence {
+	var silences []connectors.Silence
+	for _, silence := range s.silenced {
+		silences = append(silences, silence)
+	}
+	return silences
+}
+
+func (s *Silencer) SetSilence(id string, labels map[string]string) {
+	s.silences[id] = labels
+}
+
+func (s *Silencer) DeleteSilence(id string) {
+	delete(s.silences, id)
+}
+
 func (s *Silencer) RefreshCache(ctx context.Context) {
 	silenced := make(map[string]connectors.Silence)
 
@@ -77,33 +93,35 @@ func (s *Silencer) RefreshCache(ctx context.Context) {
 	s.silenced = silenced
 }
 
-func (s *Silencer) getSilence(ctx context.Context, externalId string) (connectors.Silence, error) {
-	id, err := strconv.Atoi(externalId)
-	if err != nil {
-		return connectors.Silence{}, err
+func (s *Silencer) getSilence(ctx context.Context, id string) (connectors.Silence, error) {
+	silence := connectors.Silence{
+		ExternalId: id,
+		Silenced:   false,
+		Labels:     s.silences[id],
 	}
 
-	issue, err := s.getIssue(ctx, id)
+	redmineId, err := strconv.Atoi(id)
 	if err != nil {
-		return connectors.Silence{}, err
+		return silence, err
 	}
 
-	silenced := false
+	issue, err := s.getIssue(ctx, redmineId)
+	if err != nil {
+		return silence, err
+	}
+
+	silence.URL = fmt.Sprintf("%s/issues/%d", s.config.HTTPConfig.URL, redmineId)
 
 	// Silencing if the ticket is still open and the alert is firing
 	if issue.ClosedOn == "" {
-		silenced = true
+		silence.Silenced = true
 	}
 
-	return connectors.Silence{
-		ExternalId: externalId,
-		URL:        fmt.Sprintf("%s/issues/%d", s.config.HTTPConfig.URL, id),
-		Silenced:   silenced,
-	}, nil
+	return silence, nil
 }
 
-func (s *Silencer) getIssue(ctx context.Context, externalId int) (*issue, error) {
-	url := fmt.Sprintf("%s/issues/%d.json", s.config.HTTPConfig.URL, externalId)
+func (s *Silencer) getIssue(ctx context.Context, id int) (*issue, error) {
+	url := fmt.Sprintf("%s/issues/%d.json", s.config.HTTPConfig.URL, id)
 	otelzap.Ctx(ctx).Debug("getting issues", zap.String("url", url))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

@@ -1,13 +1,19 @@
 package connectors
 
 type ExternalSilencer interface {
-	Silence(labels map[string]string, externalId string) error
-	Silenced(labels map[string]string) Silence
 	String() string
+
+	Silence(labels map[string]string, id string) error
+	Silenced(labels map[string]string) Silence
+
+	Silences() []Silence
+	SetSilence(id string, labels map[string]string)
+	DeleteSilence(id string)
 }
 
 type Silence struct {
 	ExternalId string
 	URL        string
 	Silenced   bool
+	Labels     map[string]string
 }
