@@ -19,6 +19,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
+	"github.com/synyx/tuwat/pkg/connectors/orderview"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
 	"go.uber.org/zap"
 )
@@ -81,6 +82,7 @@ type rootConfig struct {
 	NagiosAPIs    []nagiosapi.Config       `toml:"nagiosapi"`
 	Patchmans     []patchman.Config        `toml:"patchman"`
 	GitHubIssues  []github.Config          `toml:"github"`
+	Orderview     []orderview.Config       `toml:"orderview"`
 }
 
 func NewConfiguration() (*Config, error) {
@@ -186,6 +188,9 @@ func (cfg *Config) loadMainConfig(file string) error {
 	}
 	for _, connectorConfig := range rootConfig.GitHubIssues {
 		cfg.Connectors = append(cfg.Connectors, github.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.Orderview {
+		cfg.Connectors = append(cfg.Connectors, orderview.NewConnector(&connectorConfig))
 	}
 
 	// Add template for
