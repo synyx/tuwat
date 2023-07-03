@@ -3,10 +3,11 @@ package redmine
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -84,8 +85,17 @@ func (s *Silencer) DeleteSilence(id string) {
 func (s *Silencer) Refresh(ctx context.Context) error {
 	silenced := make(map[string]connectors.Silence)
 
+	var silenceIds []string
+	for id, _ := range s.silences {
+		silenceIds = append(silenceIds, id)
+	}
+	issues, err := s.getIssues(ctx, silenceIds)
+	if err != nil {
+		return err
+	}
+
 	for k, _ := range s.silences {
-		if silence, err := s.getSilence(ctx, k); err == nil {
+		if silence, err := s.getSilence(k, issues); err == nil {
 			return err
 		} else {
 			silenced[k] = silence
@@ -97,7 +107,7 @@ func (s *Silencer) Refresh(ctx context.Context) error {
 	return nil
 }
 
-func (s *Silencer) getSilence(ctx context.Context, id string) (connectors.Silence, error) {
+func (s *Silencer) getSilence(id string, issues []issue) (connectors.Silence, error) {
 	silence := connectors.Silence{
 		ExternalId: id,
 		Silenced:   false,
@@ -109,9 +119,14 @@ func (s *Silencer) getSilence(ctx context.Context, id string) (connectors.Silenc
 		return silence, err
 	}
 
-	issue, err := s.getIssue(ctx, redmineId)
-	if err != nil {
-		return silence, err
+	var issue issue
+	for _, i := range issues {
+		if strconv.Itoa(i.Id) == id {
+			issue = i
+		}
+	}
+	if issue.Id == 0 {
+		return silence, errors.New("issue not found")
 	}
 
 	silence.URL = fmt.Sprintf("%s/issues/%d", s.config.HTTPConfig.URL, redmineId)
@@ -124,8 +139,8 @@ func (s *Silencer) getSilence(ctx context.Context, id string) (connectors.Silenc
 	return silence, nil
 }
 
-func (s *Silencer) getIssue(ctx context.Context, id int) (*issue, error) {
-	url := fmt.Sprintf("%s/issues/%d.json", s.config.HTTPConfig.URL, id)
+func (s *Silencer) getIssues(ctx context.Context, ids []string) ([]issue, error) {
+	url := fmt.Sprintf("%s/issues.json", s.config.HTTPConfig.URL)
 	otelzap.Ctx(ctx).Debug("getting issues", zap.String("url", url))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -133,11 +148,9 @@ func (s *Silencer) getIssue(ctx context.Context, id int) (*issue, error) {
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("assigned_to", "me")
-	req.Header.Set("status_id", "open")
-	req.Header.Set("due_date", "<="+time.Now().Format("2006-01-02"))
 	req.Header.Set("X-Redmine-API-Key", s.config.BearerToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("issue_id", strings.Join(ids, ","))
 
 	res, err := s.client.Do(req)
 	if err != nil {
@@ -147,11 +160,11 @@ func (s *Silencer) getIssue(ctx context.Context, id int) (*issue, error) {
 
 	decoder := json.NewDecoder(res.Body)
 
-	var response issue
+	var response response
 	err = decoder.Decode(&response)
 	if err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return response.Issues, nil
 }
