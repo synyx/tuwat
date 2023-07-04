@@ -41,7 +41,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	var alerts []connectors.Alert
 	for _, issue := range issues {
-		due, _ := time.Parse("2006-01-02", issue.DueDate)
+		due, err := time.Parse("2006-01-02", issue.DueDate)
+		if err != nil {
+			continue
+		}
+
 		state := connectors.Critical
 		if issue.DueDate == time.Now().Format("2006-01-02") {
 			state = connectors.Warning
@@ -49,10 +53,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
-				"Ticket": fmt.Sprintf("#%d", issue.Id),
-				"Source": c.config.URL,
-				"Due":    issue.DueDate,
-				"Type":   "Ticket",
+				"Project": issue.Project.Name,
+				"Ticket":  fmt.Sprintf("#%d", issue.Id),
+				"Source":  c.config.URL,
+				"Due":     issue.DueDate,
+				"Type":    "Ticket",
 			},
 			Start:       due,
 			State:       state,
@@ -83,10 +88,15 @@ func (c *Connector) collectIssues(ctx context.Context) ([]issue, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("assigned_to", "me")
-	req.Header.Set("status_id", "open")
-	req.Header.Set("due_date", "<="+time.Now().Format("2006-01-02"))
 	req.Header.Set("X-Redmine-API-Key", c.config.BearerToken)
+
+	q := req.URL.Query()
+	q.Set("limit", "100")
+	q.Set("offset", "0")
+	q.Set("assigned_to_id", "me")
+	q.Set("status_id", "open")
+	q.Set("due_date", "<="+time.Now().Format("2006-01-02"))
+	req.URL.RawQuery = q.Encode()
 
 	res, err := c.client.Do(req)
 	if err != nil {
