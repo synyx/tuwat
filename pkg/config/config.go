@@ -214,15 +214,13 @@ func (cfg *Config) loadMainConfig(file string) error {
 		return err
 	}
 
-	// Add default dashboard if specified in main config file
+	// Add default dashboard, containing potentially all unfiltered alerts
 	cfg.Dashboards = make(map[string]*Dashboard)
 	var dashboard Dashboard
 	for _, r := range rootConfig.Rules {
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
-	if len(dashboard.Filter) > 0 {
-		cfg.Dashboards[""] = &dashboard
-	}
+	cfg.Dashboards[""] = &dashboard
 
 	return err
 }
