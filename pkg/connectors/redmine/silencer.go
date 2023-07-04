@@ -150,7 +150,12 @@ func (s *Silencer) getIssues(ctx context.Context, ids []string) ([]issue, error)
 
 	req.Header.Set("X-Redmine-API-Key", s.config.BearerToken)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("issue_id", strings.Join(ids, ","))
+
+	q := req.URL.Query()
+	q.Set("limit", "100")
+	q.Set("offset", "0")
+	q.Set("issue_id", strings.Join(ids, ","))
+	req.URL.RawQuery = q.Encode()
 
 	res, err := s.client.Do(req)
 	if err != nil {
