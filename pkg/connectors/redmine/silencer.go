@@ -54,7 +54,7 @@ func (s *Silencer) Silenced(labels map[string]string) connectors.Silence {
 			if silence, ok := s.silenced[id]; ok {
 				return silence
 			} else {
-				return connectors.Silence{}
+				continue
 			}
 		}
 	}
@@ -75,10 +75,13 @@ func (s *Silencer) Silences() []connectors.Silence {
 }
 
 func (s *Silencer) SetSilence(id string, labels map[string]string) {
+	otelzap.L().Debug("Adding silence", zap.String("id", id), zap.Any("labels", labels), zap.Int("count", len(s.silences)))
+
 	s.silences[id] = labels
 }
 
 func (s *Silencer) DeleteSilence(id string) {
+	otelzap.L().Debug("Deleting silence", zap.String("id", id))
 	delete(s.silences, id)
 }
 
@@ -95,12 +98,14 @@ func (s *Silencer) Refresh(ctx context.Context) error {
 	}
 
 	for k, _ := range s.silences {
-		if silence, err := s.getSilence(k, issues); err == nil {
-			return err
+		if silence, err := s.getSilence(k, issues); err != nil {
+			continue
 		} else {
 			silenced[k] = silence
 		}
 	}
+
+	otelzap.L().Debug("Refreshing silences", zap.Int("count", len(silenced)))
 
 	s.silenced = silenced
 

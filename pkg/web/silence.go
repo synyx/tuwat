@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 func (h *webHandler) silence(w http.ResponseWriter, req *http.Request) {
@@ -52,7 +54,8 @@ func (h *webHandler) silences(w http.ResponseWriter, req *http.Request) {
 
 func (h *webHandler) refreshSilence(w http.ResponseWriter, req *http.Request) {
 
-	h.silencer.Refresh(req.Context())
+	err := h.silencer.Refresh(req.Context())
+	otelzap.Ctx(req.Context()).Debug("Refreshing silences", zap.Error(err))
 
 	w.Header().Set("Location", "/silences")
 	w.WriteHeader(http.StatusSeeOther)

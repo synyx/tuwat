@@ -74,9 +74,9 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
 		newRoute("GET", "/silences", handler.silences),
 		newRoute("POST", "/silences", handler.addSilence),
-		newRoute("DELETE", "/silence/([^/]+))?", handler.delSilence),
-		newRoute("POST", "/silence/([^/]+))?/delete", handler.delSilence),
-		newRoute("POST", "/silence/([^/]+))?/refresh", handler.refreshSilence),
+		newRoute("DELETE", "/silences/([^/]+)?", handler.delSilence),
+		newRoute("POST", "/silences/([^/]+)?/delete", handler.delSilence),
+		newRoute("POST", "/silences/refresh", handler.refreshSilence),
 	}
 
 	return handler

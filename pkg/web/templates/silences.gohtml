@@ -8,11 +8,11 @@
         <label for="labels">ID</label>
         <textarea id="labels" name="labels">{{.Content.Labels}}</textarea>
 
-        <input type="submit" name="submit">
+        <input type="submit" name="submit" value="Add">
     </form>
 
-    <form action="/silences/{{.ExternalId}}/refresh" method="post">
-        <input type="submit" name="refresh">
+    <form action="/silences/refresh" method="post">
+        <input type="submit" name="refresh" value="Refresh">
     </form>
 
     <table>
@@ -22,7 +22,7 @@
                 <td>{{range $k, $v := .Labels}}{{$k}}={{$v}},{{end}}</td>
                 <td>
                     <form action="/silences/{{.ExternalId}}/delete" method="post">
-                        <input type="submit" name="delete">
+                        <input type="submit" name="delete" value="Delete">
                     </form>
                 </td>
             </tr>
