@@ -49,9 +49,9 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		state := connectors.Warning
 		switch sourceAlert.State {
-		case "critical":
+		case 2:
 			state = connectors.Critical
-		case "warning":
+		case 1:
 			state = connectors.Warning
 		default:
 			state = connectors.Unknown
@@ -77,7 +77,7 @@ func (c *Connector) String() string {
 }
 
 func (c *Connector) collectAlerts(ctx context.Context) ([]ticket, error) {
-	res, err := c.get(ctx, "/api/tickets.php")
+	res, err := c.get(ctx, "/api/ticket.php")
 	if err != nil {
 		return nil, err
 	}
