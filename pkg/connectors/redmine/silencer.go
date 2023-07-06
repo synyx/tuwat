@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -19,9 +20,10 @@ type labels map[string]string
 type Silencer struct {
 	config Config
 	client *http.Client
+	lock   sync.RWMutex
 
 	silences map[string]labels
-	silenced map[string]connectors.Silence
+	silenced *sync.Map
 }
 
 func NewSilencer(cfg *Config) *Silencer {
@@ -29,6 +31,7 @@ func NewSilencer(cfg *Config) *Silencer {
 		config:   *cfg,
 		client:   cfg.HTTPConfig.Client(),
 		silences: make(map[string]labels),
+		silenced: new(sync.Map),
 	}
 
 	if cfg.SilenceStateFile != "" {
@@ -42,13 +45,10 @@ func NewSilencer(cfg *Config) *Silencer {
 	return s
 }
 
-func (s *Silencer) Silence(labels map[string]string, id string) error {
-	s.silences[id] = labels
-
-	return nil
-}
-
 func (s *Silencer) Silenced(labels map[string]string) connectors.Silence {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
 	// look for the labels inside the known silences
 	for id, l := range s.silences {
 		found := 0
@@ -61,8 +61,8 @@ func (s *Silencer) Silenced(labels map[string]string) connectors.Silence {
 		// allowing for broader silences than the handed in set of labels
 		if found >= len(l) {
 			// get cached silence, or pretend we're not silenced even having a matched silence
-			if silence, ok := s.silenced[id]; ok {
-				return silence
+			if silence, ok := s.silenced.Load(id); ok {
+				return silence.(connectors.Silence)
 			} else {
 				continue
 			}
@@ -78,13 +78,17 @@ func (s *Silencer) String() string {
 
 func (s *Silencer) Silences() []connectors.Silence {
 	var silences []connectors.Silence
-	for _, silence := range s.silenced {
-		silences = append(silences, silence)
-	}
+	s.silenced.Range(func(key, silence any) bool {
+		silences = append(silences, silence.(connectors.Silence))
+		return true
+	})
 	return silences
 }
 
 func (s *Silencer) SetSilence(id string, labels map[string]string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	otelzap.L().Debug("Adding silence", zap.String("id", id), zap.Any("labels", labels), zap.Int("count", len(s.silences)))
 
 	s.silences[id] = labels
@@ -99,6 +103,9 @@ func (s *Silencer) SetSilence(id string, labels map[string]string) {
 }
 
 func (s *Silencer) DeleteSilence(id string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	otelzap.L().Debug("Deleting silence", zap.String("id", id))
 	delete(s.silences, id)
 
@@ -112,7 +119,10 @@ func (s *Silencer) DeleteSilence(id string) {
 }
 
 func (s *Silencer) Refresh(ctx context.Context) error {
-	silenced := make(map[string]connectors.Silence)
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	silenced := new(sync.Map)
 
 	var silenceIds []string
 	for id, _ := range s.silences {
@@ -127,11 +137,11 @@ func (s *Silencer) Refresh(ctx context.Context) error {
 		if silence, err := s.getSilence(k, issues); err != nil {
 			continue
 		} else {
-			silenced[k] = silence
+			silenced.Store(k, silence)
 		}
 	}
 
-	otelzap.L().Debug("Refreshing silences", zap.Int("count", len(silenced)))
+	otelzap.L().Debug("Refreshing silences")
 
 	s.silenced = silenced
 

@@ -5,10 +5,8 @@ import "context"
 type ExternalSilencer interface {
 	String() string
 
-	Silence(labels map[string]string, id string) error
-	Silenced(labels map[string]string) Silence
-
 	Silences() []Silence
+	Silenced(labels map[string]string) Silence
 	SetSilence(id string, labels map[string]string)
 	DeleteSilence(id string)
 	Refresh(ctx context.Context) error
