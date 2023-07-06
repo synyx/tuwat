@@ -25,11 +25,21 @@ type Silencer struct {
 }
 
 func NewSilencer(cfg *Config) *Silencer {
-	return &Silencer{
+	s := &Silencer{
 		config:   *cfg,
 		client:   cfg.HTTPConfig.Client(),
 		silences: make(map[string]labels),
 	}
+
+	if cfg.SilenceStateFile != "" {
+		if err := loadSilences(cfg.SilenceStateFile, &s.silences); err != nil {
+			otelzap.L().Warn("loading silences failed", zap.Error(err))
+		} else {
+			otelzap.L().Debug("saving silences", zap.String("file", s.config.SilenceStateFile))
+		}
+	}
+
+	return s
 }
 
 func (s *Silencer) Silence(labels map[string]string, id string) error {
@@ -78,11 +88,27 @@ func (s *Silencer) SetSilence(id string, labels map[string]string) {
 	otelzap.L().Debug("Adding silence", zap.String("id", id), zap.Any("labels", labels), zap.Int("count", len(s.silences)))
 
 	s.silences[id] = labels
+
+	if s.config.SilenceStateFile != "" {
+		if err := storeSilences(s.config.SilenceStateFile, s.silences); err != nil {
+			otelzap.L().Warn("saving silences failed", zap.Error(err))
+		} else {
+			otelzap.L().Debug("saving silences", zap.String("file", s.config.SilenceStateFile))
+		}
+	}
 }
 
 func (s *Silencer) DeleteSilence(id string) {
 	otelzap.L().Debug("Deleting silence", zap.String("id", id))
 	delete(s.silences, id)
+
+	if s.config.SilenceStateFile != "" {
+		if err := storeSilences(s.config.SilenceStateFile, s.silences); err != nil {
+			otelzap.L().Warn("saving silences failed", zap.Error(err))
+		} else {
+			otelzap.L().Debug("saving silences", zap.String("file", s.config.SilenceStateFile))
+		}
+	}
 }
 
 func (s *Silencer) Refresh(ctx context.Context) error {

@@ -21,8 +21,9 @@ type Connector struct {
 }
 
 type Config struct {
-	Tag          string
-	AssignedToId string
+	Tag              string
+	AssignedToId     string
+	SilenceStateFile string
 	common.HTTPConfig
 }
 
