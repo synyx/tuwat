@@ -5,7 +5,7 @@ module.exports = {
     mode: "production",
     devtool: "source-map",
     output: {
-        filename: 'main.js',
+        filename: 'index.min.js',
         path: path.resolve(__dirname, 'pkg/web/static/js'),
     },
 };
