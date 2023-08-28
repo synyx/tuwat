@@ -21,11 +21,17 @@ type Connector struct {
 }
 
 type Config struct {
-	Tag string
+	Tag          string
+	AssignedToId string
 	common.HTTPConfig
 }
 
 func NewConnector(cfg *Config) *Connector {
+	// by default use the current user as reference
+	if cfg.AssignedToId == "" {
+		cfg.AssignedToId = "me"
+	}
+
 	return &Connector{*cfg, cfg.HTTPConfig.Client()}
 }
 
@@ -93,7 +99,7 @@ func (c *Connector) collectIssues(ctx context.Context) ([]issue, error) {
 	q := req.URL.Query()
 	q.Set("limit", "100")
 	q.Set("offset", "0")
-	q.Set("assigned_to_id", "me")
+	q.Set("assigned_to_id", c.config.AssignedToId)
 	q.Set("status_id", "open")
 	q.Set("due_date", "<="+time.Now().Format("2006-01-02"))
 	req.URL.RawQuery = q.Encode()
