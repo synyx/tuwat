@@ -21,6 +21,7 @@ Connectors for
 * [Icinga 2]
 * [Nagios API]
 * [Patchman]
+* Due [Redmine] tickets
 
 [Alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
 [GitLab]: https://www.gitlab.com
@@ -28,6 +29,7 @@ Connectors for
 [Icinga 2]: https://icinga.com
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
+[Redmine]: https://redmine.org/
 
 ## Configuration
 

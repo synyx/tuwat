@@ -20,6 +20,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
+	"github.com/synyx/tuwat/pkg/connectors/redmine"
 	"go.uber.org/zap"
 )
 
@@ -81,6 +82,7 @@ type rootConfig struct {
 	NagiosAPIs    []nagiosapi.Config       `toml:"nagiosapi"`
 	Patchmans     []patchman.Config        `toml:"patchman"`
 	GitHubIssues  []github.Config          `toml:"github"`
+	Redmines      []redmine.Config         `toml:"redmine"`
 }
 
 func NewConfiguration() (*Config, error) {
@@ -186,6 +188,9 @@ func (cfg *Config) loadMainConfig(file string) error {
 	}
 	for _, connectorConfig := range rootConfig.GitHubIssues {
 		cfg.Connectors = append(cfg.Connectors, github.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.Redmines {
+		cfg.Connectors = append(cfg.Connectors, redmine.NewConnector(&connectorConfig))
 	}
 
 	// Add template for
