@@ -36,7 +36,7 @@ Tag = 'gh'
 #URL = "https://alertmanager.example.com"
 #[alertmanager.OAuth2Creds]
 #ClientID = "client"
-#ClientSecret = "1f8867ff-eaeb-4451-926e-2643c07b91b1"
+#ClientSecret = "example-eaeb-4451-926e-2643c07b91b1"
 #TokenURL = "https://login.example.com/auth/realms/realm/protocol/openid-connect/token"
 #
 #[[gitlabmr]]
@@ -51,3 +51,8 @@ Tag = 'gh'
 #Insecure = true
 #Username = "user"
 #Password = "password"
+#
+#[[redmine]]
+#Tag = "tkt"
+#URL = "https://redmine.example.com"
+#BearerToken = "example3f5bb1632f40bde25d315d53bdec83e"
