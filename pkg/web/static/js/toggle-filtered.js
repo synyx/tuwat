@@ -7,6 +7,9 @@ export function toggleFilteredStatus() {
         const filteredAreShown = !filteredTable.classList.contains("hidden");
         toggleButton.innerText = filteredAreShown ? "Hide" : "Show";
         localStorage.setItem("filteredAreShown", filteredAreShown.toString());
+        if (filteredAreShown) {
+            filteredTable.scrollIntoView();
+        }
     });
 
     function reRegisterToggleFilteredStatus(event) {
@@ -20,6 +23,7 @@ export function toggleFilteredStatus() {
     document.addEventListener("turbo:before-stream-render", reRegisterToggleFilteredStatus);
 
     if (localStorage.getItem("filteredAreShown") === "true") {
-        toggleButton.click();
+        filteredTable.classList.remove("hidden");
+        toggleButton.innerText = "Show";
     }
 }
