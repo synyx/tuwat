@@ -5,6 +5,7 @@
 * Add Redmine connector
 * Add `orderview` connector
 * Recognize service downtimes for `nagios-api` connector
+* The filtered alert-list is now hidden by default and can be toggled
 
 ## v0.17 - 2023-06-26 Multiple Dashboards
 
