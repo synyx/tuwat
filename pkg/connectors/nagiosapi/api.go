@@ -27,4 +27,5 @@ type service struct {
 	CurrentAttempt             string `json:"current_attempt"`
 	MaxAttempts                string `json:"max_attempts"`
 	NotificationsEnabled       string `json:"notifications_enabled"`
+	ScheduledDowntimeDepth     string `json:"scheduled_downtime_depth"`
 }

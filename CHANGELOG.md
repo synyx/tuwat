@@ -4,6 +4,7 @@
 
 * Add Redmine connector
 * Add `orderview` connector
+* Recognize service downtimes for `nagios-api` connector
 
 ## v0.17 - 2023-06-26 Multiple Dashboards
 

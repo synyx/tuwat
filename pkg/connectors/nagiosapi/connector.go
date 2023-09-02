@@ -84,6 +84,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				continue
 			} else if service.ProblemHasBeenAcknowledged == "1" {
 				continue
+			} else if i, e := strconv.ParseInt(service.ScheduledDowntimeDepth, 10, 32); e == nil && i > 0 {
+				continue
 			}
 
 			state, err := strconv.ParseInt(service.CurrentState, 10, 32)
