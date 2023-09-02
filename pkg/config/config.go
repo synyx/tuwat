@@ -32,12 +32,13 @@ var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application port")
 var fMgmtAddr = flag.String("mgmtAddr", "127.0.0.1:8987", "Bind management port")
 var fConfigFile = flag.String("conf", "/etc/tuwat.toml", "Configuration file")
 var fDashboardDir = flag.String("dashboards", "/etc/tuwat.d", "Dashboard Configuration Directory")
+var fOtelUrl = flag.String("otelUrl", "", "OTEL tracing endpoint URL")
 
 type Config struct {
 	WebAddr        string
 	ManagementAddr string
 	Environment    string
-	JaegerUrl      string
+	OtelUrl        string
 	Instance       string
 	PrintVersion   bool
 	Logger         zap.Config
@@ -127,6 +128,12 @@ func NewConfiguration() (*Config, error) {
 
 	if value, ok := os.LookupEnv("TUWAT_DASHBOARD_DIR"); ok {
 		*fDashboardDir = value
+	}
+
+	if value, ok := os.LookupEnv("TUWAT_OTEL_URL"); ok {
+		cfg.OtelUrl = value
+	} else {
+		cfg.OtelUrl = *fOtelUrl
 	}
 
 	err := cfg.loadMainConfig(*fConfigFile)
