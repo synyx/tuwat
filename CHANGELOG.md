@@ -1,5 +1,9 @@
 # Releases
 
+## v0.18 - 2023-08-02 Redmine
+
+* Add Redmine connector
+
 ## v0.17 - 2023-06-26 Multiple Dashboards
 
 * UX change: Full row for items now clickable for details
