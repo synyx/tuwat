@@ -296,6 +296,10 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		return alerts[i].When < alerts[j].When
 	})
 
+	sort.Slice(blockedAlerts, func(i, j int) bool {
+		return blockedAlerts[i].When < blockedAlerts[j].When
+	})
+
 	a.amu.Lock()
 	a.CheckTime = a.clock.Now()
 	a.current[dashboard.Name] = Aggregate{
