@@ -19,6 +19,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
+	"github.com/synyx/tuwat/pkg/connectors/orderview"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
 	"github.com/synyx/tuwat/pkg/connectors/redmine"
 	"go.uber.org/zap"
@@ -83,6 +84,7 @@ type rootConfig struct {
 	Patchmans     []patchman.Config        `toml:"patchman"`
 	GitHubIssues  []github.Config          `toml:"github"`
 	Redmines      []redmine.Config         `toml:"redmine"`
+	Orderview     []orderview.Config       `toml:"orderview"`
 }
 
 func NewConfiguration() (*Config, error) {
@@ -192,6 +194,9 @@ func (cfg *Config) loadMainConfig(file string) error {
 	for _, connectorConfig := range rootConfig.Redmines {
 		cfg.Connectors = append(cfg.Connectors, redmine.NewConnector(&connectorConfig))
 	}
+	for _, connectorConfig := range rootConfig.Orderview {
+		cfg.Connectors = append(cfg.Connectors, orderview.NewConnector(&connectorConfig))
+	}
 
 	// Add template for
 	cfg.WhereTemplate, err = template.New("where").
@@ -214,15 +219,13 @@ func (cfg *Config) loadMainConfig(file string) error {
 		return err
 	}
 
-	// Add default dashboard if specified in main config file
+	// Add default dashboard, containing potentially all unfiltered alerts
 	cfg.Dashboards = make(map[string]*Dashboard)
 	var dashboard Dashboard
 	for _, r := range rootConfig.Rules {
 		dashboard.Filter = append(dashboard.Filter, parseRule(r))
 	}
-	if len(dashboard.Filter) > 0 {
-		cfg.Dashboards[""] = &dashboard
-	}
+	cfg.Dashboards[""] = &dashboard
 
 	return err
 }

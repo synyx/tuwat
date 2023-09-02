@@ -3,6 +3,7 @@
 ## v0.18 - 2023-08-02 Redmine
 
 * Add Redmine connector
+* Add `orderview` connector
 
 ## v0.17 - 2023-06-26 Multiple Dashboards
 
