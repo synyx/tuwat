@@ -9,6 +9,16 @@ export function toggleFilteredStatus() {
         localStorage.setItem("filteredAreShown", filteredAreShown.toString());
     });
 
+    function reRegisterToggleFilteredStatus(event) {
+        const fallbackToDefaultActions = event.detail.render
+
+        event.detail.render = function (streamElement) {
+            fallbackToDefaultActions(streamElement)
+            toggleFilteredStatus();
+        }
+    }
+    document.addEventListener("turbo:before-stream-render", reRegisterToggleFilteredStatus);
+
     if (localStorage.getItem("filteredAreShown") === "true") {
         toggleButton.click();
     }
