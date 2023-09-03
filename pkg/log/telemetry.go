@@ -3,27 +3,28 @@ package log
 import (
 	"context"
 	"io"
-	"log"
+	"net/url"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/version"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {
 	var tp *tracesdk.TracerProvider
 
-	if cfg.JaegerUrl != "" {
-		tp = jaegerTracer(cfg)
+	if cfg.OtelUrl != "" {
+		tp = otelHttpTracer(appCtx, cfg)
 	} else {
 		tp = noopTracer()
 	}
@@ -43,7 +44,7 @@ func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {
 func stdoutTracer(cfg *config.Config) (tp *tracesdk.TracerProvider) {
 	exporter, err := stdout.New()
 	if err != nil {
-		log.Fatal(err)
+		zap.L().Fatal("creating new stdout tracer", zap.Error(err))
 	}
 
 	return tracesdk.NewTracerProvider(
@@ -62,7 +63,7 @@ func stdoutTracer(cfg *config.Config) (tp *tracesdk.TracerProvider) {
 func noopTracer() *tracesdk.TracerProvider {
 	exporter, err := stdout.New(stdout.WithWriter(io.Discard))
 	if err != nil {
-		log.Fatal(err)
+		zap.L().Fatal("creating noop tracer", zap.Error(err))
 	}
 
 	return tracesdk.NewTracerProvider(
@@ -71,16 +72,33 @@ func noopTracer() *tracesdk.TracerProvider {
 	)
 }
 
-func jaegerTracer(cfg *config.Config) *tracesdk.TracerProvider {
-	// Create the Jaeger exporter
-	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(cfg.JaegerUrl)))
+func otelHttpTracer(ctx context.Context, cfg *config.Config) *tracesdk.TracerProvider {
+	u, err := url.Parse(cfg.OtelUrl)
 	if err != nil {
-		log.Fatal(err)
+		zap.L().Fatal("creating OTLP trace exporter", zap.Error(err))
+	}
+
+	options := []otlptracehttp.Option{otlptracehttp.WithEndpoint(u.Host)}
+	if u.Scheme == "http" {
+		options = append(options, otlptracehttp.WithInsecure())
+	}
+	if u.Path != "" && u.Path != "/" {
+		options = append(options, otlptracehttp.WithURLPath(u.Path))
+	}
+	headers := map[string]string{
+		"User-Agent": version.Info.Application + "/" + version.Info.Version,
+	}
+	options = append(options, otlptracehttp.WithHeaders(headers))
+
+	exporter, err := otlptracehttp.New(ctx, options...)
+	if err != nil {
+		zap.L().Warn("creating OTLP trace exporter", zap.Error(err))
+		return noopTracer()
 	}
 
 	return tracesdk.NewTracerProvider(
 		// Always be sure to batch in production.
-		tracesdk.WithBatcher(exp),
+		tracesdk.WithBatcher(exporter),
 		// Record information about this application in a Resource.
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
@@ -99,6 +117,6 @@ func tracerShutdown(appCtx context.Context, tp *tracesdk.TracerProvider) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	if err := tp.Shutdown(ctx); err != nil {
-		log.Fatal(err)
+		zap.L().Fatal("shutting down tracer", zap.Error(err))
 	}
 }
