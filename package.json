@@ -8,12 +8,13 @@
     "reconnecting-websocket": "^4.4.0"
   },
   "devDependencies": {
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "@rollup/plugin-node-resolve": "^15.2.1",
+    "@rollup/plugin-terser": "^0.4.3",
+    "rollup": "^3.28.1"
   },
   "scripts": {
-    "watch": "webpack watch",
-    "build": "webpack"
+    "watch": "rollup -c --watch",
+    "build": "rollup -c"
   },
   "repository": {
     "type": "git",
