@@ -8,12 +8,19 @@
     "reconnecting-websocket": "^4.4.0"
   },
   "devDependencies": {
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "parcel": "^2.9.3"
+  },
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "source": "pkg/web/static/js/index.js",
+  "main": "pkg/web/static/js/index.min.js",
+  "targets": {
+    "main": {
+      "optimize": true
+    }
   },
   "scripts": {
-    "watch": "webpack watch",
-    "build": "webpack"
+    "build": "parcel build --detailed-report",
+    "watch": "parcel watch --no-hmr"
   },
   "repository": {
     "type": "git",
