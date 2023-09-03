@@ -12,10 +12,6 @@ export default {
       format: 'es',
       sourcemap: true,
       sourcemapFile: 'pkg/web/static/js/index.min.js.map',
-      sourcemapIgnoreList: (relativeSourcePath, sourcemapPath) => {
-        // will ignore-list all files with node_modules in their paths
-        return relativeSourcePath.includes('node_modules');
-      },
       plugins: [terser()]
     }
   ],
