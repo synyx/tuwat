@@ -3,16 +3,11 @@ import terser from '@rollup/plugin-terser';
 
 export default {
   input: 'pkg/web/static/js/index.js',
-  watch: {
-    include: 'pkg/web/static/js/**'
-  },
-  output: [
-    {
+  output: {
       file: 'pkg/web/static/js/index.min.js',
       format: 'es',
       sourcemap: true,
       plugins: [terser()]
-    }
-  ],
+  },
   plugins: [nodeResolve()]
 };
