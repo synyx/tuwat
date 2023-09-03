@@ -1,6 +1,9 @@
 # App
 /tuwat
 
+# Web ignore js map files
+pkg/web/static/js/*.map
+
 # App configuration
 /*.toml
 !/config.example.toml
