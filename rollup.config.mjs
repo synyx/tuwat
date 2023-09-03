@@ -11,7 +11,6 @@ export default {
       file: 'pkg/web/static/js/index.min.js',
       format: 'es',
       sourcemap: true,
-      sourcemapFile: 'pkg/web/static/js/index.min.js.map',
       plugins: [terser()]
     }
   ],
