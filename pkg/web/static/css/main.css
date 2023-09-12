@@ -103,6 +103,7 @@ th {
 .status.red, .status.red summary, .status.red details {
     background-color: #FF4040;
     color: whitesmoke;
+    opacity: 0.95
 }
 
 .status.yellow, .status.yellow summary, .status.yellow details {
