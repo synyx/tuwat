@@ -113,7 +113,8 @@ th {
 
 .status.grey, .status.grey summary, .status.grey details {
     background-color: #444444;
-    color: white;
+    color: whitesmoke;
+    opacity: 0.95
 }
 
 summary {
