@@ -1,5 +1,10 @@
 # Releases
 
+## v0.19 - 2023-09-12 Visuals
+
+* Make red alert more readable
+* Make filtering Redmine alerts more functional
+
 ## v0.18 - 2023-08-02 Redmine
 
 * Add Redmine connector
