@@ -59,11 +59,17 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
-				"Project": issue.Project.Name,
-				"Ticket":  fmt.Sprintf("#%d", issue.Id),
-				"Source":  c.config.URL,
-				"Due":     issue.DueDate,
-				"Type":    "Ticket",
+				"Project":  issue.Project.Name,
+				"Ticket":   fmt.Sprintf("#%d", issue.Id),
+				"Source":   c.config.URL,
+				"Due":      issue.DueDate,
+				"Type":     "Ticket",
+				"Status":   issue.Status.Name,
+				"Priority": issue.Priority.Name,
+				"Author":   issue.Author.Name,
+				"Assigned": issue.AssignedTo.Name,
+				"Subject":  issue.Subject,
+				"Private":  strconv.FormatBool(issue.IsPrivate),
 			},
 			Start:       due,
 			State:       state,
