@@ -13,9 +13,16 @@ Draft = "true"
 description = "blocked because not needed"
 what = "fooo service"
 
-[[github]]
-Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
-Tag = 'gh'
+# This adds example alerts in every flavor, useful for development
+# Should be disabled in production use
+[[example]]
+Tag = 'demo'
+
+# The github connector runs out af the box as configured below,
+# but keep in mind that github rate limits these requests.
+#[[github]]
+#Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
+#Tag = 'gh'
 
 #[[icinga2]]
 #Tag = "synyx"
