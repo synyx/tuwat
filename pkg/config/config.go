@@ -15,6 +15,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
+	"github.com/synyx/tuwat/pkg/connectors/example"
 	"github.com/synyx/tuwat/pkg/connectors/github"
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
@@ -86,6 +87,7 @@ type rootConfig struct {
 	GitHubIssues  []github.Config          `toml:"github"`
 	Redmines      []redmine.Config         `toml:"redmine"`
 	Orderview     []orderview.Config       `toml:"orderview"`
+	Example       []example.Config         `toml:"example"`
 }
 
 func NewConfiguration() (*Config, error) {
@@ -203,6 +205,9 @@ func (cfg *Config) loadMainConfig(file string) error {
 	}
 	for _, connectorConfig := range rootConfig.Orderview {
 		cfg.Connectors = append(cfg.Connectors, orderview.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.Example {
+		cfg.Connectors = append(cfg.Connectors, example.NewConnector(&connectorConfig))
 	}
 
 	// Add template for

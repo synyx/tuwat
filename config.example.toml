@@ -17,6 +17,11 @@ what = "fooo service"
 Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
 Tag = 'gh'
 
+# This adds example alerts in every flavor, useful for development
+# Should be disabled in production use
+#[[example]]
+#Tag = 'demo'
+
 #[[icinga2]]
 #Tag = "synyx"
 #URL = "https://icinga2.example.com:5665"
