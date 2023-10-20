@@ -95,15 +95,13 @@ th {
 }
 
 .status.green, .status.green summary, .status.green details {
-    background-color: #269926;
-    color: white;
-    opacity: 0.75;
+    background-color: #26AC1C;
+    color: black;
 }
 
 .status.red, .status.red summary, .status.red details {
     background-color: #FF4040;
-    color: whitesmoke;
-    opacity: 0.95
+    color: black;
 }
 
 .status.yellow, .status.yellow summary, .status.yellow details {
@@ -114,7 +112,6 @@ th {
 .status.grey, .status.grey summary, .status.grey details {
     background-color: #444444;
     color: whitesmoke;
-    opacity: 0.95
 }
 
 summary {
