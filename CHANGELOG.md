@@ -1,5 +1,10 @@
 # Releases
 
+## v1.0 - 2023-10-23 Maintenance
+
+* Revise look of alerts
+* Add example connector
+
 ## v0.19 - 2023-09-12 Visuals
 
 * Make red alert more readable

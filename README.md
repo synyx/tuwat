@@ -22,6 +22,7 @@ Connectors for
 * [Nagios API]
 * [Patchman]
 * Due [Redmine] tickets
+* Static example showing alert types
 
 [Alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
 [GitLab]: https://www.gitlab.com
@@ -90,6 +91,11 @@ export TUWAT_TEMPLATEDIR= TUWAT_STATICDIR=
 
 * Open http://localhost:8988
 
+### Adding a new collector
+
+* See `pkg/connectors/example` for a very basic example on how a connector
+  is implemented.
+
 ### JavaScript Development
 
 Updating the `main.js` used by the HTML code:
@@ -103,4 +109,4 @@ npm run watch # to watch for changes and re-generate while developing
 ```
 
 Make sure to add the changed/generated files, so not everyone has to use
-nodejs.
+`node.js`.
