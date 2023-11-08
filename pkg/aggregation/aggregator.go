@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	html "html/template"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -414,7 +413,7 @@ nextRule:
 			continue nextRule
 		}
 
-		res := make(map[string]*regexp.Regexp)
+		res := make(map[string]config.RuleMatcher)
 
 		// Test if the rule is applicable to the given alert
 		for l, r := range rule.Labels {
@@ -466,7 +465,7 @@ nextRule:
 			continue nextRule
 		}
 
-		res := make(map[string]*regexp.Regexp)
+		res := make(map[string]config.RuleMatcher)
 
 		// Test if the rule is applicable to the given alert
 		for l, r := range rule.Labels {
