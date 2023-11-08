@@ -97,8 +97,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 
 		var links []html.HTML
-		if rb, ok := sourceAlert.Annotations["runbook"]; ok {
-			link := url.QueryEscape(rb)
+		if link, ok := sourceAlert.Annotations["runbook"]; ok {
 			links = append(links, html.HTML("<a href=\""+link+"\" target=\"_blank\" alt=\"Runbook\">📖</a>"))
 		}
 

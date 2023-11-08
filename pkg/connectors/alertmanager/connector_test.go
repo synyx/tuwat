@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/synyx/tuwat/pkg/connectors"
@@ -34,6 +35,13 @@ func TestConnector(t *testing.T) {
 
 	if alerts == nil || len(alerts) != 3 {
 		t.Error("There should be alerts")
+	}
+
+	alert := alerts[0]
+	for _, link := range alert.Links {
+		if !strings.Contains(string(link), "://") {
+			t.Error("There should be a non encoded url")
+		}
 	}
 }
 
