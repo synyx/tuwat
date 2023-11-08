@@ -43,6 +43,7 @@ type webContent struct {
 	Environment string
 	Content     any
 	Dashboards  map[string]*config.Dashboard
+	Dashboard   string
 }
 
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
@@ -123,7 +124,7 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
 
-func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderFunc {
+func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
 	var templateFiles []string
 	var templateDefinition string
 
@@ -148,6 +149,7 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 		data.Version = version.Info.Version
 		data.Environment = h.environment
 		data.Dashboards = h.dashboards
+		data.Dashboard = dashboardName
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
@@ -157,7 +159,7 @@ func (h *webHandler) baseRenderer(req *http.Request, patterns ...string) renderF
 	}
 }
 
-func (h *webHandler) partialRenderer(req *http.Request, patterns ...string) renderFunc {
+func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
 	var templateFiles []string
 	var templateDefinition string
 
@@ -181,6 +183,7 @@ func (h *webHandler) partialRenderer(req *http.Request, patterns ...string) rend
 
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Dashboard = dashboardName
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
