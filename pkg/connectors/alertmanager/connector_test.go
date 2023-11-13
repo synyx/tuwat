@@ -13,7 +13,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
-func TestConnector(t *testing.T) {
+func mockConnector() connectors.Connector {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		_, _ = res.Write([]byte(mockResponse))
@@ -27,7 +27,11 @@ func TestConnector(t *testing.T) {
 		},
 	}
 
-	var connector connectors.Connector = NewConnector(&cfg)
+	return NewConnector(&cfg)
+}
+
+func TestConnector(t *testing.T) {
+	connector := mockConnector()
 	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -36,13 +40,6 @@ func TestConnector(t *testing.T) {
 	if alerts == nil || len(alerts) != 3 {
 		t.Error("There should be alerts")
 	}
-
-	alert := alerts[0]
-	for _, link := range alert.Links {
-		if !strings.Contains(string(link), "://") {
-			t.Error("There should be a non encoded url")
-		}
-	}
 }
 
 func TestDecode(t *testing.T) {
@@ -50,6 +47,18 @@ func TestDecode(t *testing.T) {
 	err := json.Unmarshal([]byte(mockResponse), &foo)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestEncodingOfLinks(t *testing.T) {
+	connector := mockConnector()
+	alerts, _ := connector.Collect(context.Background())
+
+	alert := alerts[0]
+	for _, link := range alert.Links {
+		if !strings.Contains(string(link), "://") {
+			t.Error("There should be a non encoded url")
+		}
 	}
 }
 
