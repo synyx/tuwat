@@ -1,5 +1,16 @@
 # Releases
 
+## v1.x
+
+* Add a `when` rule to be able to match on when the alert happened.
+* Add more expressive rules, making it possible to express a
+  `greater than` on numerical values.  See `README` for details.
+* Breaking configuration changes:
+  * The `what` rules are now combined via `AND` with label rules.
+    This streamlines the behaviour, making it behave like the label
+    rules themselves.  It also makes it possible e.g. to express that
+    a rule matcher only applies when the alert is old.
+
 ## v1.0 - 2023-10-23 Maintenance
 
 * Revise look of alerts
@@ -45,8 +56,8 @@
 ## v0.14 - 2023-05-16 Stability
 
 * Make management port configurable via `-mgmtAddr :8987`
-* Add net/pprof for debugging, see http://127.0.0.1:8987/debug/pprof
-* Add Down state for health endpoint if last collection too old
+* Add `net/pprof` for debugging, see http://127.0.0.1:8987/debug/pprof
+* Add `Down` state for health endpoint if last collection too old
 
 Breaking Changes:
 
