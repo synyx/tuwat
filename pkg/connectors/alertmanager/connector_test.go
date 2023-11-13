@@ -13,12 +13,11 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
-func mockConnector() connectors.Connector {
+func mockConnector() (connectors.Connector, func()) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		_, _ = res.Write([]byte(mockResponse))
 	}))
-	defer func() { testServer.Close() }()
 
 	cfg := Config{
 		Tag: "test",
@@ -27,11 +26,12 @@ func mockConnector() connectors.Connector {
 		},
 	}
 
-	return NewConnector(&cfg)
+	return NewConnector(&cfg), func() { testServer.Close() }
 }
 
 func TestConnector(t *testing.T) {
-	connector := mockConnector()
+	connector, closer := mockConnector()
+	defer closer()
 	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +51,8 @@ func TestDecode(t *testing.T) {
 }
 
 func TestEncodingOfLinks(t *testing.T) {
-	connector := mockConnector()
+	connector, closer := mockConnector()
+	defer closer()
 	alerts, _ := connector.Collect(context.Background())
 
 	alert := alerts[0]
