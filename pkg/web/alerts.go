@@ -19,10 +19,10 @@ func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 	aggregate := h.aggregator.Alerts(dashboardName)
 
 	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
-		renderer := h.partialRenderer(req, "alerts.gohtml")
+		renderer := h.partialRenderer(req, dashboardName, "alerts.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
 	} else {
-		renderer := h.baseRenderer(req, "alerts.gohtml")
+		renderer := h.baseRenderer(req, dashboardName, "alerts.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
 	}
 }
