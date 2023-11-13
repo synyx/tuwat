@@ -21,23 +21,21 @@ type RuleMatcher interface {
 
 func ParseRuleMatcher(label, s string) RuleMatcher {
 	if strings.HasPrefix(s, "~= ") {
-		return regexpMatcher{regexp.MustCompile(s)}
+		return regexpMatcher{regexp.MustCompile(s[3:])}
 	} else if strings.HasPrefix(s, "> ") {
-		return newNumberMatcher(gt, s)
-	} else if strings.HasPrefix(s, "> ") {
-		return newNumberMatcher(gt, s)
+		return newNumberMatcher(gt, s[2:])
 	} else if strings.HasPrefix(s, "= ") {
-		if _, err := strconv.ParseFloat(s, 64); err == nil {
-			return newNumberMatcher(eq, s)
+		if _, err := strconv.ParseFloat(s[2:], 64); err == nil {
+			return newNumberMatcher(eq, s[2:])
 		} else {
-			return equalityMatcher{s}
+			return equalityMatcher{s[2:]}
 		}
 	} else if strings.HasPrefix(s, ">= ") {
-		return newNumberMatcher(ge, s)
+		return newNumberMatcher(ge, s[3:])
 	} else if strings.HasPrefix(s, "< ") {
-		return newNumberMatcher(lt, s)
+		return newNumberMatcher(lt, s[2:])
 	} else if strings.HasPrefix(s, "<= ") {
-		return newNumberMatcher(le, s)
+		return newNumberMatcher(le, s[3:])
 	} else {
 		return regexpMatcher{regexp.MustCompile(s)}
 	}
@@ -73,15 +71,15 @@ func (m numberMatcher) MatchString(s string) bool {
 
 	switch m.operation {
 	case gt:
-		return floatEqualEnough(m.number, number) && m.number > number
+		return !floatEqualEnough(m.number, number) && number > m.number
 	case eq:
 		return floatEqualEnough(m.number, number)
 	case ge:
-		return floatEqualEnough(m.number, number) || m.number > number
+		return floatEqualEnough(m.number, number) || number > m.number
 	case lt:
-		return !floatEqualEnough(m.number, number) && m.number < number
+		return !floatEqualEnough(m.number, number) && number < m.number
 	case le:
-		return floatEqualEnough(m.number, number) || m.number > number
+		return floatEqualEnough(m.number, number) || number < m.number
 	}
 
 	return false

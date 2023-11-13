@@ -57,6 +57,7 @@ type Dashboard struct {
 type Rule struct {
 	Description string
 	What        RuleMatcher
+	When        RuleMatcher
 	Labels      map[string]RuleMatcher
 }
 
@@ -283,10 +284,15 @@ func parseRule(r map[string]interface{}) Rule {
 	if w, ok := r["what"]; ok {
 		what = ParseRuleMatcher("what", w.(string))
 	}
+	var when RuleMatcher
+	if w, ok := r["when"]; ok {
+		when = ParseRuleMatcher("when", w.(string))
+	}
 
 	br := Rule{
 		Description: r["description"].(string),
 		What:        what,
+		When:        when,
 		Labels:      labels,
 	}
 	return br

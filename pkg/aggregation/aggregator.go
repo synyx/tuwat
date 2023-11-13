@@ -5,6 +5,7 @@ import (
 	"fmt"
 	html "html/template"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -386,108 +387,66 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 
 // allow will match rules against the ruleset.
 func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
+	reason := a.matchAlertWithReason(dashboard, alert)
+
 	switch dashboard.Mode {
 	case config.Including:
-		return a.allowIncluding(dashboard, alert)
+		// Revert logic when only dashboard requires only showing matching alerts.
+		if reason == "" {
+			return "Unmatched"
+		} else {
+			return ""
+		}
 	case config.Excluding:
-		return a.allowExcluding(dashboard, alert)
+		return reason
 	}
 	panic("unknown mode: " + dashboard.Mode.String())
 }
 
-// allowIncluding will allow anything which matches the configured rules.
-func (a *Aggregator) allowIncluding(dashboard *config.Dashboard, alert Alert) string {
+// matchAlertWithReason will match anything which does match against any of the
+// configured rules.
+func (a *Aggregator) matchAlertWithReason(dashboard *config.Dashboard, alert Alert) string {
 nextRule:
 	for _, rule := range dashboard.Filter {
-		// if it's a rule working on the `what`:
-		// `what` contains a description what is being alerted and should be a
-		// human understandable description.  The rule simply matches against
-		// that.
-		// A match in including mode means, that this should be shown.
+		matchers := make(map[string]config.RuleMatcher)
+
+		// if it's a rule working on top level concepts:
 		if rule.What != nil && rule.What.MatchString(alert.What) {
-			return ""
+			// `what` contains a description what is being alerted and should be a
+			// human understandable description.  The rule simply matches against
+			// that.
+			// Continue with other matchers if there is no `what` rule, or it doesn't
+			// match, thus combining with other matchers via OR.
+			matchers[alert.What] = rule.What
+		} else if rule.When != nil {
+			// `when` is a duration, which is converted to seconds.  The rule simply matches against
+			// that.
+			// Continue with other matchers if there is no `when` rule, or it doesn't
+			// match, thus combining with other matchers via OR.
+			seconds := strconv.FormatFloat(alert.When.Seconds(), 'f', 0, 64)
+			matchers[seconds] = rule.When
 		}
 
-		// If there are no label rules, skip label matching
-		if len(rule.Labels) == 0 {
-			continue nextRule
-		}
-
-		res := make(map[string]config.RuleMatcher)
-
-		// Test if the rule is applicable to the given alert
+		// Test if any of the labels are applicable to the given alert
 		for l, r := range rule.Labels {
 			if x, ok := alert.Labels[l]; !ok {
 				// if the label does not exist on the alert, it cannot match
 				// thus skip this rule and try the next one
 				continue nextRule
 			} else {
-				res[x] = r
+				matchers[x] = r
 			}
 		}
 
-		// All fields of the rule exist as labels on the alert:
-		// If all the labels match the rule, a match is found,
+		// If all the applicable matchers return a match, this rule matches,
 		// meaning the rules are combined via `AND`.
 		matchCount := 0
-		for a, b := range res {
-			if b.MatchString(a) {
+		for val, matcher := range matchers {
+			if matcher.MatchString(val) {
 				matchCount++
 			}
 		}
-		if matchCount == len(res) {
-			return ""
-		}
-	}
-
-	// getting here in including mode means that no rule matched, thus
-	// the item should not be shown.
-	return "unmatched"
-}
-
-// allowExcluding will allow anything which does not match against any of the
-// // configured rules.
-func (a *Aggregator) allowExcluding(dashboard *config.Dashboard, alert Alert) string {
-nextRule:
-	for _, rule := range dashboard.Filter {
-		// if it's a rule working on the `what`:
-		// `what` contains a description what is being alerted and should be a
-		// human understandable description.  The rule simply matches against
-		// that.
-		// Continue with other matchers if there is no `what` rule, or it doesn't
-		// match, thus combining with other matchers via OR.
-		if rule.What != nil && rule.What.MatchString(alert.What) {
-			return rule.Description
-		}
-
-		// If there are no label rules, skip label matching
-		if len(rule.Labels) == 0 {
-			continue nextRule
-		}
-
-		res := make(map[string]config.RuleMatcher)
-
-		// Test if the rule is applicable to the given alert
-		for l, r := range rule.Labels {
-			if x, ok := alert.Labels[l]; !ok {
-				// if the label does not exist on the alert, it cannot match
-				// thus skip this rule and try the next one
-				continue nextRule
-			} else {
-				res[x] = r
-			}
-		}
-
-		// All fields of the rule exist as labels on the alert:
-		// If all the labels match the rule, a match is found,
-		// meaning the rules are combined via `AND`.
-		matchCount := 0
-		for a, b := range res {
-			if b.MatchString(a) {
-				matchCount++
-			}
-		}
-		if matchCount == len(res) {
+		if matchCount == len(matchers) {
 			return rule.Description
 		}
 	}
