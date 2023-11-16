@@ -391,7 +391,7 @@ func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
 
 	switch dashboard.Mode {
 	case config.Including:
-		// Revert logic when only dashboard requires only showing matching alerts.
+		// Revert logic when the dashboard configuration is in `including` mode.
 		if reason == "" {
 			return "Unmatched"
 		} else {
@@ -415,14 +415,10 @@ nextRule:
 			// `what` contains a description what is being alerted and should be a
 			// human understandable description.  The rule simply matches against
 			// that.
-			// Continue with other matchers if there is no `what` rule, or it doesn't
-			// match, thus combining with other matchers via OR.
 			matchers[alert.What] = rule.What
 		} else if rule.When != nil {
 			// `when` is a duration, which is converted to seconds.  The rule simply matches against
 			// that.
-			// Continue with other matchers if there is no `when` rule, or it doesn't
-			// match, thus combining with other matchers via OR.
 			seconds := strconv.FormatFloat(alert.When.Seconds(), 'f', 0, 64)
 			matchers[seconds] = rule.When
 		}
