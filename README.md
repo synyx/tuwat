@@ -80,7 +80,7 @@ Draft = "true"
 
 #### Matching Rules
 
-The default is to match the value in the configuration as a regulra expression.
+The default is to match the value in the configuration as a regular expression.
 However, this can be changed by specifying an operator.
 
 * `~= string`: Explicitly require a regular expression to be matched
