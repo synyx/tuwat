@@ -84,8 +84,11 @@ The default is to match the value in the configuration as a regular expression.
 However, this can be changed by specifying an operator.
 
 * `~= string`: Explicitly require a regular expression to be matched
-* `= string`: Require the string to exactly match
-* `> number`: Require both configuration and the value in the alert to be a
+* `=  string`: Require the string to exactly match.  In case the value is
+  numeric, this will mean that the value will compared like a floating point
+  value.  This means that differences below `1e-8` will be considered to be
+  the same.
+* `>  number`: Require both configuration and the value in the alert to be a
   numerical value and that the value in the alert to be bigger than the
   configured number.
   This also applies to the `<`, `>=`, `<=` operators.
