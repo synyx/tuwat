@@ -437,8 +437,8 @@ nextRule:
 		// If all the applicable matchers return a match, this rule matches,
 		// meaning the rules are combined via `AND`.
 		matchCount := 0
-		for val, matcher := range matchers {
-			if matcher.MatchString(val) {
+		for alertValue, matcher := range matchers {
+			if matcher.MatchString(alertValue) {
 				matchCount++
 			}
 		}
