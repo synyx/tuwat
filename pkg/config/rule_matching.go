@@ -4,7 +4,6 @@ import (
 	"math"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -19,26 +18,34 @@ type RuleMatcher interface {
 	MatchString(s string) bool
 }
 
-func ParseRuleMatcher(label, s string) RuleMatcher {
-	if strings.HasPrefix(s, "~= ") {
-		return regexpMatcher{regexp.MustCompile(s[3:])}
-	} else if strings.HasPrefix(s, "> ") {
-		return newNumberMatcher(gt, s[2:])
-	} else if strings.HasPrefix(s, "= ") {
-		if _, err := strconv.ParseFloat(s[2:], 64); err == nil {
-			return newNumberMatcher(eq, s[2:])
-		} else {
-			return equalityMatcher{s[2:]}
+var prefixMatcher = regexp.MustCompile(`^(~=|>|<|=|<=|>=)\s+(.*)`)
+
+func ParseRuleMatcher(value string) RuleMatcher {
+	matches := prefixMatcher.FindStringSubmatch(value)
+	if matches != nil {
+		prefix := matches[1]
+		value := matches[2]
+		switch prefix {
+		case "~=":
+			return regexpMatcher{regexp.MustCompile(value)}
+		case ">":
+			return newNumberMatcher(gt, value)
+		case "=":
+			if _, err := strconv.ParseFloat(value[2:], 64); err == nil {
+				return newNumberMatcher(eq, value[2:])
+			} else {
+				return equalityMatcher{value[2:]}
+			}
+		case "<":
+			return newNumberMatcher(lt, value)
+		case "<=":
+			return newNumberMatcher(le, value)
+		case ">=":
+			return newNumberMatcher(ge, value)
 		}
-	} else if strings.HasPrefix(s, ">= ") {
-		return newNumberMatcher(ge, s[3:])
-	} else if strings.HasPrefix(s, "< ") {
-		return newNumberMatcher(lt, s[2:])
-	} else if strings.HasPrefix(s, "<= ") {
-		return newNumberMatcher(le, s[3:])
-	} else {
-		return regexpMatcher{regexp.MustCompile(s)}
 	}
+
+	return regexpMatcher{regexp.MustCompile(value)}
 }
 
 type regexpMatcher struct {

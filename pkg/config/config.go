@@ -277,16 +277,16 @@ func parseRule(r map[string]interface{}) Rule {
 	labels := make(map[string]RuleMatcher)
 	if labelFilters, ok := r["label"]; ok {
 		for n, l := range labelFilters.(map[string]interface{}) {
-			labels[n] = ParseRuleMatcher(n, l.(string))
+			labels[n] = ParseRuleMatcher(l.(string))
 		}
 	}
 	var what RuleMatcher
 	if w, ok := r["what"]; ok {
-		what = ParseRuleMatcher("what", w.(string))
+		what = ParseRuleMatcher(w.(string))
 	}
 	var when RuleMatcher
 	if w, ok := r["when"]; ok {
-		when = ParseRuleMatcher("when", w.(string))
+		when = ParseRuleMatcher(w.(string))
 	}
 
 	br := Rule{
