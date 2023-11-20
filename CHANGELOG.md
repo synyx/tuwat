@@ -1,6 +1,6 @@
 # Releases
 
-## v1.x
+## v1.1 - 2023-11-20 Rule Matchers
 
 * Add a `when` rule to be able to match on when the alert happened.
 * Add more expressive rules, making it possible to express a
