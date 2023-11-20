@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -57,8 +56,9 @@ type Dashboard struct {
 
 type Rule struct {
 	Description string
-	What        *regexp.Regexp
-	Labels      map[string]*regexp.Regexp
+	What        RuleMatcher
+	When        RuleMatcher
+	Labels      map[string]RuleMatcher
 }
 
 type mainConfig struct {
@@ -274,20 +274,25 @@ func (cfg *Config) loadDashboardConfig(file string) error {
 }
 
 func parseRule(r map[string]interface{}) Rule {
-	labels := make(map[string]*regexp.Regexp)
+	labels := make(map[string]RuleMatcher)
 	if labelFilters, ok := r["label"]; ok {
 		for n, l := range labelFilters.(map[string]interface{}) {
-			labels[n] = regexp.MustCompile(l.(string))
+			labels[n] = ParseRuleMatcher(l.(string))
 		}
 	}
-	var what *regexp.Regexp
+	var what RuleMatcher
 	if w, ok := r["what"]; ok {
-		what = regexp.MustCompile(w.(string))
+		what = ParseRuleMatcher(w.(string))
+	}
+	var when RuleMatcher
+	if w, ok := r["when"]; ok {
+		when = ParseRuleMatcher(w.(string))
 	}
 
 	br := Rule{
 		Description: r["description"].(string),
 		What:        what,
+		When:        when,
 		Labels:      labels,
 	}
 	return br
