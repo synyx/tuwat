@@ -1,7 +1,14 @@
+FROM golang:1.20 as build
+
+WORKDIR /go/src/app
+COPY . .
+
+RUN go mod download
+RUN CGO_ENABLED=0 go build -o tuwat ./cmd/tuwat
+
 FROM gcr.io/distroless/static-debian11
 
-WORKDIR /go
-COPY ./tuwat /tuwat
+COPY --from=build /go/src/app/tuwat /tuwat
 EXPOSE 8988
 ENTRYPOINT ["/tuwat"]
 
