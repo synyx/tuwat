@@ -1,0 +1,4 @@
+[[rule]]
+description = "Ignore Drafts"
+[rule.label]
+Draft = "true"

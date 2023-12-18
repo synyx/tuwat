@@ -1,0 +1,7 @@
+[main]
+mode = "include"
+
+[[rule]]
+description = "Show only drafts"
+[rule.label]
+Draft = "true"
