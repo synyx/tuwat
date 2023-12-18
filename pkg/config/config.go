@@ -42,6 +42,7 @@ type Config struct {
 	Instance       string
 	PrintVersion   bool
 	Logger         zap.Config
+	Silencer       connectors.ExternalSilencer
 	Connectors     []connectors.Connector
 	WhereTemplate  *template.Template
 	Interval       time.Duration
@@ -229,6 +230,10 @@ func (cfg *Config) loadMainConfig(file string) error {
 
 	if cfg.Interval, err = time.ParseDuration(rootConfig.Main.Interval); err != nil {
 		return err
+	}
+
+	if rootConfig.Redmines != nil {
+		cfg.Silencer = redmine.NewSilencer(&rootConfig.Redmines[0])
 	}
 
 	// Add default dashboard, containing potentially all unfiltered alerts

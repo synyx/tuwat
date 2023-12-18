@@ -19,6 +19,7 @@ import (
 
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/version"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
@@ -34,6 +35,7 @@ type webHandler struct {
 	fs     fs.FS
 
 	aggregator  *aggregation.Aggregator
+	silencer    connectors.ExternalSilencer
 	environment string
 	dashboards  map[string]*config.Dashboard
 }
@@ -49,6 +51,7 @@ type webContent struct {
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
 	handler := &webHandler{
 		aggregator:  aggregator,
+		silencer:    cfg.Silencer,
 		environment: cfg.Environment,
 		dashboards:  cfg.Dashboards,
 	}
@@ -70,6 +73,11 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
 		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
 		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
+		newRoute("GET", "/silences", handler.silences),
+		newRoute("POST", "/silences", handler.addSilence),
+		newRoute("DELETE", "/silences/([^/]+)?", handler.delSilence),
+		newRoute("POST", "/silences/([^/]+)?/delete", handler.delSilence),
+		newRoute("POST", "/silences/refresh", handler.refreshSilence),
 	}
 
 	return handler

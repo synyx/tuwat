@@ -24,4 +24,5 @@ type issue struct {
 	IsPrivate   bool    `json:"is_private"`
 	CreatedOn   string  `json:"created_on"`
 	UpdatedOn   string  `json:"updated_on"`
+	ClosedOn    string  `json:"closed_on"`
 }
