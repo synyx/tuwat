@@ -20,11 +20,8 @@ Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
 Tag = 'gh'
 ```
 
-## Multiple Dashboards
 
-To have multiple dashboards, add the main configuration to
-the `config.toml` and create a folder containing more
-rule files.
+### Dashboard types
 
 There are two kinds of dashboards:
 
@@ -32,6 +29,18 @@ There are two kinds of dashboards:
   will filter the matching items from the board.
 * `mode = "include"`: Only items matching the rules are shown
   on the board.
+
+```toml
+[main]
+mode = "include"
+```
+
+## Multiple Dashboards
+
+To have multiple dashboards, add the main configuration to
+the `config.toml` and create a folder containing more
+rule files.
+
 
 ### Example
 
