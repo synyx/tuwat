@@ -94,14 +94,20 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
+		var hostgroups []string
+		if host, ok := hosts[service.HostName]; ok {
+			hostgroups = host.Host.Groups
+		}
+
 		sec, dec := math.Modf(service.LastStateChange)
 		alert := connectors.Alert{
 			Labels: map[string]string{
-				"Hostname": service.HostName,
-				"Zone":     service.Zone,
-				"Source":   c.config.URL,
-				"groups":   strings.Join(service.Groups, ","),
-				"Type":     "Service",
+				"Hostname":   service.HostName,
+				"Zone":       service.Zone,
+				"Source":     c.config.URL,
+				"groups":     strings.Join(service.Groups, ","),
+				"hostgroups": strings.Join(hostgroups, ","),
+				"Type":       "Service",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
 			State:       connectors.State(service.State),
@@ -111,6 +117,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				html.HTML("<a href=\"" + c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 			},
 		}
+
 		alert.Silence = c.createSilencer(alert)
 		alerts = append(alerts, alert)
 	}
@@ -140,7 +147,7 @@ func (c *Connector) collectServices(ctx context.Context) ([]serviceAttrs, error)
 	return response.Results, nil
 }
 
-func (c *Connector) collectHosts(ctx context.Context) ([]HostAttrs, error) {
+func (c *Connector) collectHosts(ctx context.Context) (map[string]HostAttrs, error) {
 	body, err := c.get("/v1/objects/hosts", ctx)
 	if err != nil {
 		return nil, err
@@ -155,7 +162,12 @@ func (c *Connector) collectHosts(ctx context.Context) ([]HostAttrs, error) {
 		return nil, err
 	}
 
-	return response.Results, nil
+	results := make(map[string]HostAttrs)
+	for _, host := range response.Results {
+		results[host.Host.DisplayName] = host
+	}
+
+	return results, nil
 }
 
 func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
