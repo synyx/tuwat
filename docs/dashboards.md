@@ -37,9 +37,8 @@ mode = "include"
 
 ## Multiple Dashboards
 
-To have multiple dashboards, add the main configuration to
-the `config.toml` and create a folder containing more
-rule files.
+To have multiple dashboards, split the configuration into a main config in `config.toml` and create a folder containing the
+rule files for additional dashboards. These dashboards will appear in the navigation bar named like the corresponding files.
 
 
 ### Example
