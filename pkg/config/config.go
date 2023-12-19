@@ -28,7 +28,7 @@ import (
 var fVersion = flag.Bool("version", false, "Print version")
 var fInstance = flag.String("instance", "0", "Running instance identifier")
 var fEnvironment = flag.String("environment", "test", "(test, stage, prod)")
-var fAddr = flag.String("addr", "127.0.0.1:8988", "Bind web application port")
+var fAddr = flag.String("addr", "0.0.0.0:8988", "Bind web application port")
 var fMgmtAddr = flag.String("mgmtAddr", "127.0.0.1:8987", "Bind management port")
 var fConfigFile = flag.String("conf", "/etc/tuwat.toml", "Configuration file")
 var fDashboardDir = flag.String("dashboards", "/etc/tuwat.d", "Dashboard Configuration Directory")
