@@ -17,7 +17,25 @@ func TestAggregation(t *testing.T) {
 	defer cancel()
 
 	connector := &mockConnector{}
-	cfg := &config.Config{Connectors: []connectors.Connector{connector}}
+	cfg := &config.Config{
+		Connectors: []connectors.Connector{connector},
+		Dashboards: map[string]*config.Dashboard{
+			"Home": {
+				Name: "Home",
+				Mode: config.Excluding,
+				Filter: []config.Rule{
+					{
+						Description: "Ignore MRs",
+						What:        nil,
+						When:        nil,
+						Labels: map[string]config.RuleMatcher{
+							"Hostname": config.ParseRuleMatcher("~= gitlab"),
+						},
+					},
+				},
+			},
+		},
+	}
 	a := NewAggregator(cfg, clock.NewMock())
 	go a.collect(ctx, collect)
 
@@ -29,7 +47,7 @@ func TestAggregation(t *testing.T) {
 	}
 
 	if len(results) != 1 {
-		t.Error()
+		t.Error("Have", len(results))
 	}
 }
 

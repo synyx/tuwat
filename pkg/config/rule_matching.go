@@ -31,10 +31,10 @@ func ParseRuleMatcher(value string) RuleMatcher {
 		case ">":
 			return newNumberMatcher(gt, value)
 		case "=":
-			if _, err := strconv.ParseFloat(value[2:], 64); err == nil {
-				return newNumberMatcher(eq, value[2:])
+			if _, err := strconv.ParseFloat(value, 64); err == nil {
+				return newNumberMatcher(eq, value)
 			} else {
-				return equalityMatcher{value[2:]}
+				return equalityMatcher{value}
 			}
 		case "<":
 			return newNumberMatcher(lt, value)
