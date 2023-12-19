@@ -1,5 +1,13 @@
 # Releases
 
+## v1.2 - 2023-12-19 Stability
+
+* Fix rule matching from `v1.1` which made every rule match everything.
+* `tuwat` now listens to every network instead of only `localhost`
+  for the web port.  The management port still only binds to `localhost`.
+* The `icinga2` adapter now adds host groups to services.
+* Add more documentation regarding rules and dashboards.
+
 ## v1.1 - 2023-11-20 Rule Matchers
 
 * Add a `when` rule to be able to match on when the alert happened.
