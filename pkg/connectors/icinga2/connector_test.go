@@ -38,6 +38,14 @@ func TestIcinga2Connector(t *testing.T) {
 	if alerts == nil || len(alerts) != 2 {
 		t.Error("There should be alerts")
 	}
+
+	if hg, ok := alerts[0].Labels["hostgroups"]; ok {
+		if !strings.Contains(hg, "non-puppet-hosts") {
+			t.Error("service should have the correct host group")
+		}
+	} else {
+		t.Error("service should be labeled with host groups ")
+	}
 }
 
 const icinga2MockHostResponse = `
