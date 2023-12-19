@@ -46,8 +46,8 @@ func TestAggregation(t *testing.T) {
 		t.Error("timeout waiting for results")
 	}
 
-	if len(results) != 2 {
-		t.Error("Have", len(results), "instead of two")
+	if len(results) != 1 {
+		t.Error("Have", len(results))
 	}
 }
 

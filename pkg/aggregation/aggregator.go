@@ -442,7 +442,7 @@ nextRule:
 				matchCount++
 			}
 		}
-		if matchCount == len(matchers) {
+		if matchCount > 0 && matchCount == len(matchers) {
 			return rule.Description
 		}
 	}

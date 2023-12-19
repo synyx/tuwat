@@ -93,10 +93,45 @@ func TestRuleMatching(t *testing.T) {
 			str:  "1.01",
 			want: true,
 		}, {
+			name: "float equality",
+			rule: "= 1.01",
+			str:  "1.010000001",
+			want: true,
+		}, {
+			name: "float non-equality",
+			rule: "= 1.01",
+			str:  "1.001",
+			want: false,
+		}, {
 			name: "string equality",
 			rule: "= a",
 			str:  "a",
 			want: true,
+		}, {
+			name: "anchored regexp",
+			rule: "(^|,)b(,|$)",
+			str:  "a,b,c",
+			want: true,
+		}, {
+			name: "anchored regexp",
+			rule: "(^|,)c(,|$)",
+			str:  "a,b,c",
+			want: true,
+		}, {
+			name: "anchored regexp",
+			rule: "(^|,)a(,|$)",
+			str:  "a,b,c",
+			want: true,
+		}, {
+			name: "anchored regexp",
+			rule: "(^|,)d(,|$)",
+			str:  "a,b,c",
+			want: false,
+		}, {
+			name: "STAAAR",
+			rule: "modality2star.*deadletter",
+			str:  "CPU wait",
+			want: false,
 		},
 	}
 	for _, tt := range tests {
