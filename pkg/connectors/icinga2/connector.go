@@ -86,6 +86,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		service := service.Service
 		if x, ok := problemHosts[service.HostName]; ok && x {
 			continue
+		} else if service.Acknowledgement > 0 {
+			continue
 		} else if !service.EnableNotifications {
 			continue
 		} else if service.DowntimeDepth > 0 {
