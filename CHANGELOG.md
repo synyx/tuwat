@@ -1,5 +1,9 @@
 # Releases
 
+## v1.3 - 2024-01-08 icinga2 ack
+
+* The `icinga2` adapter now filters all acknowledged issues.
+
 ## v1.2 - 2023-12-19 Stability
 
 * Fix rule matching from `v1.1` which made every rule match everything.
