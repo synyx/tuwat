@@ -90,7 +90,19 @@ type rootConfig struct {
 	Example       []example.Config         `toml:"example"`
 }
 
-func NewConfiguration() (*Config, error) {
+func NewConfiguration() (config *Config, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = fmt.Errorf("panicked loading config: %w", errors.New(x))
+			case error:
+				err = fmt.Errorf("panicked loading config: %w", x)
+			default:
+				err = fmt.Errorf("panicked loading config: %w", errors.New(fmt.Sprint(x)))
+			}
+		}
+	}()
 
 	flag.Parse()
 
@@ -138,7 +150,7 @@ func NewConfiguration() (*Config, error) {
 		cfg.OtelUrl = *fOtelUrl
 	}
 
-	err := cfg.loadMainConfig(*fConfigFile)
+	err = cfg.loadMainConfig(*fConfigFile)
 
 	err = filepath.WalkDir(*fDashboardDir, func(path string, d fs.DirEntry, err error) error {
 		if err == nil && !d.IsDir() && filepath.Ext(path) == ".toml" {
@@ -154,9 +166,8 @@ func NewConfiguration() (*Config, error) {
 	return cfg, err
 }
 
-func (cfg *Config) loadMainConfig(file string) error {
-
-	if _, err := os.Stat(file); err != nil {
+func (cfg *Config) loadMainConfig(file string) (err error) {
+	if _, err = os.Stat(file); err != nil {
 		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
 	}
 
@@ -174,9 +185,9 @@ func (cfg *Config) loadMainConfig(file string) error {
 	rootConfig.Main.Interval = "1m"
 
 	// Fill configuration
-	_, err := toml.DecodeFile(file, &rootConfig)
-	if err != nil {
-		panic(err)
+
+	if _, err = toml.DecodeFile(file, &rootConfig); err != nil {
+		return err
 	}
 
 	cfg.Logger = rootConfig.Logger

@@ -55,6 +55,7 @@ func main() {
 			cfg, err := config.NewConfiguration()
 			if err != nil {
 				otelzap.Ctx(appCtx).Error("Failed to read new configuration", zap.Error(err))
+				break
 			}
 
 			aggregator.Reconfigure(cfg)
