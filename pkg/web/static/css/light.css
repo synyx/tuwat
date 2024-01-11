@@ -11,6 +11,11 @@ th {
     color: #000000;
 }
 
+/* Moves the white font further away from the background for better visibility */
+summary {
+    padding-left: 7px;
+}
+
 .status.green, .status.green summary, .status.green details {
     background-color: #269926;
     color: white;
