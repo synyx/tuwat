@@ -19,8 +19,8 @@ what = "fooo service"
 [[example]]
 Tag = 'demo'
 
-# The github connector runs out af the box as configured below,
-# but keep in mind that github rate limits these requests.
+# The GitHub connector runs out of the box as configured below,
+# but keep in mind that GitHub rate limits these requests.
 #[[github]]
 #Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
 #Tag = 'gh'
