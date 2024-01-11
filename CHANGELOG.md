@@ -1,6 +1,6 @@
 # Releases
 
-## vXX
+## v1.4 - 2024-01-11 light mode
 
 * Make the look of tuwat configurable via `style` property.
 
