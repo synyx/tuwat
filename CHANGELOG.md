@@ -1,5 +1,9 @@
 # Releases
 
+## vXX
+
+* Make the look of tuwat configurable via `style` property.
+
 ## v1.3 - 2024-01-08 icinga2 ack
 
 * The `icinga2` adapter now filters all acknowledged issues.

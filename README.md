@@ -36,6 +36,11 @@ Connectors for
 
 See the [Example Config](./config.example.toml) for configuration.
 
+Available styles:
+
+* `dark` (default)
+* `light` - mimics the venerable nagdash
+
 ### Dashboards
 
 The main configuration can contain `Rules`, but if multiple rule-sets/dashboards
