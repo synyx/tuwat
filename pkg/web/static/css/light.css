@@ -1,0 +1,41 @@
+body {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+table               { border: 1px solid #c6c6c6; background-color: #F0F0F0; border-collapse: separate;
+    *border-collapse: collapse; -webkit-border-radius: 4px;
+    -moz-border-radius: 4px; border-radius: 4px; }
+th {
+    background-color: #D8D8D8;
+    color: #000000;
+}
+
+.status.green, .status.green summary, .status.green details {
+    background-color: #269926;
+    color: white;
+}
+
+.status.red, .status.red summary, .status.red details {
+    background-color: #FF4040;
+    color: white;
+}
+
+.status.yellow, .status.yellow summary, .status.yellow details {
+    background-color: #FFDE40;
+    color: black;
+}
+
+.status.grey, .status.grey summary, .status.grey details {
+    background-color: #444444;
+    color: white;
+}
+
+.tag                {
+    font-size: 0.6em;
+    color: white;
+    padding: 4px;
+    -webkit-border-radius: 0.25em;
+    background-color: #98999b;
+}
+.tag_label          { color: white;  }

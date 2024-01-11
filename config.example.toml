@@ -2,6 +2,7 @@
 # golang `text/template` describing where the alert is happening
 where = "{{with index .Labels \"Cluster\"}}{{.}}/{{end}}{{first .Labels \"Project\" \"Namespace\" \"Hostname\"}}"
 interval = "1m"
+#style = "light"
 
 
 [[rule]]
