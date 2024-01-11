@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -46,6 +47,7 @@ type Config struct {
 	WhereTemplate  *template.Template
 	Interval       time.Duration
 	Dashboards     map[string]*Dashboard
+	Style          string
 }
 
 type Dashboard struct {
@@ -64,6 +66,7 @@ type Rule struct {
 type mainConfig struct {
 	WhereTemplate string `toml:"where"`
 	Interval      string `toml:"interval"`
+	Style         string `toml:"style"`
 }
 
 type mainDashboardConfig struct {
@@ -163,6 +166,11 @@ func NewConfiguration() (config *Config, err error) {
 		err = nil
 	}
 
+	// validate configuration
+	if !slices.Contains([]string{"light", "dark"}, cfg.Style) {
+		return nil, errors.New("configuration error: [main] style must be \"light\" or \"dark\"")
+	}
+
 	return cfg, err
 }
 
@@ -183,12 +191,15 @@ func (cfg *Config) loadMainConfig(file string) (err error) {
 	}
 
 	rootConfig.Main.Interval = "1m"
+	rootConfig.Main.Style = "dark"
 
 	// Fill configuration
 
 	if _, err = toml.DecodeFile(file, &rootConfig); err != nil {
 		return err
 	}
+
+	cfg.Style = rootConfig.Main.Style
 
 	cfg.Logger = rootConfig.Logger
 

@@ -35,6 +35,7 @@ type webHandler struct {
 
 	aggregator  *aggregation.Aggregator
 	environment string
+	style       string
 	dashboards  map[string]*config.Dashboard
 }
 
@@ -44,12 +45,14 @@ type webContent struct {
 	Content     any
 	Dashboards  map[string]*config.Dashboard
 	Dashboard   string
+	Style       string
 }
 
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
 	handler := &webHandler{
 		aggregator:  aggregator,
 		environment: cfg.Environment,
+		style:       cfg.Style,
 		dashboards:  cfg.Dashboards,
 	}
 
@@ -148,6 +151,7 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Style = h.style
 		data.Dashboards = h.dashboards
 		data.Dashboard = dashboardName
 
@@ -183,6 +187,7 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Style = h.style
 		data.Dashboard = dashboardName
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
@@ -240,6 +245,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	return func(data webContent) error {
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Style = h.style
 
 		buf := new(bytes.Buffer)
 
@@ -298,6 +304,7 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 		data.Version = version.Info.Version
 		data.Environment = h.environment
+		data.Style = h.style
 
 		buf := new(bytes.Buffer)
 
