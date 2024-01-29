@@ -18,7 +18,7 @@ func TestParseRuleMatcher(t *testing.T) {
 			want:  regexpMatcher{regexp.MustCompile("X")},
 		}, {
 			name:  "Regexp",
-			value: "~= X",
+			value: "=~ X",
 			want:  regexpMatcher{regexp.MustCompile("X")},
 		}, {
 			name:  "numeric equality matcher",
@@ -84,7 +84,7 @@ func TestRuleMatching(t *testing.T) {
 			want: true,
 		}, {
 			name: "regexp",
-			rule: "~= X",
+			rule: "=~ X",
 			str:  "Xavier",
 			want: true,
 		}, {
@@ -137,7 +137,7 @@ func TestRuleMatching(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ParseRuleMatcher(tt.rule); got.MatchString(tt.str) != tt.want {
-				t.Errorf("Matching %v ~= %v, want %v", tt.rule, tt.str, tt.want)
+				t.Errorf("Matching %v =~ %v, want %v", tt.rule, tt.str, tt.want)
 			}
 		})
 	}

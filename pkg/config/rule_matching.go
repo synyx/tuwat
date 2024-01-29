@@ -26,7 +26,7 @@ func ParseRuleMatcher(value string) RuleMatcher {
 		prefix := matches[1]
 		value := matches[2]
 		switch prefix {
-		case "=~":
+		case "=~", "~=":
 			return regexpMatcher{regexp.MustCompile(value)}
 		case "!~":
 			return not(regexpMatcher{regexp.MustCompile(value)})

@@ -1,5 +1,13 @@
 # Releases
 
+## 1.5.0 - XXX backend mode
+
+* Add `alertmanager` API, e.g. `/api/alertmanager/v2/status`
+* Add negative matchers: `!=` and `!~`
+* Breaking configuration changes:
+  * To be more compatible with `alertmanager`, the `~=` is now `=~`
+    using regular expression matching.
+
 ## v1.4 - 2024-01-11 light mode
 
 * Make the look of tuwat configurable via `style` property.
