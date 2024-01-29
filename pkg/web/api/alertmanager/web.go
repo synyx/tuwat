@@ -148,6 +148,14 @@ func (h *alertmanagerHandler) alerts(w http.ResponseWriter, r *http.Request) {
 func mapAlert(dashboard string, aggregate aggregation.Aggregate, alert aggregation.Alert, state string) gettableAlert {
 	labels := alert.Labels
 	labels["dashboard"] = dashboard
+	switch alert.Status {
+	case "red":
+		labels["severity"] = "critical"
+	case "yellow":
+		labels["severity"] = "warning"
+	default:
+		labels["severity"] = ""
+	}
 
 	ga := gettableAlert{
 		Annotations: labels,

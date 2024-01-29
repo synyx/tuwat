@@ -73,7 +73,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
-		state := connectors.Critical
+		state := connectors.Unknown
 		if sourceAlert.Status.State == "unprocessed" {
 			state = connectors.Unknown
 		} else if sourceAlert.Status.State == "active" && severity == "" {
