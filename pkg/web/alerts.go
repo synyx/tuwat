@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/synyx/tuwat/pkg/web/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -87,7 +88,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	dashboardName := getField(req, 0)
+	dashboardName := common.GetField(req, 0)
 
 	renderer, cancel := h.sseRenderer(w, req, "alerts.gohtml")
 	defer cancel()

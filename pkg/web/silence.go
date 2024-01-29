@@ -1,6 +1,10 @@
 package web
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/synyx/tuwat/pkg/web/common"
+)
 
 func (h *webHandler) silence(w http.ResponseWriter, req *http.Request) {
 
@@ -9,12 +13,12 @@ func (h *webHandler) silence(w http.ResponseWriter, req *http.Request) {
 		user = hdr
 	}
 
-	alertId := getField(req, 0)
+	alertId := common.GetField(req, 0)
 
 	h.aggregator.Silence(req.Context(), alertId, user)
 
 	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
-		dashboardName := getField(req, 0)
+		dashboardName := common.GetField(req, 0)
 		renderer := h.partialRenderer(req, "alerts.gohtml")
 		aggregate := h.aggregator.Alerts(dashboardName)
 		renderer(w, 200, webContent{Content: aggregate})

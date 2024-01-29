@@ -7,19 +7,18 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/synyx/tuwat/pkg/web/common"
 	html "html/template"
 	"io/fs"
 	"net/http"
 	"os"
 	"path"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/version"
+	"github.com/synyx/tuwat/pkg/web/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -89,30 +88,12 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-
 		}
 	}()
 
-	var allow []string
-	for _, route := range h.routes {
-		matches := route.Regex.FindStringSubmatch(r.URL.Path)
-		if len(matches) > 0 {
-			if r.Method != route.Method {
-				allow = append(allow, route.Method)
-				continue
-			}
-			ctx := context.WithValue(r.Context(), ctxKey{}, matches[1:])
-			route.Handler(w, r.WithContext(ctx))
-			return
-		}
+	if ok := common.HandleRoute(h.routes, w, r); !ok {
+		h.notFound(w, r)
 	}
-	if len(allow) > 0 {
-		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	h.notFound(w, r)
 }
 
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
@@ -310,13 +291,6 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 			panic(err)
 		}
 	}
-}
-
-type ctxKey struct{}
-
-func getField(r *http.Request, index int) string {
-	fields := r.Context().Value(ctxKey{}).([]string)
-	return fields[index]
 }
 
 func niceDuration(d time.Duration) string {

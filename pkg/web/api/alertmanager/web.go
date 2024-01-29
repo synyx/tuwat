@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
@@ -48,29 +47,12 @@ func (h *alertmanagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 			}
 
 			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-
 		}
 	}()
 
-	var allow []string
-	for _, route := range h.routes {
-		matches := route.Regex.FindStringSubmatch(r.URL.Path)
-		if len(matches) > 0 {
-			if r.Method != route.Method {
-				allow = append(allow, route.Method)
-				continue
-			}
-			route.Handler(w, r.WithContext(r.Context()))
-			return
-		}
+	if ok := common.HandleRoute(h.routes, w, r); !ok {
+		http.Error(w, "404 not found", http.StatusNotFound)
 	}
-	if len(allow) > 0 {
-		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	http.Error(w, "404 not found", http.StatusNotFound)
 }
 
 func (h *alertmanagerHandler) status(w http.ResponseWriter, _ *http.Request) {
