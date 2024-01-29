@@ -7,12 +7,12 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/synyx/tuwat/pkg/web/common"
 	html "html/template"
 	"io/fs"
 	"net/http"
 	"os"
 	"path"
-	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -30,7 +30,7 @@ import (
 var templates embed.FS
 
 type webHandler struct {
-	routes []route
+	routes []common.Route
 	fs     fs.FS
 
 	aggregator  *aggregation.Aggregator
@@ -66,26 +66,16 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 		handler.fs, _ = fs.Sub(templates, "templates")
 	}
 
-	handler.routes = []route{
-		newRoute("GET", "/", handler.alerts),
-		newRoute("GET", "/foo.php", http.RedirectHandler("/alerts/foo.php", http.StatusSeeOther).ServeHTTP),
-		newRoute("GET", "/alerts/([^/]+)", handler.alerts),
-		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
-		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
-		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
+	handler.routes = []common.Route{
+		common.NewRoute("GET", "/", handler.alerts),
+		common.NewRoute("GET", "/foo.php", http.RedirectHandler("/alerts/foo.php", http.StatusSeeOther).ServeHTTP),
+		common.NewRoute("GET", "/alerts/([^/]+)", handler.alerts),
+		common.NewRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
+		common.NewRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
+		common.NewRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
 	}
 
 	return handler
-}
-
-func newRoute(method, pattern string, handler http.HandlerFunc) route {
-	return route{method, regexp.MustCompile("^" + pattern + "$"), handler}
-}
-
-type route struct {
-	method  string
-	regex   *regexp.Regexp
-	handler http.HandlerFunc
 }
 
 func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -105,14 +95,14 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var allow []string
 	for _, route := range h.routes {
-		matches := route.regex.FindStringSubmatch(r.URL.Path)
+		matches := route.Regex.FindStringSubmatch(r.URL.Path)
 		if len(matches) > 0 {
-			if r.Method != route.method {
-				allow = append(allow, route.method)
+			if r.Method != route.Method {
+				allow = append(allow, route.Method)
 				continue
 			}
 			ctx := context.WithValue(r.Context(), ctxKey{}, matches[1:])
-			route.handler(w, r.WithContext(ctx))
+			route.Handler(w, r.WithContext(ctx))
 			return
 		}
 	}

@@ -9,10 +9,11 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func Handle(appCtx context.Context, cfg *config.Config, webHandler http.Handler) {
+func Handle(appCtx context.Context, cfg *config.Config, webHandler, alertmanagerApi http.Handler) {
 	muxer := newTracedMuxer()
 
 	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer(cfg)))
+	muxer.Handle("api", "/api/alertmanager/", http.StripPrefix("/api/alertmanager", alertmanagerApi))
 	muxer.Handle("web", "/", webHandler)
 
 	common.Serve(appCtx, cfg.WebAddr, muxer.handler)
