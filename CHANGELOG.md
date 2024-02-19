@@ -1,9 +1,14 @@
 # Releases
 
-## 1.5.0 - XXX backend mode
+## 1.5.0 - 2024-02-19 backend mode
 
-* Add `alertmanager` API, e.g. `/api/alertmanager/v2/status`
+* Add `alertmanager` API, e.g. `/api/alertmanager/v2/status` for
+  use as API project.
+  Note that this is an experimental feature and should not be relied
+  upon.
 * Add negative matchers: `!=` and `!~`
+* Use [semver](https://semver.org/) for versioning tuwat.  This allows
+  tuwat to be used as a library.
 
 ## v1.4 - 2024-01-11 light mode
 
