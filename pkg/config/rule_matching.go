@@ -18,7 +18,7 @@ type RuleMatcher interface {
 	MatchString(s string) bool
 }
 
-var prefixMatcher = regexp.MustCompile(`^(~=|>|<|=|<=|>=)\s+(.*)`)
+var prefixMatcher = regexp.MustCompile(`^(=~|!~|>|<|=|!=|<=|>=)\s+(.+)$`)
 
 func ParseRuleMatcher(value string) RuleMatcher {
 	matches := prefixMatcher.FindStringSubmatch(value)
@@ -26,8 +26,10 @@ func ParseRuleMatcher(value string) RuleMatcher {
 		prefix := matches[1]
 		value := matches[2]
 		switch prefix {
-		case "~=":
+		case "=~", "~=":
 			return regexpMatcher{regexp.MustCompile(value)}
+		case "!~":
+			return not(regexpMatcher{regexp.MustCompile(value)})
 		case ">":
 			return newNumberMatcher(gt, value)
 		case "=":
@@ -35,6 +37,12 @@ func ParseRuleMatcher(value string) RuleMatcher {
 				return newNumberMatcher(eq, value)
 			} else {
 				return equalityMatcher{value}
+			}
+		case "!=":
+			if _, err := strconv.ParseFloat(value, 64); err == nil {
+				return not(newNumberMatcher(eq, value))
+			} else {
+				return not(equalityMatcher{value})
 			}
 		case "<":
 			return newNumberMatcher(lt, value)
@@ -104,4 +112,16 @@ type equalityMatcher struct {
 
 func (m equalityMatcher) MatchString(s string) bool {
 	return m.s == s
+}
+
+type notMatcher struct {
+	m RuleMatcher
+}
+
+func (n notMatcher) MatchString(s string) bool {
+	return !n.m.MatchString(s)
+}
+
+func not(m RuleMatcher) RuleMatcher {
+	return &notMatcher{m}
 }

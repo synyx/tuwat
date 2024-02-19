@@ -12,14 +12,13 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"regexp"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/version"
+	"github.com/synyx/tuwat/pkg/web/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -30,7 +29,7 @@ import (
 var templates embed.FS
 
 type webHandler struct {
-	routes []route
+	routes []common.Route
 	fs     fs.FS
 
 	aggregator  *aggregation.Aggregator
@@ -66,26 +65,16 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 		handler.fs, _ = fs.Sub(templates, "templates")
 	}
 
-	handler.routes = []route{
-		newRoute("GET", "/", handler.alerts),
-		newRoute("GET", "/foo.php", http.RedirectHandler("/alerts/foo.php", http.StatusSeeOther).ServeHTTP),
-		newRoute("GET", "/alerts/([^/]+)", handler.alerts),
-		newRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
-		newRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
-		newRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
+	handler.routes = []common.Route{
+		common.NewRoute("GET", "/", handler.alerts),
+		common.NewRoute("GET", "/foo.php", http.RedirectHandler("/alerts/foo.php", http.StatusSeeOther).ServeHTTP),
+		common.NewRoute("GET", "/alerts/([^/]+)", handler.alerts),
+		common.NewRoute("GET", "/ws/(?:alerts/([^/]+))?", websocket.Handler(handler.wsalerts).ServeHTTP),
+		common.NewRoute("GET", "/sse/(?:alerts/([^/]+))?", handler.ssealerts),
+		common.NewRoute("POST", "/alerts/([^/]+)/silence", handler.silence),
 	}
 
 	return handler
-}
-
-func newRoute(method, pattern string, handler http.HandlerFunc) route {
-	return route{method, regexp.MustCompile("^" + pattern + "$"), handler}
-}
-
-type route struct {
-	method  string
-	regex   *regexp.Regexp
-	handler http.HandlerFunc
 }
 
 func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -99,30 +88,12 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-
 		}
 	}()
 
-	var allow []string
-	for _, route := range h.routes {
-		matches := route.regex.FindStringSubmatch(r.URL.Path)
-		if len(matches) > 0 {
-			if r.Method != route.method {
-				allow = append(allow, route.method)
-				continue
-			}
-			ctx := context.WithValue(r.Context(), ctxKey{}, matches[1:])
-			route.handler(w, r.WithContext(ctx))
-			return
-		}
+	if ok := common.HandleRoute(h.routes, w, r); !ok {
+		h.notFound(w, r)
 	}
-	if len(allow) > 0 {
-		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	h.notFound(w, r)
 }
 
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
@@ -320,13 +291,6 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 			panic(err)
 		}
 	}
-}
-
-type ctxKey struct{}
-
-func getField(r *http.Request, index int) string {
-	fields := r.Context().Value(ctxKey{}).([]string)
-	return fields[index]
 }
 
 func niceDuration(d time.Duration) string {
