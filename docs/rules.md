@@ -30,9 +30,11 @@ Draft = "true"
 
 * The `label` section selects items via labels.  In this example it would match
   an item which has the label `Draft` which matches the given regular expression.
-* The label rules will combine as `AND`.
-* `what` rules will combine as `AND` with label rules.
-* `when` rules will combine with `AND` with label and `what` rules.
+* The label rules will combine as `AND` with other label rules and `when` and
+  `what` rules.
+* `when` rules interpreted as "X seconds from now".  The above example would match
+  an alert when the alert has lasted a minimum of 60 seconds.  Times in the future
+  have an undefined behaviour.
 
 ## Matching Rules
 

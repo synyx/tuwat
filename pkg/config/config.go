@@ -153,7 +153,18 @@ func NewConfiguration() (config *Config, err error) {
 		cfg.OtelUrl = *fOtelUrl
 	}
 
-	err = cfg.loadMainConfig(*fConfigFile)
+	rootConfig := cfg.defaultConfiguration()
+
+	if err := cfg.loadConfigFile(*fConfigFile, &rootConfig); errors.Is(err, os.ErrNotExist) {
+		// ignore missing configuration and start with defaults
+		err = nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.configureMain(&rootConfig); err != nil {
+		return nil, err
+	}
 
 	err = filepath.WalkDir(*fDashboardDir, func(path string, d fs.DirEntry, err error) error {
 		if err == nil && !d.IsDir() && filepath.Ext(path) == ".toml" {
@@ -167,18 +178,14 @@ func NewConfiguration() (config *Config, err error) {
 	}
 
 	// validate configuration
-	if !slices.Contains([]string{"light", "dark"}, cfg.Style) {
+	if cfg.Style != "" && !slices.Contains([]string{"light", "dark"}, cfg.Style) {
 		return nil, errors.New("configuration error: [main] style must be \"light\" or \"dark\"")
 	}
 
 	return cfg, err
 }
 
-func (cfg *Config) loadMainConfig(file string) (err error) {
-	if _, err = os.Stat(file); err != nil {
-		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
-	}
-
+func (cfg *Config) defaultConfiguration() rootConfig {
 	var rootConfig rootConfig
 
 	// Defaults for configuration
@@ -193,12 +200,23 @@ func (cfg *Config) loadMainConfig(file string) (err error) {
 	rootConfig.Main.Interval = "1m"
 	rootConfig.Main.Style = "dark"
 
-	// Fill configuration
+	return rootConfig
+}
 
-	if _, err = toml.DecodeFile(file, &rootConfig); err != nil {
+func (cfg *Config) loadConfigFile(file string, rootConfig *rootConfig) error {
+	if _, err := os.Stat(file); err != nil {
+		return fmt.Errorf("configuration file %s unreadable: %w", file, err)
+	}
+
+	// Fill configuration
+	if _, err := toml.DecodeFile(file, &rootConfig); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	cfg.Style = rootConfig.Main.Style
 
 	cfg.Logger = rootConfig.Logger

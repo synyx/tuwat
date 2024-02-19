@@ -419,7 +419,7 @@ nextRule:
 		} else if rule.When != nil {
 			// `when` is a duration, which is converted to seconds.  The rule simply matches against
 			// that.
-			seconds := strconv.FormatFloat(alert.When.Seconds(), 'f', 0, 64)
+			seconds := strconv.FormatFloat(alert.When.Abs().Seconds(), 'f', 0, 64)
 			matchers[seconds] = rule.When
 		}
 

@@ -8,35 +8,68 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/log"
 )
 
 func TestAggregation(t *testing.T) {
+	filter := config.Rule{
+		Description: "Ignore MRs",
+		Labels: map[string]config.RuleMatcher{
+			"Hostname": config.ParseRuleMatcher("~= gitlab"),
+		},
+	}
+
+	a := aggregator(config.Excluding, filter)
+	aggregation := aggregate(a, t)
+	if len(aggregation.Alerts) != 2 {
+		t.Error("invalid shown", aggregation)
+	}
+}
+
+func TestWhen(t *testing.T) {
+	filter := config.Rule{
+		Description: "Non-Escalated",
+		When:        config.ParseRuleMatcher("< 10800"), // < 3h
+		Labels: map[string]config.RuleMatcher{
+			"Hostname": config.ParseRuleMatcher("nagios"),
+		},
+	}
+
+	a := aggregator(config.Excluding, filter)
+	aggregation := aggregate(a, t)
+	if len(aggregation.Blocked) != 1 {
+		t.Error("invalid blocked", aggregation.Blocked)
+	}
+	if len(aggregation.Alerts) != 2 {
+		t.Error("invalid shown", aggregation.Alerts)
+	}
+}
+
+func aggregator(mode config.DashboardMode, filters ...config.Rule) *Aggregator {
+	cfg, _ := config.NewConfiguration()
+	log.Initialize(cfg)
+
+	connector := &mockConnector{
+		clock: clock.NewMock(),
+	}
+	cfg.Connectors = []connectors.Connector{connector}
+	cfg.Dashboards = map[string]*config.Dashboard{
+		"Home": {
+			Name:   "Home",
+			Mode:   mode,
+			Filter: filters,
+		},
+	}
+
+	return NewAggregator(cfg, connector.clock)
+}
+
+func aggregate(a *Aggregator, t *testing.T) Aggregate {
 	collect := make(chan result)
 	var results []result
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	connector := &mockConnector{}
-	cfg := &config.Config{
-		Connectors: []connectors.Connector{connector},
-		Dashboards: map[string]*config.Dashboard{
-			"Home": {
-				Name: "Home",
-				Mode: config.Excluding,
-				Filter: []config.Rule{
-					{
-						Description: "Ignore MRs",
-						What:        nil,
-						When:        nil,
-						Labels: map[string]config.RuleMatcher{
-							"Hostname": config.ParseRuleMatcher("~= gitlab"),
-						},
-					},
-				},
-			},
-		},
-	}
-	a := NewAggregator(cfg, clock.NewMock())
 	go a.collect(ctx, collect)
 
 	select {
@@ -47,11 +80,19 @@ func TestAggregation(t *testing.T) {
 	}
 
 	if len(results) != 1 {
-		t.Error("Have", len(results))
+		t.Error("Have", results)
 	}
+	if len(results[0].alerts) != 3 {
+		t.Fatal("Make sure nr == number in mock Collect()", results)
+	}
+
+	a.aggregate(ctx, a.dashboards["Home"], results)
+
+	return a.current["Home"]
 }
 
 type mockConnector struct {
+	clock clock.Clock
 }
 
 func (m *mockConnector) String() string {
@@ -69,21 +110,21 @@ func (m *mockConnector) Collect(ctx context.Context) ([]connectors.Alert, error)
 				"Hostname": "kubernetes/k8s-apps",
 			},
 			Description: "Service Down",
-			Start:       time.Now().Add(-1 * time.Minute),
+			Start:       m.clock.Now().Add(-1 * time.Minute),
 			State:       connectors.Warning,
 		}, {
 			Labels: map[string]string{
 				"Hostname": "nagios",
 			},
 			Description: "Weird",
-			Start:       time.Now().Add(-2 * time.Hour),
+			Start:       m.clock.Now().Add(-2 * time.Hour),
 			State:       connectors.Unknown,
 		}, {
 			Labels: map[string]string{
 				"Hostname": "gitlab",
 			},
 			Description: "MR !272",
-			Start:       time.Now().Add(-25 * time.Hour * 24),
+			Start:       m.clock.Now().Add(-25 * time.Hour * 24),
 			State:       connectors.Critical,
 		},
 	}

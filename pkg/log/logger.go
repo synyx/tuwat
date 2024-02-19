@@ -18,7 +18,7 @@ func Initialize(cfg *config.Config) func() {
 		zap.AddStacktrace(zap.ErrorLevel),
 	)
 	if err != nil {
-		fmt.Println("failed to set up logging system", err)
+		fmt.Println("failed to set up logging system:", err)
 		os.Exit(1)
 	}
 
