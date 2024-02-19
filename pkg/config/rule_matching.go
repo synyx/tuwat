@@ -18,7 +18,7 @@ type RuleMatcher interface {
 	MatchString(s string) bool
 }
 
-var prefixMatcher = regexp.MustCompile(`^(=~|!~|>|<|=|!=|<=|>=)\s+(.+)$`)
+var prefixMatcher = regexp.MustCompile(`^(~=|=~|!~|>|<|=|!=|<=|>=)\s+(.+)$`)
 
 func ParseRuleMatcher(value string) RuleMatcher {
 	matches := prefixMatcher.FindStringSubmatch(value)
