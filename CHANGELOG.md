@@ -1,5 +1,9 @@
 # Releases
 
+## 1.5.1 - 2024-02-19
+
+* Bugfix release for `when` rules and `~=` matching rule prefixes.
+
 ## 1.5.0 - 2024-02-19 backend mode
 
 * Add `alertmanager` API, e.g. `/api/alertmanager/v2/status` for
