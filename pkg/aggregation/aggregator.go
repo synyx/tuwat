@@ -136,11 +136,10 @@ func (a *Aggregator) Run(ctx context.Context) {
 	ticker := a.clock.Ticker(a.interval)
 	defer ticker.Stop()
 
-	collect := make(chan result, 20)
-	var results []result
-
 	otelzap.Ctx(ctx).Info("Collecting on Start")
+	collect := make(chan result, 20)
 	go a.collect(ctx, collect)
+	go a.collectAggregate(ctx, collect)
 
 	active := true
 	for {
@@ -158,20 +157,33 @@ func (a *Aggregator) Run(ctx context.Context) {
 				active = true
 			}
 
+			collect := make(chan result, 20)
 			go a.collect(ctx, collect)
-		case r, ok := <-collect:
-			if !ok {
-				for _, dashboard := range a.dashboards {
-					a.aggregate(ctx, dashboard, results)
-				}
-				results = nil
-				collect = make(chan result, 20)
-			} else if ok {
-				results = append(results, r)
-			}
+			go a.collectAggregate(ctx, collect)
 		case <-ctx.Done():
 			return
 		}
+	}
+}
+
+func (a *Aggregator) collectAggregate(ctx context.Context, collect <-chan result) {
+	var results []result
+outer:
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case r, ok := <-collect:
+			if !ok {
+				break outer
+			}
+
+			results = append(results, r)
+		}
+	}
+
+	for _, dashboard := range a.dashboards {
+		a.aggregate(ctx, dashboard, results)
 	}
 }
 
