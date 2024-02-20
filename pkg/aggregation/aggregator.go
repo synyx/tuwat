@@ -167,6 +167,9 @@ func (a *Aggregator) Run(ctx context.Context) {
 }
 
 func (a *Aggregator) collectAggregate(ctx context.Context, collect <-chan result) {
+	ctx, cancel := context.WithTimeout(ctx, a.interval)
+	defer cancel()
+
 	var results []result
 outer:
 	for {
