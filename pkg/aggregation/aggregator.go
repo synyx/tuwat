@@ -416,7 +416,9 @@ nextRule:
 			// human understandable description.  The rule simply matches against
 			// that.
 			matchers[alert.What] = rule.What
-		} else if rule.When != nil {
+		}
+
+		if rule.When != nil {
 			// `when` is a duration, which is converted to seconds.  The rule simply matches against
 			// that.
 			seconds := strconv.FormatFloat(alert.When.Abs().Seconds(), 'f', 0, 64)

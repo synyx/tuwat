@@ -29,9 +29,10 @@ func TestAggregation(t *testing.T) {
 func TestWhen(t *testing.T) {
 	filter := config.Rule{
 		Description: "Non-Escalated",
-		When:        config.ParseRuleMatcher("< 10800"), // < 3h
+		When:        config.ParseRuleMatcher("< 86400"), // < 2d
+		What:        config.ParseRuleMatcher(": Update"),
 		Labels: map[string]config.RuleMatcher{
-			"Hostname": config.ParseRuleMatcher("nagios"),
+			"Type": config.ParseRuleMatcher("PullRequest"),
 		},
 	}
 
@@ -103,20 +104,22 @@ func (m *mockConnector) Tag() string {
 	return "mock"
 }
 
-func (m *mockConnector) Collect(ctx context.Context) ([]connectors.Alert, error) {
+func (m *mockConnector) Collect(_ context.Context) ([]connectors.Alert, error) {
 	alerts := []connectors.Alert{
 		{
 			Labels: map[string]string{
-				"Hostname": "kubernetes/k8s-apps",
+				"Hostname": "nagios",
+				"Type":     "PullRequest",
 			},
-			Description: "Service Down",
-			Start:       m.clock.Now().Add(-1 * time.Minute),
+			Description: "MR !1: X: Update foo",
+			Start:       m.clock.Now().Add(-3 * 24 * time.Hour),
 			State:       connectors.Warning,
 		}, {
 			Labels: map[string]string{
 				"Hostname": "nagios",
+				"Type":     "PullRequest",
 			},
-			Description: "Weird",
+			Description: "MR !2: Y: Update bar",
 			Start:       m.clock.Now().Add(-2 * time.Hour),
 			State:       connectors.Unknown,
 		}, {
