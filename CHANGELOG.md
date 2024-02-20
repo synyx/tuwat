@@ -1,5 +1,10 @@
 # Releases
 
+## 1.5.2 - 2024-02-20
+
+* Bugfix release for `when` rules only being applied if no `where`
+  rule given.
+
 ## 1.5.1 - 2024-02-19
 
 * Bugfix release for `when` rules and `~=` matching rule prefixes.
