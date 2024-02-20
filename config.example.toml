@@ -52,6 +52,7 @@ Tag = 'demo'
 #URL = "https://gitlab.example.com"
 #BearerToken = "aBaBaBaBaBaBaBaBaBaB"
 ##Projects = ["group/project"]
+##Groups = ["group"]
 #
 #[[patchman]]
 #Tag = "dev"
