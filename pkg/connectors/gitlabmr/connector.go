@@ -26,6 +26,7 @@ type Connector struct {
 type Config struct {
 	Tag      string
 	Projects []string
+	Groups   []string
 	common.HTTPConfig
 }
 
@@ -82,17 +83,46 @@ func (c *Connector) String() string {
 }
 
 // collectMRs collects merge requests from GitLab.  It either gets all available merge requests
-// from the whole instance, or only selected projects.
+// from the whole instance, or only selected projects/groups.
 func (c *Connector) collectMRs(ctx context.Context) ([]mergeRequest, error) {
-	if c.config.Projects == nil {
+	if c.config.Projects == nil && c.config.Groups == nil {
 		return c.collectMRsFrom(ctx, "/api/v4/merge_requests")
 	}
 
+	projectMRs, err := c.collectProjectMRs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	groupMRs, err := c.collectGroupMRs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(projectMRs, groupMRs...), nil
+}
+
+func (c *Connector) collectProjectMRs(ctx context.Context) ([]mergeRequest, error) {
 	var mrs []mergeRequest
 	for _, id := range c.config.Projects {
 		id := url.PathEscape(id)
 
 		if m, err := c.collectMRsFrom(ctx, fmt.Sprintf("/api/v4/projects/%s/merge_requests", id)); err != nil {
+			return mrs, err
+		} else {
+			mrs = append(mrs, m...)
+		}
+	}
+
+	return mrs, nil
+}
+
+func (c *Connector) collectGroupMRs(ctx context.Context) ([]mergeRequest, error) {
+	var mrs []mergeRequest
+	for _, id := range c.config.Groups {
+		id := url.PathEscape(id)
+
+		if m, err := c.collectMRsFrom(ctx, fmt.Sprintf("/api/v4/groups/%s/merge_requests", id)); err != nil {
 			return mrs, err
 		} else {
 			mrs = append(mrs, m...)
