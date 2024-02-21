@@ -1,5 +1,12 @@
 # Releases
 
+## 1.6.0 - 2024-02-21 GitLab MR groups
+
+* Allow GitLab Groups to be configured for pulling merge requests.
+  This has the advantage of needing to specify fewer single projects
+  and also ignores archived projects by default.
+* Fix application crash on certain network timeouts.
+
 ## 1.5.2 - 2024-02-20
 
 * Bugfix release for `when` rules only being applied if no `where`
