@@ -6,6 +6,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/web/common"
 )

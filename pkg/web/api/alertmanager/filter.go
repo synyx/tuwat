@@ -2,8 +2,9 @@ package alertmanager
 
 import (
 	"bufio"
-	"github.com/synyx/tuwat/pkg/config"
 	"strings"
+
+	"github.com/synyx/tuwat/pkg/config"
 )
 
 type fieldMatcher struct {

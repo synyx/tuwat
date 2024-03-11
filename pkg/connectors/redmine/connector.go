@@ -9,10 +9,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/connectors/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
+
+	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 type Connector struct {

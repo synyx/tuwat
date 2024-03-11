@@ -6,8 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/config"
-	"github.com/synyx/tuwat/pkg/version"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -18,6 +16,9 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+
+	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/version"
 )
 
 func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {

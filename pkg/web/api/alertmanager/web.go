@@ -6,12 +6,13 @@ import (
 	"slices"
 	"time"
 
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
+
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/version"
 	"github.com/synyx/tuwat/pkg/web/common"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 )
 
 type alertmanagerHandler struct {

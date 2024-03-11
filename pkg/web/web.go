@@ -15,14 +15,15 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/synyx/tuwat/pkg/aggregation"
-	"github.com/synyx/tuwat/pkg/config"
-	"github.com/synyx/tuwat/pkg/version"
-	"github.com/synyx/tuwat/pkg/web/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
+
+	"github.com/synyx/tuwat/pkg/aggregation"
+	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/version"
+	"github.com/synyx/tuwat/pkg/web/common"
 )
 
 //go:embed templates/*

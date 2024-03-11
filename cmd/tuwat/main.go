@@ -7,6 +7,9 @@ import (
 	"syscall"
 
 	"github.com/benbjohnson/clock"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
+
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/log"
@@ -14,8 +17,6 @@ import (
 	"github.com/synyx/tuwat/pkg/web"
 	"github.com/synyx/tuwat/pkg/web/actuator"
 	"github.com/synyx/tuwat/pkg/web/api/alertmanager"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 )
 
 func main() {

@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/web/common"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func Handle(appCtx context.Context, cfg *config.Config, webHandler, alertmanagerApi http.Handler) {

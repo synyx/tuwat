@@ -14,12 +14,13 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/synyx/tuwat/pkg/config"
-	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+
+	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/connectors"
 )
 
 type Aggregate struct {

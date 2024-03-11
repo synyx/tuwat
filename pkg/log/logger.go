@@ -6,10 +6,11 @@ import (
 	"os"
 
 	"github.com/go-logr/stdr"
-	"github.com/synyx/tuwat/pkg/config"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
+
+	"github.com/synyx/tuwat/pkg/config"
 )
 
 func Initialize(cfg *config.Config) func() {

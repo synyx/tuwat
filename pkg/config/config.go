@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"go.uber.org/zap"
+
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
 	"github.com/synyx/tuwat/pkg/connectors/example"
@@ -23,7 +25,6 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/orderview"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
 	"github.com/synyx/tuwat/pkg/connectors/redmine"
-	"go.uber.org/zap"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")

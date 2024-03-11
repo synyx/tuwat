@@ -5,11 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/synyx/tuwat/pkg/web/common"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
+
+	"github.com/synyx/tuwat/pkg/web/common"
 )
 
 func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
