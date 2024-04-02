@@ -8,6 +8,8 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
+	"golang.org/x/oauth2"
+
 	"github.com/synyx/tuwat/pkg/version"
 )
 
