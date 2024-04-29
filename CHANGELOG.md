@@ -1,5 +1,10 @@
 # Releases
 
+## 1.7.0 - 2024-04-29 Negative Times
+
+* Allows times to be in the future (negative seconds ago)
+  and thus to be able to filter those correctly.
+
 ## 1.6.0 - 2024-02-21 GitLab MR groups
 
 * Allow GitLab Groups to be configured for pulling merge requests.
