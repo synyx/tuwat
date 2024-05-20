@@ -48,15 +48,20 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	var alerts []connectors.Alert
-	problemHosts := make(map[string]bool)
+	ignoredHosts := make(map[string]bool)
 
 	for _, host := range hosts {
 		host := host.Host
+		ignoredHosts[host.DisplayName] = false
+
 		if host.Acknowledgement > 0 {
+			ignoredHosts[host.DisplayName] = true
 			continue
 		} else if !host.EnableNotifications {
+			ignoredHosts[host.DisplayName] = true
 			continue
 		} else if host.DowntimeDepth > 0 {
+			ignoredHosts[host.DisplayName] = true
 			continue
 		} else if host.State == 0 {
 			continue
@@ -80,12 +85,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 		alert.Silence = c.createSilencer(alert)
 		alerts = append(alerts, alert)
-		problemHosts[host.DisplayName] = true
 	}
 
 	for _, service := range services {
 		service := service.Service
-		if x, ok := problemHosts[service.HostName]; ok && x {
+		if ignore, ok := ignoredHosts[service.HostName]; ok && ignore {
 			continue
 		} else if service.Acknowledgement > 0 {
 			continue

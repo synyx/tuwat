@@ -1,5 +1,13 @@
 # Releases
 
+## 1.8.0 - 2024-05-20 Icinga2 Host ACKs
+
+* Downtimes and acknowledgements as well as disabling notifications
+  for a host will also disable those for the services on this host.
+  This differs from `icinga` and `nagios`, as they allow actions
+  like `Schedule downtime for this host` vs. `allow downtime for
+  this host and all services`.
+
 ## 1.7.0 - 2024-04-29 Negative Times
 
 * Allows times to be in the future (negative seconds ago)
