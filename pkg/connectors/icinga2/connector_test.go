@@ -12,24 +12,9 @@ import (
 )
 
 func TestIcinga2Connector(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(http.StatusOK)
-		if strings.Contains(req.URL.Path, "/host") {
-			_, _ = res.Write([]byte(icinga2MockHostResponse))
-		} else if strings.Contains(req.URL.Path, "/service") {
-			_, _ = res.Write([]byte(icinga2MockServiceResponse))
-		}
-	}))
-	defer func() { testServer.Close() }()
+	connector, mockServer := testConnector(icinga2MockHostResponse, icinga2MockServiceResponse)
+	defer func() { mockServer.Close() }()
 
-	cfg := Config{
-		Tag: "test",
-		HTTPConfig: common.HTTPConfig{
-			URL: testServer.URL,
-		},
-	}
-
-	var connector connectors.Connector = NewConnector(&cfg)
 	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -46,6 +31,41 @@ func TestIcinga2Connector(t *testing.T) {
 	} else {
 		t.Error("service should be labeled with host groups ")
 	}
+}
+
+func TestIcinga2AckPropagation(t *testing.T) {
+	hostJson := strings.ReplaceAll(icinga2MockHostResponse, "\"acknowledgement\": 0", "\"acknowledgement\": 1")
+	connector, mockServer := testConnector(hostJson, icinga2MockServiceResponse)
+	defer func() { mockServer.Close() }()
+
+	alerts, err := connector.Collect(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(alerts) > 0 {
+		t.Error("There should be no alerts, as host is acked:", len(alerts), "alerts")
+	}
+}
+
+func testConnector(hostJson, serviceJson string) (connectors.Connector, *httptest.Server) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusOK)
+		if strings.Contains(req.URL.Path, "/host") {
+			_, _ = res.Write([]byte(hostJson))
+		} else if strings.Contains(req.URL.Path, "/service") {
+			_, _ = res.Write([]byte(serviceJson))
+		}
+	}))
+
+	cfg := Config{
+		Tag: "test",
+		HTTPConfig: common.HTTPConfig{
+			URL: mockServer.URL,
+		},
+	}
+
+	return NewConnector(&cfg), mockServer
 }
 
 const icinga2MockHostResponse = `
