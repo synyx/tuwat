@@ -11,6 +11,7 @@ import (
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/embedded"
 	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/version"
@@ -55,13 +56,23 @@ func (s SlogLogger) Emit(ctx context.Context, record otellog.Record) {
 	fields := make([]slog.Attr, 0, record.AttributesLen())
 	record.WalkAttributes(func(v otellog.KeyValue) bool {
 		if !v.Value.Empty() {
-			if v.Value.Kind() == otellog.KindString && v.Value.String() == "<nil>" {
+			if v.Value.Kind() == otellog.KindString && (v.Value.String() == "<nil>" || v.Value.String() == "") {
 				return true
 			}
 			fields = append(fields, slog.Any(v.Key, v.Value))
 		}
 		return true
 	})
+
+	if span := trace.SpanFromContext(ctx); span.IsRecording() {
+		sCtx := span.SpanContext()
+		if sCtx.HasTraceID() {
+			fields = append(fields, slog.String("traceId", sCtx.TraceID().String()))
+		}
+		if sCtx.HasSpanID() {
+			fields = append(fields, slog.String("spanId", sCtx.SpanID().String()))
+		}
+	}
 
 	msg := slogBody(record.Body())
 
