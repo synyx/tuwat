@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	html "html/template"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,10 +15,8 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
@@ -137,7 +136,7 @@ func (a *Aggregator) Run(ctx context.Context) {
 	ticker := a.clock.Ticker(a.interval)
 	defer ticker.Stop()
 
-	otelzap.Ctx(ctx).Info("Collecting on Start")
+	slog.InfoContext(ctx, "Collecting on Start")
 	collect := make(chan result, 20)
 	go a.collect(ctx, collect)
 	go a.collectAggregate(ctx, collect)
@@ -147,14 +146,14 @@ func (a *Aggregator) Run(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			if active && !a.active() {
-				otelzap.Ctx(ctx).Info("Deactivating collection due to inactivity")
+				slog.InfoContext(ctx, "Deactivating collection due to inactivity")
 				active = false
 				continue
 			} else if !a.active() {
-				otelzap.Ctx(ctx).Debug("Skipping collection")
+				slog.DebugContext(ctx, "Skipping collection")
 				continue
 			} else if !active && a.active() {
-				otelzap.Ctx(ctx).Info("Reactivating collection due to activity")
+				slog.InfoContext(ctx, "Reactivating collection due to activity")
 				active = true
 			}
 
@@ -202,7 +201,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 
 	a.cmu.RLock()
 	for _, c := range a.connectors {
-		otelzap.Ctx(ctx).Debug("Adding collection", zap.String("tag", c.Tag()))
+		slog.DebugContext(ctx, "Adding collection", slog.String("tag", c.Tag()))
 		wg.Add(1)
 		go func(c connectors.Connector) {
 			defer wg.Done()
@@ -214,11 +213,11 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 				if e := recover(); e != nil {
 					err = fmt.Errorf("error delivering result %w", e.(error))
 				}
-				otelzap.Ctx(ctx).Info("Collected alerts",
-					zap.String("collector", c.String()),
-					zap.String("tag", c.Tag()),
-					zap.Int("count", len(alerts)),
-					zap.Error(err))
+				slog.InfoContext(ctx, "Collected alerts",
+					slog.String("collector", c.String()),
+					slog.String("tag", c.Tag()),
+					slog.Int("count", len(alerts)),
+					slog.Any("error", err))
 			}()
 
 			r := result{
@@ -239,13 +238,13 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	a.cmu.RUnlock()
 
 	wg.Wait()
-	otelzap.Ctx(ctx).Debug("Collection end")
+	slog.DebugContext(ctx, "Collection end")
 	span.End(trace.WithTimestamp(time.Now()))
 	close(collect)
 }
 
 func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard, results []result) {
-	otelzap.Ctx(ctx).Info("Aggregating results", zap.String("dashboard", dashboard.Name), zap.Int("count", len(results)))
+	slog.InfoContext(ctx, "Aggregating results", slog.String("dashboard", dashboard.Name), slog.Int("count", len(results)))
 
 	a.cmu.RLock()
 	whereTempl := a.whereTempl
@@ -369,7 +368,7 @@ func (a *Aggregator) Unregister(handler string) {
 }
 
 func (a *Aggregator) notify(ctx context.Context) {
-	otelzap.Ctx(ctx).Debug("Notifying", zap.Any("count", a.nrRegistrations()))
+	slog.DebugContext(ctx, "Notifying", slog.Any("count", a.nrRegistrations()))
 
 	var toUnregister []string
 
@@ -377,7 +376,7 @@ func (a *Aggregator) notify(ctx context.Context) {
 		r := value.(chan bool)
 		select {
 		case r <- true:
-			otelzap.Ctx(ctx).Debug("Notified", zap.Any("client", key))
+			slog.DebugContext(ctx, "Notified", slog.Any("client", key))
 
 			a.lastAccess.Store(a.clock.Now())
 		default:
@@ -387,7 +386,7 @@ func (a *Aggregator) notify(ctx context.Context) {
 	})
 
 	for _, thing := range toUnregister {
-		otelzap.Ctx(ctx).Debug("Force unregistering", zap.Any("client", thing))
+		slog.DebugContext(ctx, "Force unregistering", slog.Any("client", thing))
 		a.Unregister(thing)
 	}
 }
@@ -485,7 +484,7 @@ all:
 
 	if alert.Silence != nil {
 		if err := alert.Silence(ctx, 24*time.Hour, user); err != nil {
-			otelzap.Ctx(ctx).Info("error silencing", zap.Error(err))
+			slog.InfoContext(ctx, "error silencing", slog.Any("error", err))
 		}
 	}
 }

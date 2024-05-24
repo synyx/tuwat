@@ -3,11 +3,9 @@ package actuator
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"sync"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 )
 
 type Status string
@@ -57,9 +55,9 @@ func (h *HealthActuator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		otelzap.Ctx(r.Context()).Error("error marshalling health status", zap.Error(err))
+		slog.ErrorContext(r.Context(), "error marshalling health status", slog.Any("error", err))
 		if _, err := io.WriteString(w, "{\"status\":\"DOWN\"}"); err != nil {
-			otelzap.Ctx(r.Context()).Debug("error serving health", zap.Error(err))
+			slog.DebugContext(r.Context(), "error serving health", slog.Any("error", err))
 		}
 	}
 
@@ -75,7 +73,7 @@ func (h *HealthActuator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := w.Write(str); err != nil {
-		otelzap.Ctx(r.Context()).Debug("error serving health", zap.Error(err))
+		slog.DebugContext(r.Context(), "error serving health", slog.Any("error", err))
 	}
 }
 

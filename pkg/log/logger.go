@@ -1,55 +1,18 @@
 package log
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"log/slog"
 
-	"github.com/go-logr/stdr"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/otel"
-	"go.uber.org/zap"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel/log/noop"
 
 	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/version"
 )
 
-func Initialize(cfg *config.Config) func() {
-	logger, err := cfg.Logger.Build(
-		zap.WithCaller(true),
-		zap.AddStacktrace(zap.ErrorLevel),
-	)
-	if err != nil {
-		fmt.Println("failed to set up logging system:", err)
-		os.Exit(1)
-	}
+func Initialize(cfg *config.Config) {
+	provider := noop.NewLoggerProvider()
+	slog.SetDefault(otelslog.NewLogger(version.Info.Application, otelslog.WithLoggerProvider(provider)))
 
-	var reversionFunctions []func()
-	revert := func(reversionFunctions []func()) func() {
-		return func() {
-			for _, f := range reversionFunctions {
-				f()
-			}
-		}
-	}
-
-	reversionFunctions = append(reversionFunctions, zap.ReplaceGlobals(logger))
-
-	logrLogger := NewLogrZapBridge(logger)
-	otel.SetLogger(logrLogger)
-	reversionFunctions = append(reversionFunctions, func() { otel.SetLogger(stdr.New(log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile))) })
-
-	stdLogger := newStdLoggerBridge(logger)
-	reversionFunctions = append(reversionFunctions, stdLogger.ReplaceGlobals())
-
-	otelLogger := otelzap.New(
-		logger,
-		otelzap.WithMinLevel(zap.DebugLevel),
-		otelzap.WithCaller(true),
-		otelzap.WithStackTrace(false),
-	)
-	reversionFunctions = append(reversionFunctions, otelzap.ReplaceGlobals(otelLogger))
-
-	otelLogger.Info("initialized logger", zap.String("environment", cfg.Environment))
-
-	return revert(reversionFunctions)
+	slog.Info("initialized logger", slog.String("environment", cfg.Environment))
 }

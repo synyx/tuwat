@@ -1,13 +1,12 @@
 package web
 
 import (
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"strings"
 
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 
 	"github.com/synyx/tuwat/pkg/web/common"
@@ -34,9 +33,9 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				otelzap.Ctx(s.Request().Context()).Info("panic serving", zap.Error(err))
+				slog.InfoContext(s.Request().Context(), "panic serving", slog.Any("error", err))
 			default:
-				otelzap.Ctx(s.Request().Context()).Info("panic serving", zap.Any("error", err))
+				slog.InfoContext(s.Request().Context(), "panic serving", slog.Any("error", err))
 			}
 		}
 		_ = s.Close()
@@ -50,9 +49,9 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
 	tr := trace.SpanFromContext(s.Request().Context()).SpanContext().TraceID().String()
-	otelzap.Ctx(s.Request().Context()).Info("Registering websocket connection",
-		zap.String("client", tr),
-		zap.String("dashboard", dashboardName))
+	slog.InfoContext(s.Request().Context(), "Registering websocket connection",
+		slog.String("client", tr),
+		slog.String("dashboard", dashboardName))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
 
@@ -60,18 +59,18 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, update channel closed",
-					zap.String("client", tr))
+				slog.DebugContext(s.Request().Context(), "stop sending to websocket client, update channel closed",
+					slog.String("client", tr))
 				update = nil
 			}
 
-			otelzap.Ctx(s.Request().Context()).Debug("sending to websocket client",
-				zap.String("client", tr))
+			slog.DebugContext(s.Request().Context(), "sending to websocket client",
+				slog.String("client", tr))
 			aggregate := h.aggregator.Alerts(dashboardName)
 			renderer(webContent{Content: aggregate})
 		case <-s.Request().Context().Done():
-			otelzap.Ctx(s.Request().Context()).Debug("stop sending to websocket client, req ctx done",
-				zap.String("client", tr))
+			slog.DebugContext(s.Request().Context(), "stop sending to websocket client, req ctx done",
+				slog.String("client", tr))
 			return
 		}
 	}
@@ -82,9 +81,9 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				otelzap.Ctx(req.Context()).Info("panic serving", zap.Error(err))
+				slog.InfoContext(req.Context(), "panic serving", slog.Any("error", err))
 			default:
-				otelzap.Ctx(req.Context()).Info("panic serving", zap.Any("error", err))
+				slog.InfoContext(req.Context(), "panic serving", slog.Any("error", err))
 			}
 		}
 	}()
@@ -95,7 +94,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 	defer cancel()
 
 	tr := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String()
-	otelzap.Ctx(req.Context()).Info("Registering sse connection", zap.String("client", tr))
+	slog.InfoContext(req.Context(), "Registering sse connection", slog.String("client", tr))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
 
@@ -103,20 +102,20 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				otelzap.Ctx(req.Context()).Debug("stop sending to sse client", zap.String("client", tr))
+				slog.DebugContext(req.Context(), "stop sending to sse client", slog.String("client", tr))
 				return
 			}
 
-			otelzap.Ctx(req.Context()).Debug("sending to sse client", zap.String("client", tr))
+			slog.DebugContext(req.Context(), "sending to sse client", slog.String("client", tr))
 			aggregate := h.aggregator.Alerts(dashboardName)
 			if err := renderer(webContent{Content: aggregate}); err != nil {
-				otelzap.Ctx(req.Context()).Debug("stop sending to sse client",
-					zap.String("client", tr),
-					zap.Error(err))
+				slog.DebugContext(req.Context(), "stop sending to sse client",
+					slog.String("client", tr),
+					slog.Any("error", err))
 				return
 			}
 		case <-req.Context().Done():
-			otelzap.Ctx(req.Context()).Info("stop sending to sse client", zap.String("client", tr))
+			slog.InfoContext(req.Context(), "stop sending to sse client", slog.String("client", tr))
 			return
 		}
 	}

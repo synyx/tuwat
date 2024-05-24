@@ -7,11 +7,9 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -92,11 +90,11 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]ticket, error) {
 	var response []ticket
 	err = decoder.Decode(&response)
 	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse",
-			zap.String("url", c.config.URL),
-			zap.String("data", buf.String()),
-			zap.Any("status", res.StatusCode),
-			zap.Error(err))
+		slog.ErrorContext(ctx, "Cannot parse",
+			slog.String("url", c.config.URL),
+			slog.String("data", buf.String()),
+			slog.Any("status", res.StatusCode),
+			slog.Any("error", err))
 		return nil, err
 	}
 
@@ -105,7 +103,7 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]ticket, error) {
 
 func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, error) {
 
-	otelzap.Ctx(ctx).Debug("getting tickets", zap.String("url", c.config.URL+endpoint))
+	slog.DebugContext(ctx, "getting tickets", slog.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

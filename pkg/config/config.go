@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
@@ -43,7 +42,6 @@ type Config struct {
 	OtelUrl        string
 	Instance       string
 	PrintVersion   bool
-	Logger         zap.Config
 	Connectors     []connectors.Connector
 	WhereTemplate  *template.Template
 	Interval       time.Duration
@@ -81,7 +79,6 @@ type dashboardConfig struct {
 
 type rootConfig struct {
 	Main          mainConfig               `toml:"main"`
-	Logger        zap.Config               `toml:"logger"`
 	Rules         []map[string]interface{} `toml:"rule"`
 	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
 	GitlabMRs     []gitlabmr.Config        `toml:"gitlabmr"`
@@ -192,12 +189,6 @@ func (cfg *Config) defaultConfiguration() rootConfig {
 	// Defaults for configuration
 	rootConfig.Main.WhereTemplate = `{{with index .Labels "Cluster"}}{{.}}/{{end}}{{first .Labels "Project" "Namespace" "Hostname" "job" "cluster"}}`
 
-	if cfg.Environment == "prod" {
-		rootConfig.Logger = zap.NewProductionConfig()
-	} else {
-		rootConfig.Logger = zap.NewDevelopmentConfig()
-	}
-
 	rootConfig.Main.Interval = "1m"
 	rootConfig.Main.Style = "dark"
 
@@ -219,8 +210,6 @@ func (cfg *Config) loadConfigFile(file string, rootConfig *rootConfig) error {
 
 func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	cfg.Style = rootConfig.Main.Style
-
-	cfg.Logger = rootConfig.Logger
 
 	// Add connectors
 	for _, connectorConfig := range rootConfig.Alertmanagers {

@@ -7,11 +7,9 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -50,7 +48,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		for _, issue := range issues {
 			last, err := time.Parse(time.RFC3339, issue.UpdatedAt)
 			if err != nil {
-				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			}
 
 			project := repo
@@ -108,10 +106,10 @@ func (c *Connector) collectIssues(ctx context.Context, repo string) ([]issue, er
 	var response []issue
 	err = decoder.Decode(&response)
 	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse",
-			zap.String("url", c.config.URL),
-			zap.String("data", buf.String()),
-			zap.Error(err))
+		slog.ErrorContext(ctx, "Cannot parse",
+			slog.String("url", c.config.URL),
+			slog.String("data", buf.String()),
+			slog.Any("error", err))
 		return nil, err
 	}
 
@@ -119,7 +117,7 @@ func (c *Connector) collectIssues(ctx context.Context, repo string) ([]issue, er
 }
 
 func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
-	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", endpoint))
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -138,7 +136,7 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse", zap.String("url", url), zap.Error(err))
+		slog.ErrorContext(ctx, "Cannot parse", slog.String("url", url), slog.Any("error", err))
 		return nil, err
 	}
 

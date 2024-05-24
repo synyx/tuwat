@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	html "html/template"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -93,7 +91,7 @@ func (c *Connector) String() string {
 }
 
 func (c *Connector) collectIssues(ctx context.Context) ([]issue, error) {
-	otelzap.Ctx(ctx).Debug("getting issues", zap.String("url", c.config.HTTPConfig.URL+"/issues.json"))
+	slog.DebugContext(ctx, "getting issues", slog.String("url", c.config.HTTPConfig.URL+"/issues.json"))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.HTTPConfig.URL+"/issues.json", nil)
 	if err != nil {

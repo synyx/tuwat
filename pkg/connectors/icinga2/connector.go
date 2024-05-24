@@ -6,13 +6,11 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"log/slog"
 	"math"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -174,7 +172,7 @@ func (c *Connector) collectHosts(ctx context.Context) (map[string]HostAttrs, err
 }
 
 func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, error) {
-	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

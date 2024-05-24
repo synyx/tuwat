@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	html "html/template"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -52,11 +50,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if host.CurrentState != "0" {
 			state, err := strconv.ParseInt(host.CurrentState, 10, 32)
 			if err != nil {
-				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			}
 			stateChange, err := strconv.ParseInt(host.LastStateChange, 10, 64)
 			if err != nil {
-				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			}
 
 			alert := connectors.Alert{
@@ -91,11 +89,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 			state, err := strconv.ParseInt(service.CurrentState, 10, 32)
 			if err != nil {
-				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			}
 			stateChange, err := strconv.ParseInt(service.LastStateChange, 10, 64)
 			if err != nil {
-				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			}
 
 			alert := connectors.Alert{
@@ -125,7 +123,7 @@ func (c *Connector) String() string {
 }
 
 func (c *Connector) collectHosts(ctx context.Context) (map[string]host, error) {
-	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+"/state"))
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+"/state"))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+"/state", nil)
 	if err != nil {
