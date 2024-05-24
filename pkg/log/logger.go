@@ -46,7 +46,6 @@ func Initialize(cfg *config.Config) func() {
 		otelzap.WithMinLevel(zap.DebugLevel),
 		otelzap.WithCaller(true),
 		otelzap.WithStackTrace(false),
-		otelzap.WithTraceIDField(true),
 	)
 	reversionFunctions = append(reversionFunctions, otelzap.ReplaceGlobals(otelLogger))
 
