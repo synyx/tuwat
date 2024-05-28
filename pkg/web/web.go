@@ -16,7 +16,6 @@ import (
 	"runtime"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/websocket"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
@@ -213,6 +212,8 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 
 	flusher.Flush()
 
+	clientId := randomClientId()
+
 	return func(data webContent) error {
 		data.Version = version.Info.Version
 		data.Environment = h.environment
@@ -226,8 +227,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 			panic(err)
 		}
 
-		tr := trace.SpanFromContext(req.Context())
-		_, err = fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID())
+		_, err = fmt.Fprintf(w, "id: %s\n", clientId)
 		_, err = fmt.Fprint(w, "event: message\n")
 
 		scanner := bufio.NewScanner(buf)

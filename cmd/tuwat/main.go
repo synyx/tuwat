@@ -32,7 +32,6 @@ func main() {
 	}
 
 	log.Initialize(cfg)
-	log.InitializeTracer(appCtx, cfg)
 
 	clk := clock.New()
 	aggregator := aggregation.NewAggregator(cfg, clk)

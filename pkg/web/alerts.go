@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/websocket"
 
 	"github.com/synyx/tuwat/pkg/web/common"
@@ -48,29 +47,29 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 	renderer := h.wsRenderer(s, "alerts.gohtml")
 
-	tr := trace.SpanFromContext(s.Request().Context()).SpanContext().TraceID().String()
+	clientId := randomClientId()
 	slog.InfoContext(s.Request().Context(), "Registering websocket connection",
-		slog.String("client", tr),
+		slog.String("client", clientId),
 		slog.String("dashboard", dashboardName))
-	update := h.aggregator.Register(tr)
-	defer h.aggregator.Unregister(tr)
+	update := h.aggregator.Register(clientId)
+	defer h.aggregator.Unregister(clientId)
 
 	for {
 		select {
 		case _, ok := <-update:
 			if !ok {
 				slog.DebugContext(s.Request().Context(), "stop sending to websocket client, update channel closed",
-					slog.String("client", tr))
+					slog.String("client", clientId))
 				update = nil
 			}
 
 			slog.DebugContext(s.Request().Context(), "sending to websocket client",
-				slog.String("client", tr))
+				slog.String("client", clientId))
 			aggregate := h.aggregator.Alerts(dashboardName)
 			renderer(webContent{Content: aggregate})
 		case <-s.Request().Context().Done():
 			slog.DebugContext(s.Request().Context(), "stop sending to websocket client, req ctx done",
-				slog.String("client", tr))
+				slog.String("client", clientId))
 			return
 		}
 	}
@@ -93,7 +92,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 	renderer, cancel := h.sseRenderer(w, req, "alerts.gohtml")
 	defer cancel()
 
-	tr := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String()
+	tr := randomClientId()
 	slog.InfoContext(req.Context(), "Registering sse connection", slog.String("client", tr))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-
 	"golang.org/x/oauth2"
 
 	"github.com/synyx/tuwat/pkg/version"
@@ -42,9 +40,6 @@ func (cfg *HTTPConfig) Client() *http.Client {
 	if cfg.Username != "" {
 		tr = &basicAuthRoundTripper{cfg.Username, cfg.Password, tr}
 	}
-
-	// Add tracing to the client connections
-	tr = otelhttp.NewTransport(tr)
 
 	client := &http.Client{Transport: tr}
 

@@ -15,8 +15,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
@@ -49,7 +47,6 @@ type BlockedAlert struct {
 type Aggregator struct {
 	interval time.Duration
 	clock    clock.Clock
-	tracer   trace.Tracer
 
 	connectors    []connectors.Connector
 	whereTempl    *text.Template
@@ -95,8 +92,7 @@ func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 		cmu:           new(sync.RWMutex),
 		amu:           new(sync.RWMutex),
 
-		clock:  clock,
-		tracer: otel.Tracer("aggregator"),
+		clock: clock,
 	}
 
 	a.lastAccess.Store(clock.Now())
@@ -193,9 +189,6 @@ outer:
 func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	var wg sync.WaitGroup
 
-	startTime := time.Now()
-	ctx, span := a.tracer.Start(ctx, "collection", trace.WithTimestamp(startTime))
-
 	ctx, cancel := context.WithTimeout(ctx, a.interval/2)
 	defer cancel()
 
@@ -239,7 +232,6 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 
 	wg.Wait()
 	slog.DebugContext(ctx, "Collection end")
-	span.End(trace.WithTimestamp(time.Now()))
 	close(collect)
 }
 
