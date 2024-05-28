@@ -2,8 +2,6 @@ module github.com/synyx/tuwat
 
 go 1.22
 
-toolchain go1.22.2
-
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/benbjohnson/clock v1.3.5
