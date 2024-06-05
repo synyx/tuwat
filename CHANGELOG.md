@@ -1,12 +1,16 @@
 # Releases
 
-## 1.8.0 - 2024-05-20 Icinga2 Host ACKs
+## 1.8.0 - 2024-06-05 Icinga2 Host ACKs
 
 * Downtimes and acknowledgements as well as disabling notifications
   for a host will also disable those for the services on this host.
   This differs from `icinga` and `nagios`, as they allow actions
   like `Schedule downtime for this host` vs. `allow downtime for
   this host and all services`.
+* Potentially breaking: Change logging system from `zap` to stdlib
+  `slog`.  In case the logs are parsed using external systems, the
+  logs are now in a different format.
+  This was done to reduce the overall amount of dependencies.
 
 ## 1.7.0 - 2024-04-29 Negative Times
 
