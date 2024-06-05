@@ -2,12 +2,10 @@ package alertmanager
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"slices"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
@@ -42,9 +40,9 @@ func (h *alertmanagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				otelzap.Ctx(r.Context()).Error("panic serving", zap.Error(err))
+				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
 			default:
-				otelzap.Ctx(r.Context()).Error("panic serving", zap.Any("error", err))
+				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
 			}
 
 			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)

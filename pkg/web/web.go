@@ -9,15 +9,14 @@ import (
 	"fmt"
 	html "html/template"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"os"
 	"path"
 	"runtime"
 	"time"
 
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
@@ -83,9 +82,9 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				otelzap.Ctx(r.Context()).Error("panic serving", zap.Error(err))
+				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
 			default:
-				otelzap.Ctx(r.Context()).Error("panic serving", zap.Any("error", err))
+				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
 			}
 
 			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
@@ -113,7 +112,7 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
-		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
+		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
 		panic(err)
 	}
 
@@ -129,7 +128,7 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
-			otelzap.Ctx(req.Context()).Error("template execution failed", zap.Error(err))
+			slog.ErrorContext(req.Context(), "template execution failed", slog.Any("error", err))
 			panic(err)
 		}
 	}
@@ -149,7 +148,7 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
-		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
+		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
 		panic(err)
 	}
 
@@ -164,7 +163,7 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 
 		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
 		if err != nil {
-			otelzap.Ctx(req.Context()).Error("template execution failed", zap.Error(err))
+			slog.ErrorContext(req.Context(), "template execution failed", slog.Any("error", err))
 			panic(err)
 		}
 	}
@@ -186,7 +185,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
-		otelzap.Ctx(req.Context()).Error("compiling template failed", zap.Error(err))
+		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
 		panic(err)
 	}
 
@@ -223,7 +222,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 
 		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
 		if err != nil {
-			otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
+			slog.InfoContext(req.Context(), "template execution failed", slog.Any("error", err))
 			panic(err)
 		}
 
@@ -242,7 +241,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 		flusher.Flush()
 
 		if err != nil {
-			otelzap.Ctx(req.Context()).Info("template execution failed", zap.Error(err))
+			slog.InfoContext(req.Context(), "template execution failed", slog.Any("error", err))
 		}
 		return err
 	}, cancel
@@ -264,7 +263,7 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
-		otelzap.Ctx(s.Request().Context()).Error("compiling template failed", zap.Error(err))
+		slog.ErrorContext(s.Request().Context(), "compiling template failed", slog.Any("error", err))
 		panic(err)
 	}
 
@@ -282,13 +281,13 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
 		if err != nil {
-			otelzap.Ctx(s.Request().Context()).Info("template execution failed", zap.Error(err))
+			slog.InfoContext(s.Request().Context(), "template execution failed", slog.Any("error", err))
 			panic(err)
 		}
 
 		_, err = w.Write(buf.Bytes())
 		if err != nil {
-			otelzap.Ctx(s.Request().Context()).Info("sending failed", zap.Error(err))
+			slog.InfoContext(s.Request().Context(), "sending failed", slog.Any("error", err))
 			panic(err)
 		}
 	}

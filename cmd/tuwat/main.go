@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/benbjohnson/clock"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/aggregation"
 	"github.com/synyx/tuwat/pkg/config"
@@ -53,17 +52,17 @@ func main() {
 	for {
 		select {
 		case <-reconfigure:
-			otelzap.Ctx(appCtx).Info("Rereading configuration")
+			slog.InfoContext(appCtx, "Rereading configuration")
 
 			cfg, err := config.NewConfiguration()
 			if err != nil {
-				otelzap.Ctx(appCtx).Error("Failed to read new configuration", zap.Error(err))
+				slog.ErrorContext(appCtx, "Failed to read new configuration", slog.Any("error", err))
 				break
 			}
 
 			aggregator.Reconfigure(cfg)
 		case <-appCtx.Done():
-			otelzap.Ctx(appCtx).Info("Exiting")
+			slog.InfoContext(appCtx, "Exiting")
 			return
 		}
 	}

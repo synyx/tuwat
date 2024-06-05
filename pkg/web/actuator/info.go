@@ -2,10 +2,8 @@ package actuator
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/version"
 )
@@ -24,6 +22,6 @@ func (v *InfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	if err := encoder.Encode(v.versionInfo); err != nil {
-		otelzap.Ctx(r.Context()).Debug("error serving info", zap.Error(err))
+		slog.DebugContext(r.Context(), "error serving info", slog.Any("error", err))
 	}
 }

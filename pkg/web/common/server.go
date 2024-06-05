@@ -2,12 +2,11 @@ package common
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 )
 
 func Serve(ctx context.Context, addr string, handler http.Handler) {
@@ -30,16 +29,16 @@ func Serve(ctx context.Context, addr string, handler http.Handler) {
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
 			// Error from closing listeners, or context timeout:
-			otelzap.Ctx(ctx).Error("error shutting down http server", zap.Error(err))
+			slog.ErrorContext(ctx, "error shutting down http server", slog.Any("error", err))
 		}
 		close(idleConnectionsClosed)
 	}()
 
-	otelzap.Ctx(ctx).Info("Starting http server", zap.String("addr", addr))
+	slog.InfoContext(ctx, "Starting http server", slog.String("addr", addr))
 
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		// Still try to start, application might still do useful work
-		otelzap.Ctx(ctx).DPanic("http server failed to start", zap.Error(err))
+		slog.ErrorContext(ctx, "http server failed to start", slog.Any("error", err))
 		return
 	}
 

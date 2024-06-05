@@ -3,7 +3,9 @@ package log
 import (
 	"context"
 	"io"
+	"log/slog"
 	"net/url"
+	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -15,7 +17,6 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/version"
@@ -45,7 +46,8 @@ func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {
 func stdoutTracer(cfg *config.Config) (tp *tracesdk.TracerProvider) {
 	exporter, err := stdout.New()
 	if err != nil {
-		zap.L().Fatal("creating new stdout tracer", zap.Error(err))
+		slog.Error("creating new stdout tracer", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	return tracesdk.NewTracerProvider(
@@ -64,7 +66,8 @@ func stdoutTracer(cfg *config.Config) (tp *tracesdk.TracerProvider) {
 func noopTracer() *tracesdk.TracerProvider {
 	exporter, err := stdout.New(stdout.WithWriter(io.Discard))
 	if err != nil {
-		zap.L().Fatal("creating noop tracer", zap.Error(err))
+		slog.Error("creating noop tracer", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	return tracesdk.NewTracerProvider(
@@ -76,7 +79,8 @@ func noopTracer() *tracesdk.TracerProvider {
 func otelHttpTracer(ctx context.Context, cfg *config.Config) *tracesdk.TracerProvider {
 	u, err := url.Parse(cfg.OtelUrl)
 	if err != nil {
-		zap.L().Fatal("creating OTLP trace exporter", zap.Error(err))
+		slog.Error("creating OTLP trace exporter", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	options := []otlptracehttp.Option{otlptracehttp.WithEndpoint(u.Host)}
@@ -93,7 +97,7 @@ func otelHttpTracer(ctx context.Context, cfg *config.Config) *tracesdk.TracerPro
 
 	exporter, err := otlptracehttp.New(ctx, options...)
 	if err != nil {
-		zap.L().Warn("creating OTLP trace exporter", zap.Error(err))
+		slog.Error("creating OTLP trace exporter", slog.Any("error", err))
 		return noopTracer()
 	}
 
@@ -118,6 +122,7 @@ func tracerShutdown(appCtx context.Context, tp *tracesdk.TracerProvider) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	if err := tp.Shutdown(ctx); err != nil {
-		zap.L().Fatal("shutting down tracer", zap.Error(err))
+		slog.Error("shutting down tracer", slog.Any("error", err))
+		os.Exit(1)
 	}
 }

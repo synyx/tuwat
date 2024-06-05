@@ -7,14 +7,12 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -86,15 +84,15 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if sourceAlert.Status.State == "active" && severity == "error" {
 			state = connectors.Critical
 		} else {
-			otelzap.Ctx(ctx).DPanic("Cannot parse: Unknown state",
-				zap.Any("state", sourceAlert.Status.State),
-				zap.Any("severity", severity),
+			slog.ErrorContext(ctx, "Cannot parse: Unknown state",
+				slog.Any("state", sourceAlert.Status.State),
+				slog.Any("severity", severity),
 			)
 		}
 
 		last, err := time.Parse("2006-01-02T15:04:05Z07", sourceAlert.StartsAt)
 		if err != nil {
-			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 		}
 
 		var links []html.HTML
@@ -172,11 +170,11 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 	var response []alert
 	err = decoder.Decode(&response)
 	if err != nil {
-		otelzap.Ctx(ctx).DPanic("Cannot parse",
-			zap.String("url", c.config.URL),
-			zap.String("data", buf.String()),
-			zap.Any("status", res.StatusCode),
-			zap.Error(err))
+		slog.ErrorContext(ctx, "Cannot parse",
+			slog.String("url", c.config.URL),
+			slog.String("data", buf.String()),
+			slog.Any("status", res.StatusCode),
+			slog.Any("error", err))
 		return nil, err
 	}
 
@@ -185,7 +183,7 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
 
 func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, error) {
 
-	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {

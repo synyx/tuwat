@@ -7,13 +7,11 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -62,7 +60,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		last, err := time.Parse("2006-01-02T15:04:05", host.LastReport)
 		if err != nil {
-			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 		}
 
 		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
@@ -116,7 +114,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 		// read open bracket
 		t, err := decoder.Token()
 		if err != nil {
-			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 		}
 
 		if d, ok := t.(json.Delim); ok && d == '{' {
@@ -124,7 +122,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 		pageHandler:
 			for t, err := decoder.Token(); err == nil; t, err = decoder.Token() {
 				if err != nil {
-					otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+					slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 				}
 
 				if s, ok := t.(string); ok && s == "next" {
@@ -140,7 +138,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 				if s, ok := t.(string); ok && s == "results" {
 					t, err := decoder.Token()
 					if d, ok := t.(json.Delim); ok && d != '[' {
-						otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+						slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 					}
 					break pageHandler
 				}
@@ -155,7 +153,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 			// decode an array value (Message)
 			err := decoder.Decode(&h)
 			if err != nil {
-				otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+				slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			}
 
 			response = append(response, h)
@@ -164,11 +162,11 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 		// read closing bracket
 		t, err = decoder.Token()
 		if err != nil {
-			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			return nil, err
 		}
 
-		otelzap.Ctx(ctx).Debug("Would pull next", zap.String("url", next))
+		slog.DebugContext(ctx, "Would pull next", slog.String("url", next))
 	}
 
 	return response, nil
@@ -201,7 +199,7 @@ func getCached[T any](ctx context.Context, c *Connector, cache map[string]*T, ra
 }
 
 func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, error) {
-	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
@@ -219,7 +217,7 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 	client := &http.Client{Transport: tr}
 
 	res, err := client.Do(req)
-	otelzap.Ctx(ctx).Debug("patchman get", zap.String("url", req.URL.String()), zap.Error(err))
+	slog.DebugContext(ctx, "patchman get", slog.String("url", req.URL.String()), slog.Any("error", err))
 	if err != nil {
 		return nil, err
 	}

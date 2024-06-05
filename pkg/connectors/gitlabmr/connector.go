@@ -7,13 +7,11 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -50,7 +48,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	for _, mr := range mRs {
 		last, err := time.Parse(time.RFC3339, mr.UpdatedAt)
 		if err != nil {
-			otelzap.Ctx(ctx).DPanic("Cannot parse", zap.Error(err))
+			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 		}
 
 		project := strings.SplitN(mr.References.Full, "!", 2)[0]
@@ -162,10 +160,10 @@ func (c *Connector) collectMRsFrom(ctx context.Context, from string) ([]mergeReq
 		var mrs []mergeRequest
 		err = decoder.Decode(&mrs)
 		if err != nil {
-			otelzap.Ctx(ctx).DPanic("Cannot parse",
-				zap.String("url", c.config.URL+from),
-				zap.String("data", buf.String()),
-				zap.Error(err))
+			slog.ErrorContext(ctx, "Cannot parse",
+				slog.String("url", c.config.URL+from),
+				slog.String("data", buf.String()),
+				slog.Any("error", err))
 			return nil, err
 		}
 		mergeRequests = append(mergeRequests, mrs...)
@@ -188,7 +186,7 @@ func (c *Connector) collectMRsFrom(ctx context.Context, from string) ([]mergeReq
 // will get 100 results.  The calling code is responsible for collecting more
 // results.
 func (c *Connector) get(ctx context.Context, endpoint string, query map[string]string) (io.ReadCloser, string, error) {
-	otelzap.Ctx(ctx).Debug("getting alerts", zap.String("url", c.config.URL+endpoint))
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
 	if err != nil {
