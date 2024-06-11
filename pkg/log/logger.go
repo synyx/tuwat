@@ -5,24 +5,41 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"regexp"
 	"runtime"
 
-	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"github.com/go-slog/otelslog"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/embedded"
-	"go.opentelemetry.io/otel/log/global"
-	"go.opentelemetry.io/otel/trace"
+	otelglobal "go.opentelemetry.io/otel/log/global"
 
 	"github.com/synyx/tuwat/pkg/config"
-	"github.com/synyx/tuwat/pkg/version"
 )
 
+var cleanFileRE = regexp.MustCompile("(.*/|^)(pkg|cmd)(.*)")
+
 func Initialize(cfg *config.Config) {
-	provider := newSlogProvider(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	handler := otelslog.NewHandler(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
+		Level:     slog.LevelInfo,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			switch a.Key {
+			case slog.SourceKey:
+				source, _ := a.Value.Any().(*slog.Source)
+				if source != nil {
+					source.File = cleanFileRE.ReplaceAllString(source.File, "$2$3")
+				}
+			case "error":
+				if a.Value.String() == "<nil>" {
+					return slog.Attr{}
+				}
+			}
+			return a
+		},
 	}))
-	global.SetLoggerProvider(provider)
-	slog.SetDefault(otelslog.NewLogger(version.Info.Application, otelslog.WithLoggerProvider(provider)))
+	provider := newSlogProvider(handler)
+	otelglobal.SetLoggerProvider(provider)
+	slog.SetDefault(slog.New(handler))
 
 	slog.Info("initialized logger", slog.String("environment", cfg.Environment))
 }
@@ -55,24 +72,12 @@ type SlogLogger struct {
 func (s SlogLogger) Emit(ctx context.Context, record otellog.Record) {
 	fields := make([]slog.Attr, 0, record.AttributesLen())
 	record.WalkAttributes(func(v otellog.KeyValue) bool {
-		if !v.Value.Empty() {
-			if v.Value.Kind() == otellog.KindString && (v.Value.String() == "<nil>" || v.Value.String() == "") {
-				return true
-			}
-			fields = append(fields, slog.Any(v.Key, v.Value))
+		if v.Value.Kind() == otellog.KindEmpty {
+			return true
 		}
+		fields = append(fields, slog.Any(v.Key, v.Value))
 		return true
 	})
-
-	if span := trace.SpanFromContext(ctx); span.IsRecording() {
-		sCtx := span.SpanContext()
-		if sCtx.HasTraceID() {
-			fields = append(fields, slog.String("traceId", sCtx.TraceID().String()))
-		}
-		if sCtx.HasSpanID() {
-			fields = append(fields, slog.String("spanId", sCtx.SpanID().String()))
-		}
-	}
 
 	msg := slogBody(record.Body())
 
