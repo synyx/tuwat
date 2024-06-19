@@ -160,8 +160,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 		}
 
 		// read closing bracket
-		t, err = decoder.Token()
-		if err != nil {
+		if _, err := decoder.Token(); err != nil {
 			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			return nil, err
 		}
