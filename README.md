@@ -34,7 +34,7 @@ Connectors for
 
 ## Configuration
 
-See the [Example Config](./config.example.toml) for configuration.
+See the [Example Config](config.example.toml) for configuration.
 
 Available styles:
 

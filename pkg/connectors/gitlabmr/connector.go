@@ -1,7 +1,6 @@
 package gitlabmr
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -152,18 +151,15 @@ func (c *Connector) collectMRsFrom(ctx context.Context, from string) ([]mergeReq
 		}
 		defer body.Close()
 
-		b, _ := io.ReadAll(body)
-		buf := bytes.NewBuffer(b)
-
-		decoder := json.NewDecoder(buf)
+		decoder := json.NewDecoder(body)
 
 		var mrs []mergeRequest
 		err = decoder.Decode(&mrs)
 		if err != nil {
 			slog.ErrorContext(ctx, "Cannot parse",
 				slog.String("url", c.config.URL+from),
-				slog.String("data", buf.String()),
-				slog.Any("error", err))
+				slog.Any("error", err),
+			)
 			return nil, err
 		}
 		mergeRequests = append(mergeRequests, mrs...)

@@ -62,7 +62,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	for _, sourceAlert := range sourceAlerts {
-		severity, _ := sourceAlert.Labels["severity"]
+		severity := ""
+		if s, ok := sourceAlert.Labels["severity"]; ok {
+			severity = s
+		}
 
 		if sourceAlert.Status.State == "suppressed" {
 			continue

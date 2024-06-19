@@ -1,5 +1,10 @@
 # Releases
 
+## 1.9.x
+
+* Using `tuwat -otelUrl stdout` or `TUWAT_OTEL_URL=stdout` now enables
+  tracing output on stdout.
+
 ## 1.8.0 - 2024-06-05 Icinga2 Host ACKs
 
 * Downtimes and acknowledgements as well as disabling notifications

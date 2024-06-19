@@ -22,6 +22,6 @@ func TestNewHealthAccumulator(t *testing.T) {
 	cancel()
 }
 
-func testCheck(ctx context.Context) (status Status, message string) {
+func testCheck(context.Context) (status Status, message string) {
 	return Up, "test"
 }
