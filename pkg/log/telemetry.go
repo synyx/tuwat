@@ -25,7 +25,9 @@ import (
 func InitializeTracer(appCtx context.Context, cfg *config.Config) trace.Tracer {
 	var tp *tracesdk.TracerProvider
 
-	if cfg.OtelUrl != "" {
+	if cfg.OtelUrl == "stdout" {
+		tp = stdoutTracer(cfg)
+	} else if cfg.OtelUrl != "" {
 		tp = otelHttpTracer(appCtx, cfg)
 	} else {
 		tp = noopTracer()
