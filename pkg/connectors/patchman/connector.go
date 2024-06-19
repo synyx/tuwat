@@ -66,9 +66,9 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
 			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
 
-		os, err := getCached(ctx, c, c.osCache, host.OSURL)
-		arch, err := getCached(ctx, c, c.archCache, host.ArchURL)
-		domain, err := getCached(ctx, c, c.domainCache, host.DomainURL)
+		os, _ := getCached(ctx, c, c.osCache, host.OSURL)
+		arch, _ := getCached(ctx, c, c.archCache, host.ArchURL)
+		domain, _ := getCached(ctx, c, c.domainCache, host.DomainURL)
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
