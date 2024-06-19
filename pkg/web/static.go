@@ -8,14 +8,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-
-	"github.com/synyx/tuwat/pkg/config"
 )
 
 //go:embed static
 var content embed.FS
 
-func newNoListingFileServer(cfg *config.Config) http.Handler {
+func newNoListingFileServer() http.Handler {
 	var staticFS fs.FS
 
 	if dir, ok := os.LookupEnv("TUWAT_STATICDIR"); ok {
