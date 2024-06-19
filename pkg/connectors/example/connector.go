@@ -2,7 +2,6 @@ package example
 
 import (
 	"context"
-	"fmt"
 	html "html/template"
 	"math/rand"
 	"time"
@@ -127,5 +126,5 @@ func exampleRandomAlert() connectors.Alert {
 }
 
 func (c *Connector) String() string {
-	return fmt.Sprintf("Example Connector")
+	return "Example Connector"
 }
