@@ -32,7 +32,7 @@ func TestConnector(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if alerts == nil || len(alerts) == 0 {
+	if len(alerts) == 0 {
 		t.Error("There should be alerts")
 	}
 }
