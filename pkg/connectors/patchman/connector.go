@@ -54,7 +54,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	var alerts []connectors.Alert
 
 	for _, host := range hosts {
-		if host.SecurityUpdateCount == 0 && host.RebootRequired == false {
+		if host.SecurityUpdateCount == 0 && !host.RebootRequired {
 			continue
 		}
 
