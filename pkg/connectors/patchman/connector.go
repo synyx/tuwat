@@ -121,10 +121,6 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 			// Paging necessary
 		pageHandler:
 			for t, err := decoder.Token(); err == nil; t, err = decoder.Token() {
-				if err != nil {
-					slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
-				}
-
 				if s, ok := t.(string); ok && s == "next" {
 					s, err := decoder.Token()
 					if s, ok := s.(string); ok && err == nil {
