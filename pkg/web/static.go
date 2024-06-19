@@ -41,8 +41,7 @@ func (nfs noListingFS) Open(path string) (http.File, error) {
 		return nil, err
 	}
 
-	s, err := f.Stat()
-	if s.IsDir() {
+	if s, err := f.Stat(); err == nil && s.IsDir() {
 		index := filepath.Join(path, "index.html")
 		if _, err := nfs.fs.Open(index); err != nil {
 			closeErr := f.Close()
