@@ -6,6 +6,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	html "html/template"
 	"io/fs"
@@ -47,6 +48,11 @@ type webContent struct {
 	Style       string
 }
 
+var (
+	TemplateError   = errors.New("template execution failed")
+	DisconnectError = errors.New("client disconnected")
+)
+
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
 	handler := &webHandler{
 		aggregator:  aggregator,
@@ -82,7 +88,11 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
+				if errors.Is(err, DisconnectError) {
+					slog.DebugContext(r.Context(), "panic serving", slog.Any("error", err))
+				} else {
+					slog.InfoContext(r.Context(), "panic serving", slog.Any("error", err))
+				}
 			default:
 				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
 			}
@@ -99,11 +109,8 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
 
 func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_base.gohtml"}, patterns...)
-	templateDefinition = "base"
+	templateFiles := append([]string{"_base.gohtml"}, patterns...)
+	templateDefinition := "base"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -126,20 +133,15 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 		data.Dashboards = h.dashboards
 		data.Dashboard = dashboardName
 
-		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
-		if err != nil {
-			slog.ErrorContext(req.Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 	}
 }
 
 func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
-	templateDefinition = "base"
+	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition := "base"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -161,10 +163,8 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 		data.Style = h.style
 		data.Dashboard = dashboardName
 
-		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
-		if err != nil {
-			slog.ErrorContext(req.Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 	}
 }
@@ -172,11 +172,8 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 type sseRenderFunc func(data webContent) error
 
 func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) (sseRenderFunc, context.CancelFunc) {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
-	templateDefinition = "content-container"
+	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition := "content-container"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -186,7 +183,9 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
-		panic(err)
+		return func(data webContent) error {
+			return err
+		}, func() {}
 	}
 
 	// prepare the flusher
@@ -204,8 +203,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	_, err = fmt.Fprint(w, "retry: 60000\n\n")
-	if err != nil {
+	if _, err := fmt.Fprint(w, "retry: 60000\n\n"); err != nil {
 		return func(data webContent) error {
 			return err
 		}, cancel
@@ -220,41 +218,45 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 
 		buf := new(bytes.Buffer)
 
-		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
-		if err != nil {
-			slog.InfoContext(req.Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 
 		tr := trace.SpanFromContext(req.Context())
-		_, err = fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID())
-		_, err = fmt.Fprint(w, "event: message\n")
+		if _, err := fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID()); err != nil {
+			panic(errors.Join(DisconnectError, err))
+		}
+		if _, err := fmt.Fprint(w, "event: message\n"); err != nil {
+			panic(errors.Join(DisconnectError, err))
+		}
 
 		scanner := bufio.NewScanner(buf)
 		for scanner.Scan() {
-			_, err = w.Write([]byte("data: "))
-			_, err = w.Write(scanner.Bytes())
-			_, err = w.Write([]byte("\n"))
-
+			if _, err := w.Write([]byte("data: ")); err != nil {
+				panic(errors.Join(DisconnectError, err))
+			}
+			if _, err := w.Write(scanner.Bytes()); err != nil {
+				panic(errors.Join(DisconnectError, err))
+			}
+			if _, err := w.Write([]byte("\n")); err != nil {
+				panic(errors.Join(DisconnectError, err))
+			}
 		}
-		_, err = w.Write([]byte("\n"))
+
+		if _, err := w.Write([]byte("\n")); err != nil {
+			panic(errors.Join(DisconnectError, err))
+		}
 		flusher.Flush()
 
-		if err != nil {
-			slog.InfoContext(req.Context(), "template execution failed", slog.Any("error", err))
-		}
-		return err
+		return nil
 	}, cancel
 }
 
 type wsRenderFunc func(data webContent)
 
 func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderFunc {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
-	templateDefinition = "content-container"
+	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition := "content-container"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -263,14 +265,13 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
-		slog.ErrorContext(s.Request().Context(), "compiling template failed", slog.Any("error", err))
-		panic(err)
+		panic(errors.Join(TemplateError, err))
 	}
 
 	return func(data webContent) {
 		w, err := s.NewFrameWriter(websocket.TextFrame)
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("cannot create websocket text frame writer: %w", err))
 		}
 
 		data.Version = version.Info.Version
@@ -279,16 +280,12 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 		buf := new(bytes.Buffer)
 
-		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
-		if err != nil {
-			slog.InfoContext(s.Request().Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 
-		_, err = w.Write(buf.Bytes())
-		if err != nil {
-			slog.InfoContext(s.Request().Context(), "sending failed", slog.Any("error", err))
-			panic(err)
+		if _, err = w.Write(buf.Bytes()); err != nil {
+			panic(errors.Join(DisconnectError, err))
 		}
 	}
 }

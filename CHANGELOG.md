@@ -1,5 +1,12 @@
 # Releases
 
+## 1.8.X - 2024-07-XX Tracing IDs
+
+* Add spans/traces to logs to enable correlation
+* Cleanup file paths in logging for visibility by stripping the
+  build path.
+* Remove error logging keys containing `<nil>` strings.
+
 ## 1.8.0 - 2024-06-05 Icinga2 Host ACKs
 
 * Downtimes and acknowledgements as well as disabling notifications
