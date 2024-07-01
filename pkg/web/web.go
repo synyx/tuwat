@@ -105,11 +105,8 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
 
 func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_base.gohtml"}, patterns...)
-	templateDefinition = "base"
+	templateFiles := append([]string{"_base.gohtml"}, patterns...)
+	templateDefinition := "base"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -139,11 +136,8 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 }
 
 func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
-	templateDefinition = "base"
+	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition := "base"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -174,11 +168,8 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 type sseRenderFunc func(data webContent) error
 
 func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) (sseRenderFunc, context.CancelFunc) {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
-	templateDefinition = "content-container"
+	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition := "content-container"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
@@ -260,11 +251,8 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 type wsRenderFunc func(data webContent)
 
 func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderFunc {
-	var templateFiles []string
-	var templateDefinition string
-
-	templateFiles = append([]string{"_stream.gohtml"}, patterns...)
-	templateDefinition = "content-container"
+	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+	templateDefinition := "content-container"
 
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
