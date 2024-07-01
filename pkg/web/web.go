@@ -88,7 +88,11 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
+				if errors.Is(err, DisconnectError) {
+					slog.DebugContext(r.Context(), "panic serving", slog.Any("error", err))
+				} else {
+					slog.InfoContext(r.Context(), "panic serving", slog.Any("error", err))
+				}
 			default:
 				slog.ErrorContext(r.Context(), "panic serving", slog.Any("error", err))
 			}
