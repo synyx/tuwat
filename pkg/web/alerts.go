@@ -50,7 +50,6 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 
 	tr := trace.SpanFromContext(s.Request().Context()).SpanContext().TraceID().String()
 	slog.InfoContext(s.Request().Context(), "Registering websocket connection",
-		slog.String("client", tr),
 		slog.String("dashboard", dashboardName))
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
@@ -59,18 +58,15 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				slog.DebugContext(s.Request().Context(), "stop sending to websocket client, update channel closed",
-					slog.String("client", tr))
+				slog.DebugContext(s.Request().Context(), "stop sending to websocket client, update channel closed")
 				update = nil
 			}
 
-			slog.DebugContext(s.Request().Context(), "sending to websocket client",
-				slog.String("client", tr))
+			slog.DebugContext(s.Request().Context(), "sending to websocket client")
 			aggregate := h.aggregator.Alerts(dashboardName)
 			renderer(webContent{Content: aggregate})
 		case <-s.Request().Context().Done():
-			slog.DebugContext(s.Request().Context(), "stop sending to websocket client, req ctx done",
-				slog.String("client", tr))
+			slog.DebugContext(s.Request().Context(), "stop sending to websocket client, req ctx done")
 			return
 		}
 	}
@@ -94,7 +90,7 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 	defer cancel()
 
 	tr := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String()
-	slog.InfoContext(req.Context(), "Registering sse connection", slog.String("client", tr))
+	slog.InfoContext(req.Context(), "Registering sse connection")
 	update := h.aggregator.Register(tr)
 	defer h.aggregator.Unregister(tr)
 
@@ -102,20 +98,18 @@ func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 		select {
 		case _, ok := <-update:
 			if !ok {
-				slog.DebugContext(req.Context(), "stop sending to sse client", slog.String("client", tr))
+				slog.DebugContext(req.Context(), "stop sending to sse client")
 				return
 			}
 
-			slog.DebugContext(req.Context(), "sending to sse client", slog.String("client", tr))
+			slog.DebugContext(req.Context(), "sending to sse client")
 			aggregate := h.aggregator.Alerts(dashboardName)
 			if err := renderer(webContent{Content: aggregate}); err != nil {
-				slog.DebugContext(req.Context(), "stop sending to sse client",
-					slog.String("client", tr),
-					slog.Any("error", err))
+				slog.DebugContext(req.Context(), "stop sending to sse client", slog.Any("error", err))
 				return
 			}
 		case <-req.Context().Done():
-			slog.InfoContext(req.Context(), "stop sending to sse client", slog.String("client", tr))
+			slog.InfoContext(req.Context(), "stop sending to sse client")
 			return
 		}
 	}
