@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"path/filepath"
@@ -33,7 +34,11 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
 			case error:
-				slog.InfoContext(s.Request().Context(), "panic serving", slog.Any("error", err))
+				if errors.Is(err, DisconnectError) {
+					slog.DebugContext(s.Request().Context(), "panic serving", slog.Any("error", err))
+				} else {
+					slog.InfoContext(s.Request().Context(), "panic serving", slog.Any("error", err))
+				}
 			default:
 				slog.InfoContext(s.Request().Context(), "panic serving", slog.Any("error", err))
 			}

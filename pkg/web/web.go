@@ -6,6 +6,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	html "html/template"
 	"io/fs"
@@ -46,6 +47,11 @@ type webContent struct {
 	Dashboard   string
 	Style       string
 }
+
+var (
+	TemplateError   = errors.New("template execution failed")
+	DisconnectError = errors.New("client disconnected")
+)
 
 func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
 	handler := &webHandler{
@@ -126,10 +132,8 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 		data.Dashboards = h.dashboards
 		data.Dashboard = dashboardName
 
-		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
-		if err != nil {
-			slog.ErrorContext(req.Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 	}
 }
@@ -161,10 +165,8 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 		data.Style = h.style
 		data.Dashboard = dashboardName
 
-		err := tmpl.ExecuteTemplate(w, templateDefinition, data)
-		if err != nil {
-			slog.ErrorContext(req.Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 	}
 }
@@ -186,7 +188,9 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
 		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
-		panic(err)
+		return func(data webContent) error {
+			return err
+		}, func() {}
 	}
 
 	// prepare the flusher
@@ -204,8 +208,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	_, err = fmt.Fprint(w, "retry: 60000\n\n")
-	if err != nil {
+	if _, err := fmt.Fprint(w, "retry: 60000\n\n"); err != nil {
 		return func(data webContent) error {
 			return err
 		}, cancel
@@ -220,30 +223,37 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 
 		buf := new(bytes.Buffer)
 
-		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
-		if err != nil {
-			slog.InfoContext(req.Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
+			panic(errors.Join(TemplateError, err))
 		}
 
 		tr := trace.SpanFromContext(req.Context())
-		_, err = fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID())
-		_, err = fmt.Fprint(w, "event: message\n")
+		if _, err := fmt.Fprintf(w, "id: %s\n", tr.SpanContext().TraceID()); err != nil {
+			panic(errors.Join(DisconnectError, err))
+		}
+		if _, err := fmt.Fprint(w, "event: message\n"); err != nil {
+			panic(errors.Join(DisconnectError, err))
+		}
 
 		scanner := bufio.NewScanner(buf)
 		for scanner.Scan() {
-			_, err = w.Write([]byte("data: "))
-			_, err = w.Write(scanner.Bytes())
-			_, err = w.Write([]byte("\n"))
-
+			if _, err := w.Write([]byte("data: ")); err != nil {
+				panic(errors.Join(DisconnectError, err))
+			}
+			if _, err := w.Write(scanner.Bytes()); err != nil {
+				panic(errors.Join(DisconnectError, err))
+			}
+			if _, err := w.Write([]byte("\n")); err != nil {
+				panic(errors.Join(DisconnectError, err))
+			}
 		}
-		_, err = w.Write([]byte("\n"))
+
+		if _, err := w.Write([]byte("\n")); err != nil {
+			panic(errors.Join(DisconnectError, err))
+		}
 		flusher.Flush()
 
-		if err != nil {
-			slog.InfoContext(req.Context(), "template execution failed", slog.Any("error", err))
-		}
-		return err
+		return nil
 	}, cancel
 }
 
@@ -263,8 +273,7 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	tmpl := html.New(templateDefinition).Funcs(funcs)
 	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
 	if err != nil {
-		slog.ErrorContext(s.Request().Context(), "compiling template failed", slog.Any("error", err))
-		panic(err)
+		panic(errors.Join(TemplateError, err))
 	}
 
 	return func(data webContent) {
@@ -281,14 +290,12 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
 		if err != nil {
-			slog.InfoContext(s.Request().Context(), "template execution failed", slog.Any("error", err))
-			panic(err)
+			panic(errors.Join(TemplateError, err))
 		}
 
 		_, err = w.Write(buf.Bytes())
 		if err != nil {
-			slog.InfoContext(s.Request().Context(), "sending failed", slog.Any("error", err))
-			panic(err)
+			panic(errors.Join(DisconnectError, err))
 		}
 	}
 }
