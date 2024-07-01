@@ -279,7 +279,7 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	return func(data webContent) {
 		w, err := s.NewFrameWriter(websocket.TextFrame)
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("cannot create websocket text frame writer: %w", err))
 		}
 
 		data.Version = version.Info.Version
@@ -288,13 +288,11 @@ func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 
 		buf := new(bytes.Buffer)
 
-		err = tmpl.ExecuteTemplate(buf, templateDefinition, data)
-		if err != nil {
+		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
 			panic(errors.Join(TemplateError, err))
 		}
 
-		_, err = w.Write(buf.Bytes())
-		if err != nil {
+		if _, err = w.Write(buf.Bytes()); err != nil {
 			panic(errors.Join(DisconnectError, err))
 		}
 	}
