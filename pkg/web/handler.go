@@ -13,7 +13,7 @@ import (
 func Handle(appCtx context.Context, cfg *config.Config, webHandler, alertmanagerApi http.Handler) {
 	muxer := newTracedMuxer()
 
-	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer(cfg)))
+	muxer.Handle("static", "/static/", http.StripPrefix("/static", newNoListingFileServer()))
 	muxer.Handle("api", "/api/alertmanager/", http.StripPrefix("/api/alertmanager", alertmanagerApi))
 	muxer.Handle("web", "/", webHandler)
 

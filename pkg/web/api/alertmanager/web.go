@@ -112,12 +112,12 @@ func (h *alertmanagerHandler) alerts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if active == false {
+	if !active {
 		gettableAlerts = slices.DeleteFunc(gettableAlerts, func(x gettableAlert) bool {
 			return x.Status.State == "active"
 		})
 	}
-	if inhibited == false {
+	if !inhibited {
 		gettableAlerts = slices.DeleteFunc(gettableAlerts, func(x gettableAlert) bool {
 			return x.Status.State == "suppressed"
 		})

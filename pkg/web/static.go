@@ -8,14 +8,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-
-	"github.com/synyx/tuwat/pkg/config"
 )
 
 //go:embed static
 var content embed.FS
 
-func newNoListingFileServer(cfg *config.Config) http.Handler {
+func newNoListingFileServer() http.Handler {
 	var staticFS fs.FS
 
 	if dir, ok := os.LookupEnv("TUWAT_STATICDIR"); ok {
@@ -41,8 +39,7 @@ func (nfs noListingFS) Open(path string) (http.File, error) {
 		return nil, err
 	}
 
-	s, err := f.Stat()
-	if s.IsDir() {
+	if s, err := f.Stat(); err == nil && s.IsDir() {
 		index := filepath.Join(path, "index.html")
 		if _, err := nfs.fs.Open(index); err != nil {
 			closeErr := f.Close()

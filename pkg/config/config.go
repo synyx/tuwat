@@ -153,7 +153,7 @@ func NewConfiguration() (config *Config, err error) {
 
 	rootConfig := cfg.defaultConfiguration()
 
-	if err := cfg.loadConfigFile(*fConfigFile, &rootConfig); errors.Is(err, os.ErrNotExist) {
+	if err = cfg.loadConfigFile(*fConfigFile, &rootConfig); errors.Is(err, os.ErrNotExist) {
 		// ignore missing configuration and start with defaults
 		err = nil
 	} else if err != nil {

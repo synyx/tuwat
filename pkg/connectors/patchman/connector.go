@@ -54,7 +54,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	var alerts []connectors.Alert
 
 	for _, host := range hosts {
-		if host.SecurityUpdateCount == 0 && host.RebootRequired == false {
+		if host.SecurityUpdateCount == 0 && !host.RebootRequired {
 			continue
 		}
 
@@ -66,9 +66,9 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
 			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
 
-		os, err := getCached(ctx, c, c.osCache, host.OSURL)
-		arch, err := getCached(ctx, c, c.archCache, host.ArchURL)
-		domain, err := getCached(ctx, c, c.domainCache, host.DomainURL)
+		os, _ := getCached(ctx, c, c.osCache, host.OSURL)
+		arch, _ := getCached(ctx, c, c.archCache, host.ArchURL)
+		domain, _ := getCached(ctx, c, c.domainCache, host.DomainURL)
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -121,10 +121,6 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 			// Paging necessary
 		pageHandler:
 			for t, err := decoder.Token(); err == nil; t, err = decoder.Token() {
-				if err != nil {
-					slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
-				}
-
 				if s, ok := t.(string); ok && s == "next" {
 					s, err := decoder.Token()
 					if s, ok := s.(string); ok && err == nil {
@@ -160,8 +156,7 @@ func (c *Connector) collectHosts(ctx context.Context) ([]host, error) {
 		}
 
 		// read closing bracket
-		t, err = decoder.Token()
-		if err != nil {
+		if _, err := decoder.Token(); err != nil {
 			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 			return nil, err
 		}

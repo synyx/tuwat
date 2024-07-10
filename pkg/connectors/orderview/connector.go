@@ -46,7 +46,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	for _, sourceAlert := range sourceAlerts {
 
-		state := connectors.Warning
+		var state connectors.State
 		switch sourceAlert.State {
 		case 2:
 			state = connectors.Critical
