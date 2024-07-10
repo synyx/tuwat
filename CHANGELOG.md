@@ -1,9 +1,13 @@
 # Releases
 
-## 1.9.x
+## 1.9.x - 2024-07-XX Tracing IDs
 
 * Using `tuwat -otelUrl stdout` or `TUWAT_OTEL_URL=stdout` now enables
   tracing output on stdout.
+* Add spans/traces to logs to enable correlation
+* Cleanup file paths in logging for visibility by stripping the
+  build path.
+* Remove error logging keys containing `<nil>` strings.
 
 ## 1.8.0 - 2024-06-05 Icinga2 Host ACKs
 
