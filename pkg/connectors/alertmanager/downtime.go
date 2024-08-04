@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime, error) {
-	res, err := c.get(ctx, "/silences")
+	res, err := c.get(ctx, "/api/v2/silences")
 	if err != nil {
 		return nil, err
 	}
