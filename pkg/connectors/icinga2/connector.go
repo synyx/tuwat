@@ -58,9 +58,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if !host.EnableNotifications {
 			ignoredHosts[host.DisplayName] = true
 			continue
-		} else if host.DowntimeDepth > 0 {
-			ignoredHosts[host.DisplayName] = true
-			continue
 		} else if host.State == 0 {
 			continue
 		}
@@ -95,8 +92,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if service.Acknowledgement > 0 {
 			continue
 		} else if !service.EnableNotifications {
-			continue
-		} else if service.DowntimeDepth > 0 {
 			continue
 		} else if service.State == 0 {
 			continue

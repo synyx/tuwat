@@ -246,7 +246,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 			var downtimes []connectors.Downtime
 			if dc, ok := c.(connectors.DowntimeCollector); ok {
 				var err2 error
-				downtimes, err2 := dc.CollectDowntimes(ctx)
+				downtimes, err2 = dc.CollectDowntimes(ctx)
 				slog.InfoContext(ctx, "Collected downtimes",
 					slog.String("collector", c.String()),
 					slog.String("tag", c.Tag()),
@@ -305,7 +305,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		downtimes := make([]ruleengine.Rule, 0, len(r.downtimes))
 		for _, dt := range r.downtimes {
 			rule := ruleengine.Rule{
-				Description: fmt.Sprintf("Downtimed by %s: %s", dt.Comment, dt.Author),
+				Description: fmt.Sprintf("Downtimed by %s: %s", dt.Author, dt.Comment),
 				Labels:      dt.Matchers,
 			}
 			downtimes = append(downtimes, rule)

@@ -69,8 +69,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		if sourceAlert.Status.State == stateSuppressed {
 			continue
-		} else if len(sourceAlert.Status.SilencedBy) > 0 {
-			continue
 		} else if severity == severityNone {
 			continue
 		}

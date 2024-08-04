@@ -17,7 +17,7 @@ export function toggleFilteredStatus(button, table) {
 
         event.detail.render = function (streamElement) {
             fallbackToDefaultActions(streamElement)
-            toggleFilteredStatus();
+            toggleFilteredStatus(button, table);
         }
     }
     document.addEventListener("turbo:before-stream-render", reRegisterToggleFilteredStatus);
