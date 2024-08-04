@@ -2,6 +2,7 @@ package aggregation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	html "html/template"
 	"log/slog"
@@ -22,7 +23,7 @@ import (
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/rules"
+	"github.com/synyx/tuwat/pkg/ruleengine"
 )
 
 type Aggregate struct {
@@ -30,6 +31,7 @@ type Aggregate struct {
 	Alerts        []Alert
 	GroupedAlerts []AlertGroup
 	Blocked       []BlockedAlert
+	Known         []KnownAlert
 }
 
 type Alert struct {
@@ -56,6 +58,11 @@ type BlockedAlert struct {
 	Reason string
 }
 
+type KnownAlert struct {
+	Alert
+	Downtime string
+}
+
 type Aggregator struct {
 	interval time.Duration
 	clock    clock.Clock
@@ -76,10 +83,11 @@ type Aggregator struct {
 }
 
 type result struct {
+	connector connectors.Connector
 	tag       string
 	alerts    []connectors.Alert
+	downtimes []connectors.Downtime
 	error     error
-	connector connectors.Connector
 }
 
 var (
@@ -217,24 +225,40 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 		wg.Add(1)
 		go func(c connectors.Connector) {
 			defer wg.Done()
-
-			alerts, err := c.Collect(ctx)
-
 			// Be graceful on errors accessing the handed-in channel
 			defer func() {
 				if e := recover(); e != nil {
-					err = fmt.Errorf("error delivering result %w", e.(error))
+					err := fmt.Errorf("error delivering result %w", e.(error))
+					slog.InfoContext(ctx, "Collection cycle error",
+						slog.String("collector", c.String()),
+						slog.String("tag", c.Tag()),
+						slog.Any("error", err))
 				}
-				slog.InfoContext(ctx, "Collected alerts",
+			}()
+
+			alerts, err := c.Collect(ctx)
+			slog.InfoContext(ctx, "Collected alerts",
+				slog.String("collector", c.String()),
+				slog.String("tag", c.Tag()),
+				slog.Int("count", len(alerts)),
+				slog.Any("error", err))
+
+			var downtimes []connectors.Downtime
+			if dc, ok := c.(connectors.DowntimeCollector); ok {
+				var err2 error
+				downtimes, err2 := dc.CollectDowntimes(ctx)
+				slog.InfoContext(ctx, "Collected downtimes",
 					slog.String("collector", c.String()),
 					slog.String("tag", c.Tag()),
-					slog.Int("count", len(alerts)),
-					slog.Any("error", err))
-			}()
+					slog.Int("count", len(downtimes)),
+					slog.Any("error", err2))
+				err = errors.Join(err, err2)
+			}
 
 			r := result{
 				tag:       c.Tag(),
 				alerts:    alerts,
+				downtimes: downtimes,
 				error:     err,
 				connector: c,
 			}
@@ -264,6 +288,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 
 	var alerts []Alert
 	var blockedAlerts []BlockedAlert
+	var knownAlerts []KnownAlert
 
 	for _, r := range results {
 		if r.error != nil {
@@ -276,6 +301,14 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 				Status:  connectors.Critical.String(),
 			}
 			alerts = append(alerts, alert)
+		}
+		downtimes := make([]ruleengine.Rule, 0, len(r.downtimes))
+		for _, dt := range r.downtimes {
+			rule := ruleengine.Rule{
+				Description: fmt.Sprintf("Downtimed by %s: %s", dt.Comment, dt.Author),
+				Labels:      dt.Matchers,
+			}
+			downtimes = append(downtimes, rule)
 		}
 
 		for _, al := range r.alerts {
@@ -311,7 +344,13 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if reason := a.allow(dashboard, alert); reason == "" {
+			if downtime, ok := a.downtimed(alert, downtimes); ok {
+				knownAlert := KnownAlert{
+					Alert:    alert,
+					Downtime: downtime,
+				}
+				knownAlerts = append(knownAlerts, knownAlert)
+			} else if reason := a.allow(alert, dashboard); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
 				blockedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: reason})
@@ -333,6 +372,10 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		return blockedAlerts[i].When < blockedAlerts[j].When
 	})
 
+	sort.Slice(knownAlerts, func(i, j int) bool {
+		return knownAlerts[i].When < knownAlerts[j].When
+	})
+
 	a.amu.Lock()
 	a.CheckTime = a.clock.Now()
 	a.current[dashboard.Name] = Aggregate{
@@ -340,6 +383,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		Alerts:        alerts,
 		GroupedAlerts: alertGroups,
 		Blocked:       blockedAlerts,
+		Known:         knownAlerts,
 	}
 	a.amu.Unlock()
 
@@ -450,29 +494,29 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 }
 
 // allow will match rules against the ruleset.
-func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
-	reason := a.matchAlertWithReason(dashboard, alert)
+func (a *Aggregator) allow(alert Alert, dashboard *config.Dashboard) string {
+	rule, matched := a.matchAlert(alert, dashboard.Filter)
 
 	switch dashboard.Mode {
 	case config.Including:
 		// Revert logic when the dashboard configuration is in `including` mode.
-		if reason == "" {
+		if !matched {
 			return "Unmatched"
 		} else {
 			return ""
 		}
 	case config.Excluding:
-		return reason
+		return rule.Description
 	}
 	panic("unknown mode: " + dashboard.Mode.String())
 }
 
-// matchAlertWithReason will match anything which does match against any of the
+// matchAlert will match anything which does match against any of the
 // configured rules.
-func (a *Aggregator) matchAlertWithReason(dashboard *config.Dashboard, alert Alert) string {
+func (a *Aggregator) matchAlert(alert Alert, rules []ruleengine.Rule) (ruleengine.Rule, bool) {
 nextRule:
-	for _, rule := range dashboard.Filter {
-		matchers := make(map[string]rules.RuleMatcher)
+	for _, rule := range rules {
+		matchers := make(map[string]ruleengine.RuleMatcher)
 
 		// if it's a rule working on top level concepts:
 		if rule.What != nil && rule.What.MatchString(alert.What) {
@@ -509,11 +553,17 @@ nextRule:
 			}
 		}
 		if matchCount > 0 && matchCount == len(matchers) {
-			return rule.Description
+			return rule, true
 		}
 	}
 
-	return ""
+	return ruleengine.Rule{}, false
+}
+
+// downtimed will match rules against the downtimes.
+func (a *Aggregator) downtimed(alert Alert, rules []ruleengine.Rule) (string, bool) {
+	rule, matched := a.matchAlert(alert, rules)
+	return rule.Description, matched
 }
 
 func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {

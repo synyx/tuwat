@@ -10,14 +10,14 @@ import (
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/log"
-	"github.com/synyx/tuwat/pkg/rules"
+	"github.com/synyx/tuwat/pkg/ruleengine"
 )
 
 func TestAggregation(t *testing.T) {
-	filter := config.Rule{
+	filter := ruleengine.Rule{
 		Description: "Ignore MRs",
-		Labels: map[string]rules.RuleMatcher{
-			"Hostname": rules.ParseRuleMatcher("~= gitlab"),
+		Labels: map[string]ruleengine.RuleMatcher{
+			"Hostname": ruleengine.ParseRuleMatcher("~= gitlab"),
 		},
 	}
 
@@ -29,10 +29,10 @@ func TestAggregation(t *testing.T) {
 }
 
 func TestGroupedAggregation(t *testing.T) {
-	filter := config.Rule{
+	filter := ruleengine.Rule{
 		Description: "Ignore MRs",
-		Labels: map[string]rules.RuleMatcher{
-			"Hostname": rules.ParseRuleMatcher("~= gitlab"),
+		Labels: map[string]ruleengine.RuleMatcher{
+			"Hostname": ruleengine.ParseRuleMatcher("~= gitlab"),
 		},
 	}
 
@@ -44,12 +44,12 @@ func TestGroupedAggregation(t *testing.T) {
 }
 
 func TestWhen(t *testing.T) {
-	filter := config.Rule{
+	filter := ruleengine.Rule{
 		Description: "Non-Escalated",
-		When:        rules.ParseRuleMatcher("< 86400"), // < 2d
-		What:        rules.ParseRuleMatcher(": Update"),
-		Labels: map[string]rules.RuleMatcher{
-			"Type": rules.ParseRuleMatcher("PullRequest"),
+		When:        ruleengine.ParseRuleMatcher("< 86400"), // < 2d
+		What:        ruleengine.ParseRuleMatcher(": Update"),
+		Labels: map[string]ruleengine.RuleMatcher{
+			"Type": ruleengine.ParseRuleMatcher("PullRequest"),
 		},
 	}
 
@@ -63,7 +63,7 @@ func TestWhen(t *testing.T) {
 	}
 }
 
-func aggregator(mode config.DashboardMode, groupAlerts bool, filters ...config.Rule) *Aggregator {
+func aggregator(mode config.DashboardMode, groupAlerts bool, filters ...ruleengine.Rule) *Aggregator {
 	cfg, _ := config.NewConfiguration()
 	log.Initialize(cfg)
 

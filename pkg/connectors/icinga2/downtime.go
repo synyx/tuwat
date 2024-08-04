@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/rules"
+	"github.com/synyx/tuwat/pkg/ruleengine"
 )
 
 func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime, error) {
@@ -29,10 +29,10 @@ func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime
 			continue
 		}
 
-		matchers := make(map[string]rules.RuleMatcher)
-		matchers["Hostname"] = rules.ParseRuleMatcher("= " + dt.Downtime.HostName)
+		matchers := make(map[string]ruleengine.RuleMatcher)
+		matchers["Hostname"] = ruleengine.ParseRuleMatcher("= " + dt.Downtime.HostName)
 		if dt.Downtime.ServiceName != "" {
-			matchers["Service"] = rules.ParseRuleMatcher("= " + dt.Downtime.ServiceName)
+			matchers["Service"] = ruleengine.ParseRuleMatcher("= " + dt.Downtime.ServiceName)
 		}
 
 		downtime := connectors.Downtime{

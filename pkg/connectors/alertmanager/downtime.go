@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/rules"
+	"github.com/synyx/tuwat/pkg/ruleengine"
 )
 
 func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime, error) {
@@ -29,14 +29,14 @@ func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime
 			continue
 		}
 
-		matchers := make(map[string]rules.RuleMatcher)
+		matchers := make(map[string]ruleengine.RuleMatcher)
 		for _, m := range dt.Matchers {
 			if m.IsEqual {
-				matchers[m.Name] = rules.ParseRuleMatcher("= " + m.Value)
+				matchers[m.Name] = ruleengine.ParseRuleMatcher("= " + m.Value)
 			} else if m.IsRegex {
-				matchers[m.Name] = rules.ParseRuleMatcher("~= " + m.Value)
+				matchers[m.Name] = ruleengine.ParseRuleMatcher("~= " + m.Value)
 			} else {
-				matchers[m.Name] = rules.ParseRuleMatcher("~= " + regexp.QuoteMeta(m.Value))
+				matchers[m.Name] = ruleengine.ParseRuleMatcher("~= " + regexp.QuoteMeta(m.Value))
 			}
 		}
 
