@@ -3,7 +3,7 @@ package connectors
 import (
 	"time"
 
-	"github.com/synyx/tuwat/pkg/config"
+	"github.com/synyx/tuwat/pkg/rules"
 )
 
 type Downtime struct {
@@ -11,5 +11,5 @@ type Downtime struct {
 	Comment   string
 	StartTime time.Time
 	EndTime   time.Time
-	Matchers  map[string]config.RuleMatcher
+	Matchers  map[string]rules.RuleMatcher
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"regexp"
 
-	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/rules"
 )
 
 func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime, error) {
@@ -29,14 +29,14 @@ func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime
 			continue
 		}
 
-		matchers := make(map[string]config.RuleMatcher)
+		matchers := make(map[string]rules.RuleMatcher)
 		for _, m := range dt.Matchers {
 			if m.IsEqual {
-				matchers[m.Name] = config.ParseRuleMatcher("= " + m.Value)
+				matchers[m.Name] = rules.ParseRuleMatcher("= " + m.Value)
 			} else if m.IsRegex {
-				matchers[m.Name] = config.ParseRuleMatcher("~= " + m.Value)
+				matchers[m.Name] = rules.ParseRuleMatcher("~= " + m.Value)
 			} else {
-				matchers[m.Name] = config.ParseRuleMatcher("~= " + regexp.QuoteMeta(m.Value))
+				matchers[m.Name] = rules.ParseRuleMatcher("~= " + regexp.QuoteMeta(m.Value))
 			}
 		}
 
