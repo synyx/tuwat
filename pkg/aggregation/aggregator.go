@@ -22,6 +22,7 @@ import (
 
 	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/rules"
 )
 
 type Aggregate struct {
@@ -471,7 +472,7 @@ func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
 func (a *Aggregator) matchAlertWithReason(dashboard *config.Dashboard, alert Alert) string {
 nextRule:
 	for _, rule := range dashboard.Filter {
-		matchers := make(map[string]config.RuleMatcher)
+		matchers := make(map[string]rules.RuleMatcher)
 
 		// if it's a rule working on top level concepts:
 		if rule.What != nil && rule.What.MatchString(alert.What) {

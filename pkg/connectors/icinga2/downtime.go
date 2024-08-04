@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/rules"
 )
 
 func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime, error) {
@@ -29,10 +29,10 @@ func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime
 			continue
 		}
 
-		matchers := make(map[string]config.RuleMatcher)
-		matchers["Hostname"] = config.ParseRuleMatcher("= " + dt.Downtime.HostName)
+		matchers := make(map[string]rules.RuleMatcher)
+		matchers["Hostname"] = rules.ParseRuleMatcher("= " + dt.Downtime.HostName)
 		if dt.Downtime.ServiceName != "" {
-			matchers["Service"] = config.ParseRuleMatcher("= " + dt.Downtime.ServiceName)
+			matchers["Service"] = rules.ParseRuleMatcher("= " + dt.Downtime.ServiceName)
 		}
 
 		downtime := connectors.Downtime{
