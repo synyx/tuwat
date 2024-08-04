@@ -65,7 +65,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
-		sec, dec := math.Modf(host.LastStateChange)
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.DisplayName,
@@ -73,7 +72,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"groups":   strings.Join(host.Groups, ","),
 				"Type":     "Host",
 			},
-			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
+			Start:       floatToTime(host.LastStateChange),
 			State:       connectors.State(host.State),
 			Description: "Host down",
 			Details:     host.Output,
@@ -208,4 +207,9 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 
 	return nil, fmt.Errorf("failed to get, unknown status code: %d", res.StatusCode)
+}
+
+func floatToTime(f64 float64) time.Time {
+	sec, dec := math.Modf(f64)
+	return time.Unix(int64(sec), int64(dec*(1e9)))
 }
