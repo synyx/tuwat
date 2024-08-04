@@ -3,7 +3,9 @@ package alertmanager
 import (
 	"context"
 	"encoding/json"
+	"regexp"
 
+	"github.com/synyx/tuwat/pkg/config"
 	"github.com/synyx/tuwat/pkg/connectors"
 )
 
@@ -27,11 +29,23 @@ func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime
 			continue
 		}
 
+		matchers := make(map[string]config.RuleMatcher)
+		for _, m := range dt.Matchers {
+			if m.IsEqual {
+				matchers[m.Name] = config.ParseRuleMatcher("= " + m.Value)
+			} else if m.IsRegex {
+				matchers[m.Name] = config.ParseRuleMatcher("~= " + m.Value)
+			} else {
+				matchers[m.Name] = config.ParseRuleMatcher("~= " + regexp.QuoteMeta(m.Value))
+			}
+		}
+
 		downtime := connectors.Downtime{
 			Author:    dt.CreatedBy,
 			Comment:   dt.Comment,
 			StartTime: parseTime(ctx, dt.StartsAt),
 			EndTime:   parseTime(ctx, dt.EndsAt),
+			Matchers:  matchers,
 		}
 		downtimes = append(downtimes, downtime)
 	}

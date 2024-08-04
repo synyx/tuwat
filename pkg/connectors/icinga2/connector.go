@@ -117,6 +117,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname":   service.HostName,
+				"Service":    service.Name,
 				"Zone":       service.Zone,
 				"Source":     c.config.URL,
 				"groups":     strings.Join(service.Groups, ","),
