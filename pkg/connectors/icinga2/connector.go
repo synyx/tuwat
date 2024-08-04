@@ -78,7 +78,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"groups":   strings.Join(host.Groups, ","),
 				"Type":     "Host",
 			},
-			Start:       floatToTime(host.LastStateChange),
+			Start:       parseTime(host.LastStateChange),
 			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
@@ -240,7 +240,7 @@ func fromServiceState(state int) connectors.State {
 	return connectors.State(state)
 }
 
-func floatToTime(f64 float64) time.Time {
-	sec, dec := math.Modf(f64)
+func parseTime(timeField float64) time.Time {
+	sec, dec := math.Modf(timeField)
 	return time.Unix(int64(sec), int64(dec*(1e9)))
 }

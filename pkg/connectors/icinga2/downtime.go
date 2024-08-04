@@ -7,7 +7,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors"
 )
 
-func (c *Connector) CollectDowntime(ctx context.Context) ([]connectors.Downtime, error) {
+func (c *Connector) CollectDowntimes(ctx context.Context) ([]connectors.Downtime, error) {
 	body, err := c.get("/v1/objects/downtimes", ctx)
 	if err != nil {
 		return nil, err
@@ -31,8 +31,8 @@ func (c *Connector) CollectDowntime(ctx context.Context) ([]connectors.Downtime,
 		downtime := connectors.Downtime{
 			Author:    dt.Downtime.Author,
 			Comment:   dt.Downtime.Comment,
-			StartTime: floatToTime(dt.Downtime.StartTime),
-			EndTime:   floatToTime(dt.Downtime.EndTime),
+			StartTime: parseTime(dt.Downtime.StartTime),
+			EndTime:   parseTime(dt.Downtime.EndTime),
 		}
 		downtimes = append(downtimes, downtime)
 	}

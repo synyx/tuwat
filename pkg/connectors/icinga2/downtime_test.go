@@ -14,7 +14,7 @@ func TestIcinga2Downtime(t *testing.T) {
 	})
 	defer func() { mockServer.Close() }()
 
-	downtimes, err := connector.CollectDowntime(context.Background())
+	downtimes, err := connector.CollectDowntimes(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

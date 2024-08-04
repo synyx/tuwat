@@ -66,9 +66,9 @@ func TestIcinga2AckPropagation(t *testing.T) {
 func testConnector(endpoints map[string]string) (*Connector, *httptest.Server) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
-		for endpoint, json := range endpoints {
+		for endpoint, body := range endpoints {
 			if strings.Contains(req.URL.Path, endpoint) {
-				_, _ = res.Write([]byte(json))
+				_, _ = res.Write([]byte(body))
 			}
 		}
 	}))
