@@ -9,14 +9,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
-func mockConnector() (connectors.Connector, func()) {
+func testConnector(endpoints map[string]string) (*Connector, func()) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
-		_, _ = res.Write([]byte(mockResponse))
+		for endpoint, body := range endpoints {
+			if strings.Contains(req.URL.Path, endpoint) {
+				_, _ = res.Write([]byte(body))
+			}
+		}
 	}))
 
 	cfg := Config{
@@ -30,7 +33,9 @@ func mockConnector() (connectors.Connector, func()) {
 }
 
 func TestConnector(t *testing.T) {
-	connector, closer := mockConnector()
+	connector, closer := testConnector(map[string]string{
+		"/alert": mockAlertResponse,
+	})
 	defer closer()
 	alerts, err := connector.Collect(context.Background())
 	if err != nil {
@@ -44,14 +49,16 @@ func TestConnector(t *testing.T) {
 
 func TestDecode(t *testing.T) {
 	var foo []alert
-	err := json.Unmarshal([]byte(mockResponse), &foo)
+	err := json.Unmarshal([]byte(mockAlertResponse), &foo)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestEncodingOfLinks(t *testing.T) {
-	connector, closer := mockConnector()
+	connector, closer := testConnector(map[string]string{
+		"/alert": mockAlertResponse,
+	})
 	defer closer()
 	alerts, _ := connector.Collect(context.Background())
 
@@ -63,7 +70,7 @@ func TestEncodingOfLinks(t *testing.T) {
 	}
 }
 
-const mockResponse = `
+const mockAlertResponse = `
 [
   {
     "annotations": {
