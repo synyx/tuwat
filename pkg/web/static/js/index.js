@@ -2,7 +2,8 @@ import * as Turbo from '@hotwired/turbo';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { toggleFilteredStatus } from "./toggle-filtered";
 
-toggleFilteredStatus();
+toggleFilteredStatus("toggle-filtered-alerts", "filtered-table");
+toggleFilteredStatus("toggle-downtimed-alerts", "downtimed-table");
 
 class SSEConn {
     constructor(socketUrl) {

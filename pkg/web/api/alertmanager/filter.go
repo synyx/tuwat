@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"strings"
 
-	"github.com/synyx/tuwat/pkg/rules"
+	"github.com/synyx/tuwat/pkg/ruleengine"
 )
 
 type fieldMatcher struct {
 	field string
-	m     rules.RuleMatcher
+	m     ruleengine.RuleMatcher
 }
 
 func parseFilter(val string) []fieldMatcher {
@@ -64,7 +64,7 @@ top:
 		str := s.parseString()
 		return fieldMatcher{
 			field: field,
-			m:     rules.ParseRuleMatcher(prefix + " " + str),
+			m:     ruleengine.ParseRuleMatcher(prefix + " " + str),
 		}
 	}
 }
