@@ -1,3 +1,6 @@
+---
+version: 2
+
 # Before building anything, we need to ensure that go modules and generators are set up correctly
 before:
   hooks:
