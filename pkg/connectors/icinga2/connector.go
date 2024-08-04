@@ -71,7 +71,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 		links = append(links, html.HTML("<a href=\""+c.config.DashboardURL+"/dashboard#!/monitoring/host/show?host="+host.DisplayName+"\" target=\"_blank\" alt=\"Home\">🏠</a>"))
 
-		sec, dec := math.Modf(host.LastStateChange)
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.DisplayName,
@@ -79,7 +78,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"groups":   strings.Join(host.Groups, ","),
 				"Type":     "Host",
 			},
-			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
+			Start:       floatToTime(host.LastStateChange),
 			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
@@ -239,4 +238,9 @@ func fromHostState(state int) connectors.State {
 
 func fromServiceState(state int) connectors.State {
 	return connectors.State(state)
+}
+
+func floatToTime(f64 float64) time.Time {
+	sec, dec := math.Modf(f64)
+	return time.Unix(int64(sec), int64(dec*(1e9)))
 }
