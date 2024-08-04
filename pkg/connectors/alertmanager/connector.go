@@ -93,11 +93,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			)
 		}
 
-		last, err := time.Parse("2006-01-02T15:04:05Z07", sourceAlert.StartsAt)
-		if err != nil {
-			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
-		}
-
 		var links []html.HTML
 		if link, ok := sourceAlert.Annotations["runbook"]; ok {
 			links = append(links, html.HTML("<a href=\""+link+"\" target=\"_blank\" alt=\"Runbook\">📖</a>"))
@@ -131,7 +126,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		alert := connectors.Alert{
 			Labels:      tags,
-			Start:       last,
+			Start:       parseTime(ctx, sourceAlert.StartsAt),
 			State:       state,
 			Description: descr,
 			Details:     details,
@@ -142,6 +137,15 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	return alerts, nil
+}
+
+func parseTime(ctx context.Context, timeField string) time.Time {
+	last, err := time.Parse("2006-01-02T15:04:05Z07", timeField)
+	if err != nil {
+		slog.InfoContext(ctx, "Cannot parse time field", slog.String("field", timeField), slog.Any("error", err))
+	}
+
+	return last
 }
 
 func (c *Connector) String() string {
