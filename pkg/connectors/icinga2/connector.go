@@ -72,7 +72,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"groups":   strings.Join(host.Groups, ","),
 				"Type":     "Host",
 			},
-			Start:       floatToTime(host.LastStateChange),
+			Start:       parseTime(host.LastStateChange),
 			State:       connectors.State(host.State),
 			Description: "Host down",
 			Details:     host.Output,
@@ -209,7 +209,7 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	return nil, fmt.Errorf("failed to get, unknown status code: %d", res.StatusCode)
 }
 
-func floatToTime(f64 float64) time.Time {
-	sec, dec := math.Modf(f64)
+func parseTime(timeField float64) time.Time {
+	sec, dec := math.Modf(timeField)
 	return time.Unix(int64(sec), int64(dec*(1e9)))
 }
