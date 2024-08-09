@@ -1,5 +1,9 @@
 # Releases
 
+## 1.9.1 - 2024-08-09 Maintenance
+
+* Only dependency upgrades
+
 ## 1.9.0 - 2024-07-10 Tracing IDs
 
 * Using `tuwat -otelUrl stdout` or `TUWAT_OTEL_URL=stdout` now enables
