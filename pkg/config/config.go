@@ -19,6 +19,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/example"
 	"github.com/synyx/tuwat/pkg/connectors/github"
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
+	"github.com/synyx/tuwat/pkg/connectors/graylog"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
 	"github.com/synyx/tuwat/pkg/connectors/orderview"
@@ -89,6 +90,7 @@ type rootConfig struct {
 	Redmines      []redmine.Config         `toml:"redmine"`
 	Orderview     []orderview.Config       `toml:"orderview"`
 	Example       []example.Config         `toml:"example"`
+	Graylogs      []graylog.Config         `toml:"graylog"`
 }
 
 func NewConfiguration() (config *Config, err error) {
@@ -238,6 +240,9 @@ func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	}
 	for _, connectorConfig := range rootConfig.Example {
 		cfg.Connectors = append(cfg.Connectors, example.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.Graylogs {
+		cfg.Connectors = append(cfg.Connectors, graylog.NewConnector(&connectorConfig))
 	}
 
 	// Add template for
