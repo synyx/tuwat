@@ -1,11 +1,15 @@
 package graylog
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	html "html/template"
+	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
@@ -34,23 +38,32 @@ func (c *Connector) Tag() string {
 }
 
 func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
-	sourceAlerts, err := c.collectAlerts(ctx)
+	sourceAlerts, err := c.collectAlertEvents(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var alerts []connectors.Alert
 
-	for _, sourceAlert := range sourceAlerts {
+	for _, sourceAlert := range sourceAlerts.Events {
+		var streams []string
+		for _, stream := range sourceAlerts.Context.Streams {
+			streams = append(streams, stream.Title)
+		}
 
+		labels := map[string]string{
+			"Source": sourceAlert.Event.Source,
+			"Stream": strings.Join(streams, ","),
+		}
 		alert := connectors.Alert{
-			Labels:      nil,
-			Start:       parseTime(sourceAlert.TriggeredAt),
-			State:       0,
-			Description: "",
-			Details:     "",
-			Links:       nil,
-			Silence:     nil,
+			Labels:      labels,
+			Start:       parseTime(sourceAlert.Event.TimeRangeStart),
+			State:       connectors.Warning,
+			Description: sourceAlert.Event.Message,
+			Details:     sourceAlerts.Context.EventDefinitions[sourceAlert.Event.EventDefinitionId].Description,
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + c.config.URL + "/alerts" + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
+			},
 		}
 		alerts = append(alerts, alert)
 	}
@@ -62,45 +75,62 @@ func (c *Connector) String() string {
 	return fmt.Sprintf("Alertmanager (%s)", c.config.URL)
 }
 
-func (c *Connector) collectAlerts(ctx context.Context) ([]alert, error) {
-	res, err := c.get(ctx, "/api/streams/alerts/paginated")
+func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults, error) {
+	// TODO: Use pagination, however, we're unlikely to hit this limit for unresolved alerts
+	body := eventsSearchParameters{
+		Query:   "",
+		Page:    1,
+		PerPage: 25,
+		Filter: eventsSearchFilter{
+			Alerts: AlertsFilterOnly,
+		},
+		TimeRange: timeRange{
+			Type:  TimeRangeRelative,
+			Range: 60,
+		},
+	}
+
+	res, err := c.post(ctx, "/api/events/search", body)
 	if err != nil {
-		return nil, err
+		return eventsSearchResults{}, err
 	}
 	defer res.Body.Close()
 
-	decoder := json.NewDecoder(res.Body)
+	b, _ := io.ReadAll(res.Body)
+	buf := bytes.NewBuffer(b)
+	decoder := json.NewDecoder(buf)
 
-	var response alertResult
+	var response eventsSearchResults
 	err = decoder.Decode(&response)
 	if err != nil {
 		slog.ErrorContext(ctx, "Cannot parse",
 			slog.String("url", c.config.URL),
 			slog.Any("status", res.StatusCode),
 			slog.Any("error", err))
-		return nil, err
+		return eventsSearchResults{}, err
 	}
 
-	return response.Alerts, nil
+	return response, nil
 }
 
-func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, error) {
+func (c *Connector) post(ctx context.Context, endpoint string, body interface{}) (*http.Response, error) {
 
 	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
+	buf := new(bytes.Buffer)
+	encoder := json.NewEncoder(buf)
+	err := encoder.Encode(body)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Accept", "application/json")
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.URL+endpoint, buf)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: Use pagination, however, we're unlikely to hit this limit for unresolved alerts
-	q := req.URL.Query()
-	q.Set("skip", "0")
-	q.Set("limit", "300")
-	q.Set("state", "unresolved")
-	req.URL.RawQuery = q.Encode()
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 
 	res, err := c.client.Do(req)
 	if err != nil {
