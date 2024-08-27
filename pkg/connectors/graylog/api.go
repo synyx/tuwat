@@ -81,6 +81,7 @@ type eventsSearchEventResult struct {
 	TimeRangeEnd        string              `json:"timerange_end"`
 	Streams             []string            `json:"streams"`
 	Priority            int                 `json:"priority"`
+	GroupByFields       map[string]string   `json:"group_by_fields"`
 }
 
 const (

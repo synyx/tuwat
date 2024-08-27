@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -45,8 +46,15 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	var alerts []connectors.Alert
+	var seenEventDefinitions []string
 
 	for _, sourceAlert := range sourceAlerts.Events {
+		eventAggregationId := eventToAggregationId(sourceAlert)
+		if slices.Contains(seenEventDefinitions, eventAggregationId) {
+			continue
+		}
+		seenEventDefinitions = append(seenEventDefinitions, eventAggregationId)
+
 		var streams []string
 		for _, stream := range sourceAlerts.Context.Streams {
 			streams = append(streams, stream.Title)
@@ -88,7 +96,7 @@ func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults
 		PerPage: 25,
 		TimeRange: timeRange{
 			Type:  TimeRangeRelative,
-			Range: 60,
+			Range: 600,
 		},
 	}
 
@@ -182,4 +190,16 @@ func alertToLabel(isAlert bool) string {
 		return "Alert"
 	}
 	return "Event"
+}
+
+func eventToAggregationId(sourceAlert eventsSearchResult) string {
+	event := sourceAlert.Event
+	id := event.EventDefinitionId
+	var fieldValues []string
+	for _, value := range event.GroupByFields {
+		fieldValues = append(fieldValues, value)
+	}
+	slices.Sort(fieldValues)
+	id += strings.Join(fieldValues, "")
+	return id
 }
