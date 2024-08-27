@@ -1,7 +1,10 @@
 package graylog
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -33,6 +36,23 @@ func TestConnector(t *testing.T) {
 func testConnector(endpoints map[string]string) (*Connector, *httptest.Server) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
+
+		b, _ := io.ReadAll(req.Body)
+		buf := bytes.NewBuffer(b)
+		decoder := json.NewDecoder(buf)
+
+		var request eventsSearchParameters
+		err := decoder.Decode(&request)
+		if err != nil {
+			panic(err)
+		}
+
+		if request.Page > 1 {
+			if _, err := res.Write([]byte(mockEventEmptyResult)); err != nil {
+				panic(err)
+			}
+		}
+
 		for endpoint, body := range endpoints {
 			if strings.Contains(req.URL.Path, endpoint) {
 				if _, err := res.Write([]byte(body)); err != nil {
@@ -88,14 +108,14 @@ const mockEventSearchResult = `
   ],
   "parameters": {
     "page": 1,
-    "per_page": 25,
+    "per_page": 100,
     "timerange": {
       "type": "relative",
-      "range": 60
+      "range": 600
     },
     "query": "",
     "filter": {
-      "alerts": "only",
+      "alerts": "include",
       "event_definitions": []
     },
     "sort_by": "timestamp",
@@ -118,6 +138,37 @@ const mockEventSearchResult = `
         "description": "Stream containing all events created by Graylog"
       }
     }
+  }
+}
+`
+
+const mockEventEmptyResult = `
+{
+  "events": [],
+  "used_indices": [
+    "gl-events_24",
+    "gl-system-events_1"
+  ],
+  "parameters": {
+    "page": 2,
+    "per_page": 100,
+    "timerange": {
+      "type": "relative",
+      "range": 600
+    },
+    "query": "",
+    "filter": {
+      "alerts": "include",
+      "event_definitions": []
+    },
+    "sort_by": "timestamp",
+    "sort_direction": "desc"
+  },
+  "total_events": 4,
+  "duration": 3,
+  "context": {
+    "event_definitions": {},
+    "streams": {}
   }
 }
 `
