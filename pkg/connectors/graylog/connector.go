@@ -72,7 +72,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 }
 
 func (c *Connector) String() string {
-	return fmt.Sprintf("Alertmanager (%s)", c.config.URL)
+	return fmt.Sprintf("Graylog (%s)", c.config.URL)
 }
 
 func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults, error) {
