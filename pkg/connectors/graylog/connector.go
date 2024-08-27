@@ -113,10 +113,6 @@ func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults
 		return eventsSearchResults{}, err
 	}
 
-	slog.InfoContext(ctx, "Graylog response",
-		slog.Any("raw", b),
-		slog.Any("response", response))
-
 	return response, nil
 }
 
@@ -130,9 +126,6 @@ func (c *Connector) post(ctx context.Context, endpoint string, body interface{})
 	if err != nil {
 		return nil, err
 	}
-
-	slog.InfoContext(ctx, "Graylog request",
-		slog.Any("request", buf))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.URL+endpoint, buf)
 	if err != nil {
