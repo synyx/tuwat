@@ -67,10 +67,10 @@
 </table>
 
 <h3 class="filtered">
-    Filtered Alerts ({{ len .Content.Blocked }})
-    <button id="toggle-filtered-alerts">Show</button>
+    Known Alerts ({{ len .Content.Downtimes }})
+    <button id="toggle-downtimed-alerts">Show</button>
 </h3>
-<table id="filtered-table" class="widetable filtered hidden">
+<table id="downtimed-table" class="widetable filtered hidden">
     <thead>
     <tr>
         <th width="30%">Where</th>
@@ -79,7 +79,7 @@
     </tr>
     </thead>
     <tbody>
-    {{range .Content.Blocked}}
+    {{range .Content.Downtimes}}
         <tr>
             <td>
                 {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
@@ -105,12 +105,11 @@
     </tbody>
 </table>
 
-
 <h3 class="filtered">
-    Known Alerts ({{ len .Content.Downtimes }})
-    <button id="toggle-downtimed-alerts">Show</button>
+    Filtered Alerts ({{ len .Content.Blocked }})
+    <button id="toggle-filtered-alerts">Show</button>
 </h3>
-<table id="downtimed-table" class="widetable filtered hidden">
+<table id="filtered-table" class="widetable filtered hidden">
     <thead>
     <tr>
         <th width="30%">Where</th>
@@ -119,7 +118,7 @@
     </tr>
     </thead>
     <tbody>
-    {{range .Content.Downtimes}}
+    {{range .Content.Blocked}}
         <tr>
             <td>
                 {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
