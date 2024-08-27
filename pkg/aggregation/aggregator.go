@@ -427,9 +427,11 @@ func groupAlerts(alerts []Alert) []AlertGroup {
 }
 
 func (a *Aggregator) downtimeDescription(dt connectors.Downtime) string {
-	// endzeit auch in description neben comment
-	// comment abschneiden nach X zeichen (100?), mit `...` enden.
-	return fmt.Sprintf("Downtimed %s: %s", a.niceDate(dt.EndTime), dt.Comment)
+	description := fmt.Sprintf("Downtimed %s: %s", a.niceDate(dt.EndTime), dt.Comment)
+	if len(description) > 100 {
+		description = description[:99] + "…"
+	}
+	return description
 }
 
 func (a *Aggregator) niceDate(t time.Time) string {
