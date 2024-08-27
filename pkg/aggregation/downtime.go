@@ -3,6 +3,7 @@ package aggregation
 import (
 	"fmt"
 	html "html/template"
+	"strings"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
@@ -31,7 +32,13 @@ func (a *Aggregator) downtimeRules(downtimes []connectors.Downtime) []ruleengine
 }
 
 func (a *Aggregator) downtimeDescription(dt connectors.Downtime) string {
-	description := fmt.Sprintf("Downtimed %s: %s", a.niceDate(dt.EndTime), dt.Comment)
+	// Strip all URLs as those will be extracted and shown elsewhere
+	comment := dt.Comment
+	for _, u := range extractUrls(comment) {
+		comment = strings.Replace(comment, u, "", 1)
+	}
+
+	description := fmt.Sprintf("Downtimed %s: %s", a.niceDate(dt.EndTime), comment)
 	if len(description) > 100 {
 		description = description[:99] + "…"
 	}
