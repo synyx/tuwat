@@ -80,7 +80,7 @@
 
 
 <h3 class="filtered">
-    Known Alerts ({{ len .Content.Known }})
+    Known Alerts ({{ len .Content.Downtimes }})
     <button id="toggle-downtimed-alerts">Show</button>
 </h3>
 <table id="downtimed-table" class="widetable filtered hidden">
@@ -92,7 +92,7 @@
     </tr>
     </thead>
     <tbody>
-    {{range .Content.Known}}
+    {{range .Content.Downtimes}}
         <tr>
             <td>
                 {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
