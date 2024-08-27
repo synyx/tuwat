@@ -65,3 +65,10 @@ Tag = 'demo'
 #Tag = "tkt"
 #URL = "https://redmine.example.com"
 #BearerToken = "example3f5bb1632f40bde25d315d53bdec83e"
+#
+#[[graylog]]
+#Tag = 'graylog'
+#URL = "https://graylog.example.com"
+#TimeRange = 600 # query timerange in seconds
+#Username = "example3f5bb1632f40bde25d315d53bdec83e"
+#Password = "token"

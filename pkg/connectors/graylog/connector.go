@@ -24,8 +24,9 @@ type Connector struct {
 }
 
 type Config struct {
-	Tag     string
-	Cluster string
+	Tag       string
+	Cluster   string
+	TimeRange int
 	common.HTTPConfig
 }
 
@@ -90,13 +91,18 @@ func (c *Connector) String() string {
 
 func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults, error) {
 	// TODO: Use pagination, however, we're unlikely to hit this limit for unresolved alerts
+	timeRangeSeconds := c.config.TimeRange
+	if timeRangeSeconds == 0 {
+		timeRangeSeconds = 600
+	}
+
 	body := eventsSearchParameters{
 		Query:   "",
 		Page:    1,
 		PerPage: 100,
 		TimeRange: timeRange{
 			Type:  TimeRangeRelative,
-			Range: 600,
+			Range: timeRangeSeconds,
 		},
 	}
 
