@@ -60,7 +60,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 		alert := connectors.Alert{
 			Labels:      labels,
-			Start:       parseTime(sourceAlert.Event.TimeRangeStart),
+			Start:       parseTime(sourceAlert.Event.TimeStamp),
 			State:       connectors.Warning,
 			Description: sourceAlert.Event.Message,
 			Details:     sourceAlerts.Context.EventDefinitions[sourceAlert.Event.EventDefinitionId].Description,

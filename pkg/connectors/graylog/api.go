@@ -76,6 +76,7 @@ type eventsSearchEventResult struct {
 	Alert               bool                `json:"alert"`
 	Message             string              `json:"message"`
 	Source              string              `json:"source"`
+	TimeStamp           string              `json:"timestamp"`
 	TimeRangeStart      string              `json:"timerange_start"`
 	TimeRangeEnd        string              `json:"timerange_end"`
 	Streams             []string            `json:"streams"`
