@@ -31,7 +31,7 @@ type Aggregate struct {
 	Alerts        []Alert
 	GroupedAlerts []AlertGroup
 	Blocked       []BlockedAlert
-	Downtimes     []KnownAlert
+	Downtimes     []BlockedAlert
 }
 
 type Alert struct {
@@ -56,11 +56,6 @@ type AlertGroup struct {
 type BlockedAlert struct {
 	Alert
 	Reason string
-}
-
-type KnownAlert struct {
-	Alert
-	Downtime string
 }
 
 type Aggregator struct {
@@ -288,7 +283,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 
 	var alerts []Alert
 	var blockedAlerts []BlockedAlert
-	var knownAlerts []KnownAlert
+	var downtimedAlerts []BlockedAlert
 
 	for _, r := range results {
 		if r.error != nil {
@@ -338,14 +333,10 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if description, downtimeIdx, ok := a.downtimed(alert, downtimeRules); ok {
-				downtime := r.downtimes[downtimeIdx]
-				knownAlert := KnownAlert{
-					Alert:    alert,
-					Downtime: description,
-				}
-				knownAlerts = append(knownAlerts, knownAlert)
+			if reason, downtimeIdx, ok := a.downtimed(alert, downtimeRules); ok {
+				downtimedAlerts = append(blockedAlerts, BlockedAlert{Alert: alert, Reason: reason})
 
+				downtime := r.downtimes[downtimeIdx]
 				alert.Labels["DowntimeStart"] = strconv.FormatInt(downtime.StartTime.Unix(), 10)
 				alert.Labels["DowntimeEnd"] = strconv.FormatInt(downtime.EndTime.Unix(), 10)
 				alert.Labels["DowntimeAuthor"] = downtime.Author
@@ -372,8 +363,8 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		return blockedAlerts[i].When < blockedAlerts[j].When
 	})
 
-	sort.Slice(knownAlerts, func(i, j int) bool {
-		return knownAlerts[i].When < knownAlerts[j].When
+	sort.Slice(downtimedAlerts, func(i, j int) bool {
+		return downtimedAlerts[i].When < downtimedAlerts[j].When
 	})
 
 	a.amu.Lock()
@@ -383,7 +374,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		Alerts:        alerts,
 		GroupedAlerts: alertGroups,
 		Blocked:       blockedAlerts,
-		Downtimes:     knownAlerts,
+		Downtimes:     downtimedAlerts,
 	}
 	a.amu.Unlock()
 
