@@ -93,7 +93,7 @@ func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults
 	body := eventsSearchParameters{
 		Query:   "",
 		Page:    1,
-		PerPage: 25,
+		PerPage: 100,
 		TimeRange: timeRange{
 			Type:  TimeRangeRelative,
 			Range: 600,
