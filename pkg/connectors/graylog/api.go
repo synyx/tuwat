@@ -18,12 +18,12 @@ type eventsSearchParameters struct {
 	Query     string             `json:"query"`
 	Page      int                `json:"page"`
 	PerPage   int                `json:"per_page"`
-	Filter    eventsSearchFilter `json:"filter"`
-	TimeRange timeRange          `json:"timerange"`
+	Filter    eventsSearchFilter `json:"filter,omitempty"`
+	TimeRange timeRange          `json:"timerange,omitempty"`
 }
 
 type eventsSearchFilter struct {
-	Alerts AlertsFilerType `json:"alerts"`
+	Alerts AlertsFilerType `json:"alerts,omitempty"`
 }
 
 type AlertsFilerType = string

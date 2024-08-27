@@ -86,9 +86,6 @@ func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults
 		Query:   "",
 		Page:    1,
 		PerPage: 25,
-		Filter: eventsSearchFilter{
-			Alerts: AlertsFilterOnly,
-		},
 		TimeRange: timeRange{
 			Type:  TimeRangeRelative,
 			Range: 60,
