@@ -54,15 +54,16 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 		hostname, _ := url.Parse(c.config.URL)
 		labels := map[string]string{
-			"Source":   sourceAlert.Event.Source,
-			"Stream":   strings.Join(streams, ","),
-			"Priority": priorityToLabel(sourceAlert.Event.Priority),
-			"Hostname": hostname.Hostname(),
+			"Source":    sourceAlert.Event.Source,
+			"Stream":    strings.Join(streams, ","),
+			"Priority":  priorityToLabel(sourceAlert.Event.Priority),
+			"EventType": alertToLabel(sourceAlert.Event.Alert),
+			"Hostname":  hostname.Hostname(),
 		}
 		alert := connectors.Alert{
 			Labels:      labels,
 			Start:       parseTime(sourceAlert.Event.TimeStamp),
-			State:       connectors.Warning,
+			State:       priorityToState(sourceAlert.Event.Priority),
 			Description: sourceAlert.Event.Message,
 			Details:     sourceAlerts.Context.EventDefinitions[sourceAlert.Event.EventDefinitionId].Description,
 			Links: []html.HTML{
@@ -164,4 +165,24 @@ func priorityToLabel(priority int) string {
 	default:
 		return "Unknown"
 	}
+}
+
+func priorityToState(priority int) connectors.State {
+	switch priority {
+	case priorityLow:
+		return connectors.Warning
+	case priorityNormal:
+		return connectors.Warning
+	case priorityHigh:
+		return connectors.Critical
+	default:
+		return connectors.Unknown
+	}
+}
+
+func alertToLabel(isAlert bool) string {
+	if isAlert {
+		return "Alert"
+	}
+	return "Event"
 }
