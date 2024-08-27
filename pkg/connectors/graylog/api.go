@@ -83,6 +83,12 @@ type eventsSearchEventResult struct {
 	Priority            int                 `json:"priority"`
 }
 
+const (
+	priorityLow    = 1
+	priorityNormal = 2
+	priorityHigh   = 3
+)
+
 type eventDefinitionType = string
 
 const (

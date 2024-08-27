@@ -56,6 +56,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		labels := map[string]string{
 			"Source":   sourceAlert.Event.Source,
 			"Stream":   strings.Join(streams, ","),
+			"Priority": priorityToLabel(sourceAlert.Event.Priority),
 			"Hostname": hostname.Hostname(),
 		}
 		alert := connectors.Alert{
@@ -150,4 +151,17 @@ func parseTime(timeField string) time.Time {
 		return time.Time{}
 	}
 	return t
+}
+
+func priorityToLabel(priority int) string {
+	switch priority {
+	case priorityLow:
+		return "Low"
+	case priorityNormal:
+		return "Normal"
+	case priorityHigh:
+		return "High"
+	default:
+		return "Unknown"
+	}
 }
