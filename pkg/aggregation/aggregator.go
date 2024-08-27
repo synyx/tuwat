@@ -302,10 +302,11 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 			}
 			alerts = append(alerts, alert)
 		}
+
 		downtimes := make([]ruleengine.Rule, 0, len(r.downtimes))
 		for _, dt := range r.downtimes {
 			rule := ruleengine.Rule{
-				Description: fmt.Sprintf("Downtimed by %s: %s", dt.Author, dt.Comment),
+				Description: a.downtimeDescription(dt),
 				Labels:      dt.Matchers,
 			}
 			downtimes = append(downtimes, rule)
@@ -344,12 +345,17 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if downtime, ok := a.downtimed(alert, downtimes); ok {
+			if downtimeIdx, ok := a.downtimed(alert, downtimes); ok {
+				downtime := r.downtimes[downtimeIdx]
 				knownAlert := KnownAlert{
 					Alert:    alert,
-					Downtime: downtime,
+					Downtime: downtime.Comment,
 				}
 				knownAlerts = append(knownAlerts, knownAlert)
+
+				alert.Labels["DowntimeStart"] = strconv.FormatInt(downtime.StartTime.Unix(), 10)
+				alert.Labels["DowntimeEnd"] = strconv.FormatInt(downtime.EndTime.Unix(), 10)
+				alert.Labels["DowntimeAuthor"] = downtime.Author
 			} else if reason := a.allow(alert, dashboard); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
@@ -418,6 +424,27 @@ func groupAlerts(alerts []Alert) []AlertGroup {
 		return alertGroups[i].Alerts[0].When < alertGroups[j].Alerts[0].When
 	})
 	return alertGroups
+}
+
+func (a *Aggregator) downtimeDescription(dt connectors.Downtime) string {
+	// endzeit auch in description neben comment
+	// comment abschneiden nach X zeichen (100?), mit `...` enden.
+	return fmt.Sprintf("Downtimed %s: %s", a.niceDate(dt.EndTime), dt.Comment)
+}
+
+func (a *Aggregator) niceDate(t time.Time) string {
+	d := a.clock.Now().Sub(t)
+	if d > 2*time.Hour*24 {
+		return t.Format("until 2006-01-02")
+	} else if d > 2*time.Hour {
+		return fmt.Sprintf("for %.0fh", d.Hours())
+	} else if d > 2*time.Minute {
+		return fmt.Sprintf("for %.0fm", d.Minutes())
+	} else if d > 0 {
+		return fmt.Sprintf("for %.0fs", d.Seconds())
+	} else {
+		return t.Format("ended 2006-01-02 15:04")
+	}
 }
 
 func (a *Aggregator) Alerts(dashboardName string) Aggregate {
@@ -495,7 +522,7 @@ func (a *Aggregator) Reconfigure(cfg *config.Config) {
 
 // allow will match rules against the ruleset.
 func (a *Aggregator) allow(alert Alert, dashboard *config.Dashboard) string {
-	rule, matched := a.matchAlert(alert, dashboard.Filter)
+	rule, _, matched := a.matchAlert(alert, dashboard.Filter)
 
 	switch dashboard.Mode {
 	case config.Including:
@@ -513,9 +540,9 @@ func (a *Aggregator) allow(alert Alert, dashboard *config.Dashboard) string {
 
 // matchAlert will match anything which does match against any of the
 // configured rules.
-func (a *Aggregator) matchAlert(alert Alert, rules []ruleengine.Rule) (ruleengine.Rule, bool) {
+func (a *Aggregator) matchAlert(alert Alert, rules []ruleengine.Rule) (ruleengine.Rule, int, bool) {
 nextRule:
-	for _, rule := range rules {
+	for idx, rule := range rules {
 		matchers := make(map[string]ruleengine.RuleMatcher)
 
 		// if it's a rule working on top level concepts:
@@ -553,17 +580,17 @@ nextRule:
 			}
 		}
 		if matchCount > 0 && matchCount == len(matchers) {
-			return rule, true
+			return rule, idx, true
 		}
 	}
 
-	return ruleengine.Rule{}, false
+	return ruleengine.Rule{}, -1, false
 }
 
 // downtimed will match rules against the downtimes.
-func (a *Aggregator) downtimed(alert Alert, rules []ruleengine.Rule) (string, bool) {
-	rule, matched := a.matchAlert(alert, rules)
-	return rule.Description, matched
+func (a *Aggregator) downtimed(alert Alert, rules []ruleengine.Rule) (int, bool) {
+	_, idx, matched := a.matchAlert(alert, rules)
+	return idx, matched
 }
 
 func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
