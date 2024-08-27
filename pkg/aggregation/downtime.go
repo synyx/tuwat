@@ -2,11 +2,20 @@ package aggregation
 
 import (
 	"fmt"
+	html "html/template"
 	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/ruleengine"
 )
+
+func (a *Aggregator) downtimeLinks(comment string) []html.HTML {
+	var urls []html.HTML
+	for _, u := range extractUrls(comment) {
+		urls = append(urls, html.HTML(`<a href="`+u+`">🔗</a>`))
+	}
+	return urls
+}
 
 func (a *Aggregator) downtimeRules(downtimes []connectors.Downtime) []ruleengine.Rule {
 	rules := make([]ruleengine.Rule, 0, len(downtimes))

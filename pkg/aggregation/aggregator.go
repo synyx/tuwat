@@ -349,6 +349,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 				alert.Labels["DowntimeStart"] = strconv.FormatInt(downtime.StartTime.Unix(), 10)
 				alert.Labels["DowntimeEnd"] = strconv.FormatInt(downtime.EndTime.Unix(), 10)
 				alert.Labels["DowntimeAuthor"] = downtime.Author
+				alert.Links = append(alert.Links, a.downtimeLinks(downtime.Comment)...)
 			} else if reason := a.allow(alert, dashboard); reason == "" {
 				alerts = append(alerts, alert)
 			} else {
