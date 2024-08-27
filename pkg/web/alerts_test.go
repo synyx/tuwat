@@ -20,20 +20,22 @@ func TestRendering(t *testing.T) {
 	wh := NewWebHandler(cfg, agg)
 
 	renderer := wh.baseRenderer(req, "test", "alerts.gohtml")
-	alerts := []aggregation.Alert{
-		{
-			Id:      "asdf",
+	alerts := []aggregation.KnownAlert{
+		{Alert: aggregation.Alert{
+			Id:      "id",
 			Where:   "where",
 			Tag:     "tag",
-			What:    "what",
-			Details: "details",
+			What:    "wha",
+			Details: "detail",
 			When:    0,
 			Status:  connectors.Warning.String(),
+			Labels:  nil,
+		}, Downtime: "comment",
 		},
 	}
 	aggregate := aggregation.Aggregate{
 		CheckTime: clock.New().Now(),
-		Alerts:    alerts,
+		Downtimes: alerts,
 	}
 	renderer(w, 200, webContent{Content: aggregate})
 }

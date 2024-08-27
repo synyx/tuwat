@@ -31,7 +31,7 @@ type Aggregate struct {
 	Alerts        []Alert
 	GroupedAlerts []AlertGroup
 	Blocked       []BlockedAlert
-	Known         []KnownAlert
+	Downtimes     []KnownAlert
 }
 
 type Alert struct {
@@ -345,11 +345,11 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if downtimeIdx, ok := a.downtimed(alert, downtimes); ok {
+			if description, downtimeIdx, ok := a.downtimed(alert, downtimes); ok {
 				downtime := r.downtimes[downtimeIdx]
 				knownAlert := KnownAlert{
 					Alert:    alert,
-					Downtime: downtime.Comment,
+					Downtime: description,
 				}
 				knownAlerts = append(knownAlerts, knownAlert)
 
@@ -389,7 +389,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		Alerts:        alerts,
 		GroupedAlerts: alertGroups,
 		Blocked:       blockedAlerts,
-		Known:         knownAlerts,
+		Downtimes:     knownAlerts,
 	}
 	a.amu.Unlock()
 
@@ -588,9 +588,9 @@ nextRule:
 }
 
 // downtimed will match rules against the downtimes.
-func (a *Aggregator) downtimed(alert Alert, rules []ruleengine.Rule) (int, bool) {
-	_, idx, matched := a.matchAlert(alert, rules)
-	return idx, matched
+func (a *Aggregator) downtimed(alert Alert, rules []ruleengine.Rule) (string, int, bool) {
+	match, idx, matched := a.matchAlert(alert, rules)
+	return match.Description, idx, matched
 }
 
 func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {
