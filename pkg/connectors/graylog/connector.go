@@ -131,6 +131,7 @@ func (c *Connector) post(ctx context.Context, endpoint string, body interface{})
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Requested-By", "tuwat")
 
 	res, err := c.client.Do(req)
 	if err != nil {
