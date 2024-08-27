@@ -303,14 +303,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 			alerts = append(alerts, alert)
 		}
 
-		downtimes := make([]ruleengine.Rule, 0, len(r.downtimes))
-		for _, dt := range r.downtimes {
-			rule := ruleengine.Rule{
-				Description: a.downtimeDescription(dt),
-				Labels:      dt.Matchers,
-			}
-			downtimes = append(downtimes, rule)
-		}
+		downtimeRules := a.downtimeRules(r.downtimes)
 
 		for _, al := range r.alerts {
 			labels := make(map[string]string)
@@ -345,7 +338,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					html.HTML(`<form class="txtform" action="/alerts/`+alert.Id+`/silence" method="post"><button class="txtbtn" value="silence" type="submit">🔇</button></form>`))
 			}
 
-			if description, downtimeIdx, ok := a.downtimed(alert, downtimes); ok {
+			if description, downtimeIdx, ok := a.downtimed(alert, downtimeRules); ok {
 				downtime := r.downtimes[downtimeIdx]
 				knownAlert := KnownAlert{
 					Alert:    alert,
@@ -424,29 +417,6 @@ func groupAlerts(alerts []Alert) []AlertGroup {
 		return alertGroups[i].Alerts[0].When < alertGroups[j].Alerts[0].When
 	})
 	return alertGroups
-}
-
-func (a *Aggregator) downtimeDescription(dt connectors.Downtime) string {
-	description := fmt.Sprintf("Downtimed %s: %s", a.niceDate(dt.EndTime), dt.Comment)
-	if len(description) > 100 {
-		description = description[:99] + "…"
-	}
-	return description
-}
-
-func (a *Aggregator) niceDate(t time.Time) string {
-	d := a.clock.Now().Sub(t)
-	if d > 2*time.Hour*24 {
-		return t.Format("until 2006-01-02")
-	} else if d > 2*time.Hour {
-		return fmt.Sprintf("for %.0fh", d.Hours())
-	} else if d > 2*time.Minute {
-		return fmt.Sprintf("for %.0fm", d.Minutes())
-	} else if d > 0 {
-		return fmt.Sprintf("for %.0fs", d.Seconds())
-	} else {
-		return t.Format("ended 2006-01-02 15:04")
-	}
 }
 
 func (a *Aggregator) Alerts(dashboardName string) Aggregate {
