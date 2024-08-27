@@ -6,7 +6,7 @@ import (
 	"github.com/synyx/tuwat/pkg/web/common"
 )
 
-func (h *webHandler) silence(w http.ResponseWriter, req *http.Request) {
+func (h *WebHandler) silence(w http.ResponseWriter, req *http.Request) {
 
 	user := "jo"
 	if hdr := req.Header.Get("X-Auth-Request-User"); hdr != "" {

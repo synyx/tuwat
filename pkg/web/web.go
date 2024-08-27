@@ -29,7 +29,7 @@ import (
 //go:embed templates/*
 var templates embed.FS
 
-type webHandler struct {
+type WebHandler struct {
 	routes []common.Route
 	fs     fs.FS
 
@@ -53,8 +53,8 @@ var (
 	DisconnectError = errors.New("client disconnected")
 )
 
-func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Handler {
-	handler := &webHandler{
+func NewWebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) *WebHandler {
+	handler := &WebHandler{
 		aggregator:  aggregator,
 		environment: cfg.Environment,
 		style:       cfg.Style,
@@ -83,7 +83,7 @@ func WebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) http.Han
 	return handler
 }
 
-func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
@@ -108,7 +108,7 @@ func (h *webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
 
-func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
+func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
 	templateFiles := append([]string{"_base.gohtml"}, patterns...)
 	templateDefinition := "base"
 
@@ -139,7 +139,7 @@ func (h *webHandler) baseRenderer(req *http.Request, dashboardName string, patte
 	}
 }
 
-func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
+func (h *WebHandler) partialRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
 	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition := "base"
 
@@ -171,7 +171,7 @@ func (h *webHandler) partialRenderer(req *http.Request, dashboardName string, pa
 
 type sseRenderFunc func(data webContent) error
 
-func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) (sseRenderFunc, context.CancelFunc) {
+func (h *WebHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patterns ...string) (sseRenderFunc, context.CancelFunc) {
 	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition := "content-container"
 
@@ -254,7 +254,7 @@ func (h *webHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 
 type wsRenderFunc func(data webContent)
 
-func (h *webHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderFunc {
+func (h *WebHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderFunc {
 	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition := "content-container"
 

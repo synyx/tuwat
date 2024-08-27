@@ -36,7 +36,7 @@ func main() {
 
 	clk := clock.New()
 	aggregator := aggregation.NewAggregator(cfg, clk)
-	webHandler := web.WebHandler(cfg, aggregator)
+	webHandler := web.NewWebHandler(cfg, aggregator)
 	alertmanagerApi := alertmanager.ApiV2(cfg, aggregator)
 
 	acc := actuator.NewHealthAccumulator(clk)

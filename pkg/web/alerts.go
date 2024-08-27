@@ -13,7 +13,7 @@ import (
 	"github.com/synyx/tuwat/pkg/web/common"
 )
 
-func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
+func (h *WebHandler) alerts(w http.ResponseWriter, req *http.Request) {
 
 	dashboardName := filepath.Base(req.URL.Path)
 	dashboardName = strings.TrimPrefix(dashboardName, "/")
@@ -29,7 +29,7 @@ func (h *webHandler) alerts(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (h *webHandler) wsalerts(s *websocket.Conn) {
+func (h *WebHandler) wsalerts(s *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			switch err := err.(type) {
@@ -77,7 +77,7 @@ func (h *webHandler) wsalerts(s *websocket.Conn) {
 	}
 }
 
-func (h *webHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
+func (h *WebHandler) ssealerts(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			switch err := err.(type) {

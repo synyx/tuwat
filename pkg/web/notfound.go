@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (h *webHandler) notFound(w http.ResponseWriter, req *http.Request) {
+func (h *WebHandler) notFound(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(404)
 
 	renderer := h.baseRenderer(req, "404.gohtml")
