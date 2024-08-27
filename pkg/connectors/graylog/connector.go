@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -51,9 +52,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			streams = append(streams, stream.Title)
 		}
 
+		hostname, _ := url.Parse(c.config.URL)
 		labels := map[string]string{
-			"Source": sourceAlert.Event.Source,
-			"Stream": strings.Join(streams, ","),
+			"Source":   sourceAlert.Event.Source,
+			"Stream":   strings.Join(streams, ","),
+			"Hostname": hostname.Hostname(),
 		}
 		alert := connectors.Alert{
 			Labels:      labels,
@@ -110,6 +113,10 @@ func (c *Connector) collectAlertEvents(ctx context.Context) (eventsSearchResults
 		return eventsSearchResults{}, err
 	}
 
+	slog.InfoContext(ctx, "Graylog response",
+		slog.Any("raw", b),
+		slog.Any("response", response))
+
 	return response, nil
 }
 
@@ -123,6 +130,9 @@ func (c *Connector) post(ctx context.Context, endpoint string, body interface{})
 	if err != nil {
 		return nil, err
 	}
+
+	slog.InfoContext(ctx, "Graylog request",
+		slog.Any("request", buf))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.URL+endpoint, buf)
 	if err != nil {
