@@ -49,7 +49,7 @@ universal_binaries:
 
 # Configure how snapshots are versioned
 snapshot:
-  name_template: '{{ incpatch .Version }}-dev-{{ .ShortCommit }}'
+  version_template: '{{ incpatch .Version }}-dev-{{ .ShortCommit }}'
 
 # Configure what goes into the archives
 archives:
