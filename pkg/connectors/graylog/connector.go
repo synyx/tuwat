@@ -46,6 +46,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		return nil, err
 	}
 
+	hostname, _ := url.Parse(c.config.URL)
+
 	var alerts []connectors.Alert
 	var seenEventDefinitions []string
 
@@ -62,13 +64,15 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				streams = append(streams, stream.Title)
 			}
 
-			hostname, _ := url.Parse(c.config.URL)
 			labels := map[string]string{
 				"Source":    sourceAlert.Event.Source,
 				"Stream":    strings.Join(streams, ","),
 				"Priority":  priorityToLabel(sourceAlert.Event.Priority),
 				"EventType": alertToLabel(sourceAlert.Event.Alert),
 				"Hostname":  hostname.Hostname(),
+			}
+			for name, value := range sourceAlert.Event.GroupByFields {
+				labels[name] = value
 			}
 
 			details := ""
