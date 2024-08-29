@@ -70,6 +70,9 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"EventType": alertToLabel(sourceAlert.Event.Alert),
 				"Hostname":  hostname.Hostname(),
 			}
+			for name, value := range sourceAlert.Event.GroupByFields {
+				labels[name] = value
+			}
 
 			details := ""
 			switch sourceAlert.Event.EventDefinitionType {
