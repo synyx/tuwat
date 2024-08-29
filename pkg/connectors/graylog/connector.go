@@ -70,12 +70,23 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"EventType": alertToLabel(sourceAlert.Event.Alert),
 				"Hostname":  hostname.Hostname(),
 			}
+
+			details := ""
+			switch sourceAlert.Event.EventDefinitionType {
+			case eventDefinitionCorrelationv1:
+				// correlations are an enterprise feature, there does not appear to be enough information on the
+				// structure online, thus we assume it has a description field.
+				fallthrough
+			case eventDefinitionAggregationv1:
+				details = sourceAlertPage.Context.EventDefinitions[sourceAlert.Event.EventDefinitionId]["description"]
+			}
+
 			alert := connectors.Alert{
 				Labels:      labels,
 				Start:       parseTime(sourceAlert.Event.TimeStamp),
 				State:       priorityToState(sourceAlert.Event.Priority),
 				Description: sourceAlert.Event.Message,
-				Details:     sourceAlertPage.Context.EventDefinitions[sourceAlert.Event.EventDefinitionId].Description,
+				Details:     details,
 				Links: []html.HTML{
 					html.HTML("<a href=\"" + c.config.URL + "/alerts" + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 				},

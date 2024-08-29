@@ -37,14 +37,8 @@ type eventsSearchResults struct {
 }
 
 type eventsSearchResultContext struct {
-	EventDefinitions map[string]eventDefinition  `json:"event_definitions"`
-	Streams          map[string]streamDefinition `json:"streams"`
-}
-
-type eventDefinition struct {
-	Description string `json:"description"`
-	Id          string `json:"id"`
-	Title       string `json:"title"`
+	EventDefinitions map[string]map[string]string `json:"event_definitions"`
+	Streams          map[string]streamDefinition  `json:"streams"`
 }
 
 type streamDefinition struct {

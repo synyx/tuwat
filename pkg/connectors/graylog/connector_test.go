@@ -34,7 +34,7 @@ func TestConnector(t *testing.T) {
 // Each usage of the backend server will return the next mocked body in order.
 func testConnector(endpoints map[string][]string) (*Connector, *httptest.Server) {
 	calls := map[string]int{}
-	for k, _ := range endpoints {
+	for k := range endpoints {
 		calls[k] = 0
 	}
 
