@@ -1,10 +1,7 @@
 package graylog
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,8 +11,8 @@ import (
 )
 
 func TestConnector(t *testing.T) {
-	connector, mockServer := testConnector(map[string]string{
-		"/api/events/search": mockEventSearchResult,
+	connector, mockServer := testConnector(map[string][]string{
+		"/api/events/search": {mockEventSearchResult, mockEventEmptyResult},
 	})
 	defer func() { mockServer.Close() }()
 
@@ -33,28 +30,24 @@ func TestConnector(t *testing.T) {
 	}
 }
 
-func testConnector(endpoints map[string]string) (*Connector, *httptest.Server) {
+// testConnector builds a connector with a mocked backend.
+// Each usage of the backend server will return the next mocked body in order.
+func testConnector(endpoints map[string][]string) (*Connector, *httptest.Server) {
+	calls := map[string]int{}
+	for k, _ := range endpoints {
+		calls[k] = 0
+	}
+
 	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 
-		b, _ := io.ReadAll(req.Body)
-		buf := bytes.NewBuffer(b)
-		decoder := json.NewDecoder(buf)
-
-		var request eventsSearchParameters
-		err := decoder.Decode(&request)
-		if err != nil {
-			panic(err)
-		}
-
-		if request.Page > 1 {
-			if _, err := res.Write([]byte(mockEventEmptyResult)); err != nil {
-				panic(err)
-			}
-		}
-
-		for endpoint, body := range endpoints {
+		for endpoint, bodies := range endpoints {
 			if strings.Contains(req.URL.Path, endpoint) {
+				if calls[endpoint] >= len(bodies) {
+					panic("missing additional mock for endpoint " + endpoint)
+				}
+				body := bodies[calls[endpoint]]
+				calls[endpoint]++
 				if _, err := res.Write([]byte(body)); err != nil {
 					panic(err)
 				}
