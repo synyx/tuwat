@@ -18,15 +18,17 @@ Connectors for
 * Prometheus [Alertmanager]
 * [GitLab] MRs
 * [GitHub] PRs
+* [Graylog] Events
 * [Icinga 2]
 * [Nagios API]
 * [Patchman]
-* Due [Redmine] tickets
+* Past due [Redmine] tickets
 * Static example showing alert types
 
 [Alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
 [GitLab]: https://www.gitlab.com
 [GitHub]: https://www.github.com
+[Graylog]: https://graylog.org/
 [Icinga 2]: https://icinga.com
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
