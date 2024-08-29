@@ -1,5 +1,9 @@
 # Releases
 
+## 1.10.1 - 2024-08-29 Graylog Labels
+
+* Add Graylog event grouping fields to labels.
+
 ## 1.10.0 - 2024-08-29 Graylog
 
 * Add Graylog connector.
