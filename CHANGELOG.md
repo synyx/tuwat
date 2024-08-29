@@ -1,8 +1,8 @@
 # Releases
 
-## 1.XX - 2024-08-XX Graylog
+## 1.10.0 - 2024-08-29 Graylog
 
-* Add Graylog connector to show configured alerts.
+* Add Graylog connector.
 
 ## 1.9.1 - 2024-08-09 Maintenance
 
