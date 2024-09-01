@@ -1,18 +1,24 @@
 package grafana
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	html "html/template"
+	"io"
+	"log/slog"
+	"net/http"
+	"strings"
+	"time"
 
 	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/connectors/alertmanager"
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 type Connector struct {
 	config Config
-	ac     *alertmanager.Connector
+	client *http.Client
 }
 
 type Config struct {
@@ -22,14 +28,7 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
-	alertmanagerConfig := &alertmanager.Config{
-		Tag:        cfg.Tag,
-		Cluster:    cfg.Cluster,
-		HTTPConfig: cfg.HTTPConfig,
-	}
-	alertmanagerConfig.URL += "/api/alertmanager/grafana"
-
-	c := &Connector{config: *cfg, ac: alertmanager.NewConnector(alertmanagerConfig)}
+	c := &Connector{config: *cfg, client: cfg.HTTPConfig.Client()}
 
 	return c
 }
@@ -39,27 +38,39 @@ func (c *Connector) Tag() string {
 }
 
 func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
-	sourceAlerts, err := c.ac.Collect(ctx)
+	sourceAlertGroups, err := c.collectAlerts(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var alerts []connectors.Alert
 
-	for _, alert := range sourceAlerts {
-		alert.Description = alert.Labels["rulename"]
-		alert.Details = alert.Labels["message"]
-		labels := map[string]string{
-			"Hostname": alert.Labels["grafana_folder"],
-			"Contacts": alert.Labels["__contacts__"],
-		}
-		for k, v := range labels {
-			alert.Labels[k] = v
+	for _, sourceAlertGroup := range sourceAlertGroups {
+		rule := sourceAlertGroup.Rules[0]
+		sourceAlert := rule.Alerts[0]
+
+		state := grafanaStateToState(sourceAlert.State)
+		if state == connectors.OK {
+			continue
 		}
 
-		alert.Links = []html.HTML{
-			html.HTML("<a href=\"" + c.config.URL + "/alerting/grafana/" + alert.Labels["rule_uid"] + "/view?tab=instances" + "\" target=\"_blank\" alt=\"Alert\">🏠</a>"),
-			html.HTML("<a href=\"" + c.config.URL + "/d/" + alert.Labels["__dashboardUid__"] + "\" target=\"_blank\" alt=\"Dashboard\">🏠</a>"),
+		labels := map[string]string{
+			"Hostname":  sourceAlert.Labels["grafana_folder"],
+			"Folder":    sourceAlert.Labels["grafana_folder"],
+			"Alertname": sourceAlert.Labels["alertname"],
+			"Contacts":  sourceAlert.Labels["__contacts__"],
+		}
+
+		alert := connectors.Alert{
+			Labels:      labels,
+			Start:       parseTime(sourceAlert.ActiveAt),
+			State:       state,
+			Description: rule.Name,
+			Details:     rule.Annotations["message"],
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + c.config.URL + "/alerting/grafana/" + rule.Labels["rule_uid"] + "/view?tab=instances" + "\" target=\"_blank\" alt=\"Alert\">🏠</a>"),
+				html.HTML("<a href=\"" + c.config.URL + "/d/" + rule.Annotations["__dashboardUid__"] + "\" target=\"_blank\" alt=\"Dashboard\">🏠</a>"),
+			},
 		}
 
 		alerts = append(alerts, alert)
@@ -68,6 +79,69 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	return alerts, nil
 }
 
+func grafanaStateToState(state string) connectors.State {
+	switch strings.ToLower(state) {
+	case alertingStateAlerting:
+		return connectors.Critical
+	case alertingStateNoData:
+		return connectors.Warning
+	default:
+		return connectors.OK
+	}
+}
+
 func (c *Connector) String() string {
 	return fmt.Sprintf("Grafana (%s)", c.config.URL)
+}
+
+func (c *Connector) collectAlerts(ctx context.Context) ([]ruleGroup, error) {
+	res, err := c.get(ctx, "/api/prometheus/grafana/api/v1/rules")
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	b, _ := io.ReadAll(res.Body)
+	buf := bytes.NewBuffer(b)
+
+	decoder := json.NewDecoder(buf)
+
+	var response ruleResponse
+	err = decoder.Decode(&response)
+	if err != nil {
+		slog.ErrorContext(ctx, "Cannot parse",
+			slog.String("url", c.config.URL),
+			slog.String("data", buf.String()),
+			slog.Any("status", res.StatusCode),
+			slog.Any("error", err))
+		return nil, err
+	}
+
+	return response.Data.Groups, nil
+}
+
+func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, error) {
+
+	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.config.URL+endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+func parseTime(timeField string) time.Time {
+	t, err := time.Parse("2006-01-02T15:04:05.999-07:00", timeField)
+	if err != nil {
+		return time.Time{}
+	}
+	return t
 }
