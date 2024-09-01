@@ -67,24 +67,24 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			severity = s
 		}
 
-		if sourceAlert.Status.State == "suppressed" {
+		if sourceAlert.Status.State == stateSuppressed {
 			continue
 		} else if len(sourceAlert.Status.SilencedBy) > 0 {
 			continue
-		} else if severity == "none" {
+		} else if severity == severityNone {
 			continue
 		}
 
 		state := connectors.Unknown
-		if sourceAlert.Status.State == "unprocessed" {
+		if sourceAlert.Status.State == stateUnprocessed {
 			state = connectors.Unknown
-		} else if sourceAlert.Status.State == "active" && severity == "" {
+		} else if sourceAlert.Status.State == stateActive && severity == "" {
 			state = connectors.Warning
-		} else if sourceAlert.Status.State == "active" && severity == "warning" {
+		} else if sourceAlert.Status.State == stateActive && severity == severityWarning {
 			state = connectors.Warning
-		} else if sourceAlert.Status.State == "active" && severity == "critical" {
+		} else if sourceAlert.Status.State == stateActive && severity == severityCritical {
 			state = connectors.Critical
-		} else if sourceAlert.Status.State == "active" && severity == "error" {
+		} else if sourceAlert.Status.State == stateActive && severity == severityError {
 			state = connectors.Critical
 		} else {
 			slog.ErrorContext(ctx, "Cannot parse: Unknown state",
