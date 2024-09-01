@@ -7,7 +7,7 @@ require (
 	github.com/benbjohnson/clock v1.3.5
 	github.com/go-slog/otelslog v0.1.0
 	github.com/prometheus/client_golang v1.20.2
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.29.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.29.0
