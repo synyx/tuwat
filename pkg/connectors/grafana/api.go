@@ -1,5 +1,7 @@
 package grafana
 
+import "time"
+
 // https://raw.githubusercontent.com/grafana/grafana/main/pkg/services/ngalert/api/tooling/post.json
 
 type ruleResponse struct {
@@ -49,4 +51,26 @@ const (
 	alertingStateNoData   = "nodata"
 	alertingStateNormal   = "normal"
 	alertingStateError    = "error"
+)
+
+// https://grafana.com/docs/grafana/latest/developers/http_api/alerting_provisioning/#provisioned-alert-rules
+
+type provisionedAlertRule struct {
+	Annotations  map[string]string `json:"annotations"`
+	Condition    string            `json:"condition"`
+	ExecErrState string            `json:"execErrState"`
+	Uid          int64             `json:"id"`
+	IsPaused     bool              `json:"isPaused"`
+	Labels       map[string]string `json:"labels"`
+	NoDataState  string            `json:"noDataState"`
+	For          time.Duration     `json:"for"`
+	Title        string            `json:"title"`
+	RuleGroup    string            `json:"ruleGroup"`
+}
+
+const (
+	noDataStateNoData    = "NoData"
+	noDataStateOk        = "OK"
+	execErrStateAlerting = "Alerting"
+	execErrStateError    = "Error"
 )
