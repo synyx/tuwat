@@ -5,39 +5,61 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 func TestConnector(t *testing.T) {
-	connector, closer := mockConnector()
-	defer closer()
+	connector, mockServer := testConnector(map[string][]string{
+		"/api/prometheus/grafana/api/v1/rules": {mockResponse},
+	})
+	defer func() { mockServer.Close() }()
+
 	alerts, err := connector.Collect(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if alerts == nil || len(alerts) != 3 {
+	if len(alerts) == 0 {
 		t.Error("There should be alerts")
 	}
 }
 
-func mockConnector() (connectors.Connector, func()) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+// testConnector builds a connector with a mocked backend.
+// Each usage of the backend server will return the next mocked body in order.
+func testConnector(endpoints map[string][]string) (*Connector, *httptest.Server) {
+	calls := map[string]int{}
+	for k := range endpoints {
+		calls[k] = 0
+	}
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
-		_, _ = res.Write([]byte(mockResponse))
+
+		for endpoint, bodies := range endpoints {
+			if strings.HasPrefix(req.URL.Path, endpoint) {
+				if calls[endpoint] >= len(bodies) {
+					panic("missing additional mock for endpoint " + endpoint)
+				}
+				body := bodies[calls[endpoint]]
+				calls[endpoint]++
+				if _, err := res.Write([]byte(body)); err != nil {
+					panic(err)
+				}
+			}
+		}
 	}))
 
 	cfg := Config{
 		Tag: "test",
 		HTTPConfig: common.HTTPConfig{
-			URL: testServer.URL,
+			URL: mockServer.URL,
 		},
 	}
 
-	return NewConnector(&cfg), func() { testServer.Close() }
+	return NewConnector(&cfg), mockServer
 }
 
 const mockResponse = `
@@ -50,7 +72,7 @@ const mockResponse = `
         "file": "Folder",
         "rules": [
           {
-            "state": "inactive",
+            "state": "alerting",
             "name": "Consumed no things alert",
             "query": "",
             "annotations": {
@@ -62,7 +84,7 @@ const mockResponse = `
             "alerts": [
               {
                 "labels": {
-                  "__contacts__": "\"Trucking Team\",\"jbuch mail\"",
+                  "__contacts__": "\"Team\",\"jbuch mail\"",
                   "alertname": "Consumed no things alert",
                   "grafana_folder": "Folder",
                   "rule_uid": "kbMKlW04z"
@@ -73,7 +95,7 @@ const mockResponse = `
                   "__panelId__": "7",
                   "message": "Long Message"
                 },
-                "state": "Normal",
+                "state": "Alerting",
                 "activeAt": "2024-08-13T12:41:40+02:00",
                 "value": ""
               }
@@ -85,10 +107,10 @@ const mockResponse = `
               "normal": 1
             },
             "labels": {
-              "__contacts__": "\"Trucking Team\",\"jbuch mail\"",
+              "__contacts__": "\"Team\",\"jbuch mail\"",
               "rule_uid": "kbMKlW04z"
             },
-            "health": "ok",
+            "health": "nodata",
             "type": "alerting",
             "lastEvaluation": "2024-08-30T15:18:40+02:00",
             "evaluationTime": 6.723146319

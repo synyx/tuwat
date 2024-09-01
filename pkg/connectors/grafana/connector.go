@@ -55,6 +55,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 
 		labels := map[string]string{
+			"Hostname":  sourceAlert.Labels["grafana_folder"],
 			"Folder":    sourceAlert.Labels["grafana_folder"],
 			"Alertname": sourceAlert.Labels["alertname"],
 			"Contacts":  sourceAlert.Labels["__contacts__"],
@@ -82,6 +83,8 @@ func grafanaStateToState(state string) connectors.State {
 	switch strings.ToLower(state) {
 	case alertingStateAlerting:
 		return connectors.Critical
+	case alertingStateNoData:
+		return connectors.Warning
 	default:
 		return connectors.OK
 	}
@@ -91,7 +94,7 @@ func (c *Connector) String() string {
 	return fmt.Sprintf("Grafana (%s)", c.config.URL)
 }
 
-func (c *Connector) collectAlerts(ctx context.Context) ([]alertingRulesGroup, error) {
+func (c *Connector) collectAlerts(ctx context.Context) ([]ruleGroup, error) {
 	res, err := c.get(ctx, "/api/prometheus/grafana/api/v1/rules")
 	if err != nil {
 		return nil, err
@@ -103,7 +106,7 @@ func (c *Connector) collectAlerts(ctx context.Context) ([]alertingRulesGroup, er
 
 	decoder := json.NewDecoder(buf)
 
-	var response alertingRulesResult
+	var response ruleResponse
 	err = decoder.Decode(&response)
 	if err != nil {
 		slog.ErrorContext(ctx, "Cannot parse",
