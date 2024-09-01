@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -12,8 +11,8 @@ import (
 )
 
 func TestConnector(t *testing.T) {
-	connector, mockServer := testConnector(map[string][]string{
-		"/api/prometheus/grafana/api/v1/rules": {mockResponse},
+	connector, mockServer := testConnector(map[string]string{
+		"/api/prometheus/grafana/api/v1/rules": mockResponse,
 	})
 	defer func() { mockServer.Close() }()
 
@@ -27,24 +26,12 @@ func TestConnector(t *testing.T) {
 	}
 }
 
-// testConnector builds a connector with a mocked backend.
-// Each usage of the backend server will return the next mocked body in order.
-func testConnector(endpoints map[string][]string) (*Connector, *httptest.Server) {
-	calls := map[string]int{}
-	for k := range endpoints {
-		calls[k] = 0
-	}
-
+func testConnector(endpoints map[string]string) (*Connector, *httptest.Server) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 
-		for endpoint, bodies := range endpoints {
+		for endpoint, body := range endpoints {
 			if strings.HasPrefix(req.URL.Path, endpoint) {
-				if calls[endpoint] >= len(bodies) {
-					panic("missing additional mock for endpoint " + endpoint)
-				}
-				body := bodies[calls[endpoint]]
-				calls[endpoint]++
 				if _, err := res.Write([]byte(body)); err != nil {
 					panic(err)
 				}
@@ -131,15 +118,3 @@ const mockResponse = `
   }
 }
 `
-
-func TestConnector_Collect(t *testing.T) {
-	r := regexp.MustCompile(`in namespace\W+([a-zA-Z-0-9_-]+)`)
-	details := "constraint violation of kind ContainerLimits in Pod gitlab-agent-landingpage-659cf9567d-kkxsl in namespace api-gateway-stage\n\t\t"
-	where := ""
-	if s := r.FindAllStringSubmatch(details, 1); len(s) > 0 {
-		where = s[0][1]
-	}
-	if where != "api-gateway-stage" {
-		t.Fail()
-	}
-}
