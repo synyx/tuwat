@@ -1,8 +1,7 @@
 package grafana
 
-import "time"
-
 // https://raw.githubusercontent.com/grafana/grafana/main/pkg/services/ngalert/api/tooling/post.json
+// https://prometheus.io/docs/prometheus/latest/querying/api/#rules
 
 type ruleResponse struct {
 	Status string        `json:"status"`
@@ -20,10 +19,9 @@ type ruleGroup struct {
 }
 
 type alertingRule struct {
-	State       alertingState     `json:"state"`
+	State       alertingRuleState `json:"state"`
 	Name        string            `json:"name"`
 	ActiveAt    string            `json:"activeAt"`
-	Health      string            `json:"health"`
 	Annotations map[string]string `json:"annotations"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Alerts      []alert           `json:"alerts,omitempty"`
@@ -33,44 +31,24 @@ type alertingRule struct {
 type alert struct {
 	Labels      map[string]string `json:"labels"`
 	Annotations map[string]string `json:"annotations"`
-	State       string            `json:"state"`
+	State       alertingState     `json:"state"`
 	ActiveAt    string            `json:"activeAt"`
 	Value       string            `json:"value"`
 }
 
+type alertingRuleState = string
+
+const (
+	alertingStateFiring   alertingRuleState = "firing"
+	alertingStatePending  alertingRuleState = "pending"
+	alertingStateInactive alertingRuleState = "inactive"
+)
+
 type alertingState = string
 
 const (
-	alertingStatePending  = "pending"
-	alertingStateFiring   = "firing"
-	alertingStateInactive = "inactive"
-)
-
-const (
-	alertingStateAlerting = "alerting"
-	alertingStateNoData   = "nodata"
-	alertingStateNormal   = "normal"
-	alertingStateError    = "error"
-)
-
-// https://grafana.com/docs/grafana/latest/developers/http_api/alerting_provisioning/#provisioned-alert-rules
-
-type provisionedAlertRule struct {
-	Annotations  map[string]string `json:"annotations"`
-	Condition    string            `json:"condition"`
-	ExecErrState string            `json:"execErrState"`
-	Uid          int64             `json:"id"`
-	IsPaused     bool              `json:"isPaused"`
-	Labels       map[string]string `json:"labels"`
-	NoDataState  string            `json:"noDataState"`
-	For          time.Duration     `json:"for"`
-	Title        string            `json:"title"`
-	RuleGroup    string            `json:"ruleGroup"`
-}
-
-const (
-	noDataStateNoData    = "NoData"
-	noDataStateOk        = "OK"
-	execErrStateAlerting = "Alerting"
-	execErrStateError    = "Error"
+	alertingStateAlerting alertingState = "alerting"
+	alertingStateNoData   alertingState = "nodata"
+	alertingStateNormal   alertingState = "normal"
+	alertingStateError    alertingState = "error"
 )

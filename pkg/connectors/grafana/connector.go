@@ -47,6 +47,19 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	for _, sourceAlertGroup := range sourceAlertGroups {
 		rule := sourceAlertGroup.Rules[0]
+		switch rule.State {
+		case alertingStateInactive:
+			continue
+		case alertingStatePending:
+			fallthrough
+		case alertingStateFiring:
+			// ok
+		}
+
+		if rule.Type != "alerting" {
+			continue
+		}
+
 		sourceAlert := rule.Alerts[0]
 
 		state := grafanaStateToState(sourceAlert.State)
@@ -84,7 +97,11 @@ func grafanaStateToState(state string) connectors.State {
 	case alertingStateAlerting:
 		return connectors.Critical
 	case alertingStateNoData:
+		return connectors.Unknown
+	case alertingStateError:
 		return connectors.Warning
+	case alertingStateNormal:
+		return connectors.OK
 	default:
 		return connectors.OK
 	}
