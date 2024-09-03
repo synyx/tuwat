@@ -1,5 +1,9 @@
 # Releases
 
+## 1.10.2 - 2024-09-03 Log Volume Fix
+
+* The 1.10.0 version unfortunately introduced a large unnecessary log volume change.
+
 ## 1.10.1 - 2024-08-29 Graylog Labels
 
 * Add Graylog event grouping fields to labels.
