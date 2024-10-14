@@ -8,12 +8,12 @@ require (
 	github.com/go-slog/otelslog v0.1.0
 	github.com/prometheus/client_golang v1.20.4
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.55.0
-	go.opentelemetry.io/otel v1.30.0
+	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.30.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.30.0
-	go.opentelemetry.io/otel/log v0.6.0
+	go.opentelemetry.io/otel/log v0.7.0
 	go.opentelemetry.io/otel/sdk v1.30.0
-	go.opentelemetry.io/otel/trace v1.30.0
+	go.opentelemetry.io/otel/trace v1.31.0
 	golang.org/x/net v0.30.0
 	golang.org/x/oauth2 v0.23.0
 )
@@ -33,7 +33,7 @@ require (
 	github.com/prometheus/common v0.60.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.30.0 // indirect
-	go.opentelemetry.io/otel/metric v1.30.0 // indirect
+	go.opentelemetry.io/otel/metric v1.31.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
