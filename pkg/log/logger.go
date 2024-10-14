@@ -88,7 +88,7 @@ func (s SlogLogger) Emit(ctx context.Context, record otellog.Record) {
 	_ = s.handler.Handle(ctx, r)
 }
 
-func (s SlogLogger) Enabled(context.Context, otellog.Record) bool {
+func (s SlogLogger) Enabled(_ context.Context, _ otellog.EnabledParameters) bool {
 	return true
 }
 
