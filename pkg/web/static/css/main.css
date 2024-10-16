@@ -261,42 +261,6 @@ nav#menu ul li a:hover {
     background-color: rgba(50, 51, 51, 0.08);
 }
 
-nav#menu:target {
-    height: auto;
-    padding: 0;
-}
-
-nav#menu:target ul {
-    max-height: none;
-}
-
-nav#menu:target ul li {
-    display: block;
-}
-
-nav#menu:target ul li:last-child {
-    display: none;
-}
-
-nav#menu:target ul li:nth-last-child(2) {
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 0;
-    border-left: 2px solid #dde4e6;
-}
-
-nav#menu:target ul li a {
-    display: block;
-    padding: 0 2em;
-    background-color: rgba(51, 51, 51, 0.05);
-}
-
-nav#menu:target ul li a:hover {
-    background-color: rgba(51, 51, 51, 0.08);
-}
-
 .mobile-nav {
     margin-bottom: 0 !important;
 }
