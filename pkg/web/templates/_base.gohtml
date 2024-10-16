@@ -20,9 +20,9 @@
 <body>
 <nav id="menu">
     <ul id="menu-closed">
-        <li class="mobile-nav"><a href="/" data-turbo="false">Home</a></li>
+        <li class="mobile-nav{{if not $.Dashboard}} mobile-nav-active{{end}}"><a href="/" data-turbo="false">Home</a></li>
         {{range .Dashboards}}
-        <li class="mobile-nav"><a href="/alerts/{{.Name}}" data-turbo="false">{{.Name}}</a></li>
+        <li class="mobile-nav{{if and ($.Dashboard) (eq $.Dashboard .Name)}} mobile-nav-active{{end}}"><a href="/alerts/{{.Name}}" data-turbo="false">{{.Name}}</a></li>
         {{end}}
         <li class="mobile-nav"><a href="#menu-closed">&#215; Close</a></li>
         <li class="mobile-nav"><a href="#menu">&#9776; Menu</a></li>
