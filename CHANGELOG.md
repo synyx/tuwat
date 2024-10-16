@@ -3,6 +3,7 @@
 ## 1.11.0 - 2024-10-16 Menu Styling
 
 * The menu has been given an overhaul to be more readable in the dark theme.
+* The current dashboard is now better recognizable in the menu.
 
 ## 1.10.2 - 2024-09-03 Log Volume Fix
 
