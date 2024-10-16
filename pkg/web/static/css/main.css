@@ -223,15 +223,15 @@ nav#menu {
 }
 
 nav#menu ul {
+    list-style-type: none;
     margin: 0;
     padding: 0;
-    list-style-type: none;
-    max-height: 120px;
-    position: relative;
+    overflow: hidden;
+    background-color: #242222;
 }
 
 nav#menu ul li {
-    display: inline-block;
+    float: left;
 }
 
 nav#menu ul li:last-child {
@@ -247,22 +247,20 @@ nav#menu ul li:nth-last-child(2) {
 }
 
 nav#menu ul li a {
-    display: inline-block;
-    padding: 0 1vw;
-    color: #0023d9;
-    font-size: calc(14px + .1vw);
-    font-weight: 300;
+    display: block;
+    color: #D8D9DA;
+    text-align: center;
+    padding: 3px 14px;
     text-decoration: none;
-    letter-spacing: -.1px;
-    white-space: nowrap;
 }
 
 nav#menu ul li a:hover {
-    background-color: rgba(50, 51, 51, 0.08);
+    background-color: #111;
 }
 
-.mobile-nav {
-    margin-bottom: 0 !important;
+.mobile-nav-active {
+    background-color: #444444;
+    color: whitesmoke;
 }
 
 @media all and (max-width: 640px) {
