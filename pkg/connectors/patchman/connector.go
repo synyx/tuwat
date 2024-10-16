@@ -27,7 +27,8 @@ type Connector struct {
 }
 
 type Config struct {
-	Tag string
+	Tag    string
+	Filter map[string]string
 	common.HTTPConfig
 }
 
@@ -200,6 +201,12 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 	if err != nil {
 		return nil, err
 	}
+
+	q := req.URL.Query()
+	for k, v := range c.config.Filter {
+		q.Set(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Accept", "application/json")
 	if c.config.Username != "" {

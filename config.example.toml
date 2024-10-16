@@ -60,6 +60,7 @@ Tag = 'demo'
 #Insecure = true
 #Username = "user"
 #Password = "password"
+#Filter = { tag = "test", domain = "1", os = "7", osgroup = "2", arch = "5", reboot_required = "True" }
 #
 #[[redmine]]
 #Tag = "tkt"
