@@ -44,3 +44,20 @@ summary {
     background-color: #98999b;
 }
 .tag_label          { color: white;  }
+
+nav#menu ul {
+    background-color: #F0F0F0;
+}
+
+nav#menu ul li a {
+    color: #333333;
+    text-decoration: underline black;
+}
+
+nav#menu ul li a:hover {
+    background-color: white;
+}
+
+.mobile-nav-active {
+    background-color: #D8D8D8;
+}
