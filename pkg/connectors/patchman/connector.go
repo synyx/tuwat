@@ -4,13 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	html "html/template"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -38,13 +39,17 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
+	if cfg.CacheDuration == 0 {
+		cfg.CacheDuration = 60 * time.Minute
+	}
+
 	return &Connector{
 		config:      *cfg,
 		client:      cfg.HTTPConfig.Client(),
 		osCache:     make(map[string]*os),
 		archCache:   make(map[string]*arch),
 		domainCache: make(map[string]*domain),
-		hostCache:   newCache[[]host](clock.New(), 60*time.Minute),
+		hostCache:   newCache[[]host](clock.New(), cfg.CacheDuration),
 	}
 }
 
@@ -56,23 +61,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	// Collecting Patchman hosts is incredibly expensive.  We allow more time,
 	// but cache the result.
-	hosts, err := c.hostCache.get(func() ([]host, error) {
+	hosts, err := c.hostCache.get(context.Background(), func(ctx context.Context) ([]host, error) {
 		return c.collectHosts(ctx)
 	})
-	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		go func() {
-			_, err := c.hostCache.get(func() ([]host, error) {
-				ctx, cancel := context.WithTimeout(context.Background(), c.config.CacheDuration/2)
-				defer cancel()
-				return c.collectHosts(ctx)
-			})
-			if err != nil {
-				slog.WarnContext(ctx, "background collection of patchman failed")
-				return
-			}
-		}()
-		return nil, errors.New("patchman collection in background")
-	} else if err != nil {
+	if err != nil {
 		return nil, err
 	}
 
