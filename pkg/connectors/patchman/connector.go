@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	html "html/template"
 	"io"
@@ -12,6 +13,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/benbjohnson/clock"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -24,11 +27,13 @@ type Connector struct {
 	osCache     map[string]*os
 	archCache   map[string]*arch
 	domainCache map[string]*domain
+	hostCache   *cache[[]host]
 }
 
 type Config struct {
-	Tag    string
-	Filter map[string]string
+	Tag           string
+	Filter        map[string]string
+	CacheDuration time.Duration
 	common.HTTPConfig
 }
 
@@ -39,6 +44,7 @@ func NewConnector(cfg *Config) *Connector {
 		osCache:     make(map[string]*os),
 		archCache:   make(map[string]*arch),
 		domainCache: make(map[string]*domain),
+		hostCache:   newCache[[]host](clock.New(), 60*time.Minute),
 	}
 }
 
@@ -47,8 +53,26 @@ func (c *Connector) Tag() string {
 }
 
 func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
-	hosts, err := c.collectHosts(ctx)
-	if err != nil {
+
+	// Collecting Patchman hosts is incredibly expensive.  We allow more time,
+	// but cache the result.
+	hosts, err := c.hostCache.get(func() ([]host, error) {
+		return c.collectHosts(ctx)
+	})
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		go func() {
+			_, err := c.hostCache.get(func() ([]host, error) {
+				ctx, cancel := context.WithTimeout(context.Background(), c.config.CacheDuration/2)
+				defer cancel()
+				return c.collectHosts(ctx)
+			})
+			if err != nil {
+				slog.WarnContext(ctx, "background collection of patchman failed")
+				return
+			}
+		}()
+		return nil, errors.New("patchman collection in background")
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -201,12 +225,6 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 	if err != nil {
 		return nil, err
 	}
-
-	q := req.URL.Query()
-	for k, v := range c.config.Filter {
-		q.Set(k, v)
-	}
-	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Accept", "application/json")
 	if c.config.Username != "" {

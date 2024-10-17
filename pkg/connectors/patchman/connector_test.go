@@ -10,7 +10,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
-func TestNagiosConnector(t *testing.T) {
+func TestPatchmanConnector(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		_, _ = res.Write([]byte(patchmanApiMockResponse))
