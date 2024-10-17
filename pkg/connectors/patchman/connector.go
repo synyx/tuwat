@@ -88,6 +88,19 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			}
 		}
 
+		state := connectors.Unknown
+		description := "Host Updates"
+		if host.SecurityUpdateCount > 0 {
+			state = connectors.Critical
+			description = fmt.Sprintf("Host Security Updates missing: %d", host.SecurityUpdateCount)
+		} else if host.BugfixUpdateCount > 0 {
+			state = connectors.Warning
+			description = fmt.Sprintf("Host Bugfix Updates missing: %d", host.BugfixUpdateCount)
+		} else if host.RebootRequired {
+			state = connectors.Warning
+			description = "Host Reboot Required"
+		}
+
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.Hostname,
@@ -103,8 +116,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"reboot":   strconv.FormatBool(host.RebootRequired),
 			},
 			Start:       parseTime(host.LastReport),
-			State:       connectors.Critical,
-			Description: "Host Security critical",
+			State:       state,
+			Description: description,
 			Details:     details,
 			Links: []html.HTML{
 				html.HTML("<a href=\"" + c.config.URL + "/host/" + url.QueryEscape(host.Hostname) + "/\" target=\"_blank\" alt=\"Home\">🏠</a>"),
