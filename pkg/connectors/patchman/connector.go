@@ -90,6 +90,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		arch, _ := getCached(ctx, c, c.archCache, host.ArchURL)
 		domain, _ := getCached(ctx, c, c.domainCache, host.DomainURL)
 
+		if f, ok := c.config.Filter["tag"]; ok {
+			if !slices.Contains(strings.Split(host.Tags, " "), f) {
+				continue
+			}
+		}
+
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.Hostname,
