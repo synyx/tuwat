@@ -83,11 +83,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
-		last, err := time.Parse("2006-01-02T15:04:05", host.LastReport)
-		if err != nil {
-			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
-		}
-
 		details := fmt.Sprintf("Security Updates: %d, Updates: %d, Needs Reboot: %t",
 			host.SecurityUpdateCount, host.BugfixUpdateCount, host.RebootRequired)
 
@@ -100,12 +95,16 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Hostname": host.Hostname,
 				"Source":   c.config.URL,
 				"Type":     "Host",
+				"ptr":      host.ReverseDNS,
 				"tags":     host.Tags,
 				"os":       os.Name,
 				"arch":     arch.Name,
 				"domain":   domain.Name,
+				"security": strconv.Itoa(host.SecurityUpdateCount),
+				"updates":  strconv.Itoa(host.BugfixUpdateCount),
+				"reboot":   strconv.FormatBool(host.RebootRequired),
 			},
-			Start:       last,
+			Start:       parseTime(host.LastReport),
 			State:       connectors.Critical,
 			Description: "Host Security critical",
 			Details:     details,
