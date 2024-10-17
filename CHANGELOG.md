@@ -1,5 +1,9 @@
 # Releases
 
+## 1.12.0 - 2024-10-17 Patchman Filter
+
+* Enable pre-filtering Patchman results, see [example.toml](config.example.toml) for details.
+
 ## 1.11.0 - 2024-10-16 Menu Styling
 
 * The menu has been given an overhaul to be more readable in the dark theme.
