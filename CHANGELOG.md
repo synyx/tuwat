@@ -1,5 +1,9 @@
 # Releases
 
+## 1.12.1 - 2024-10-17 Patchman Slowness
+
+* Handle slow patchman instances.
+
 ## 1.12.0 - 2024-10-17 Patchman Filter
 
 * Enable pre-filtering Patchman results, see [example.toml](config.example.toml) for details.
