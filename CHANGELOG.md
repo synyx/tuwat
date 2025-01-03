@@ -1,12 +1,15 @@
 # Releases
 
+## 1.12.2 - 2025-01-03 New Year
+
 ## 1.12.1 - 2024-10-17 Patchman Slowness
 
 * Handle slow patchman instances.
 
 ## 1.12.0 - 2024-10-17 Patchman Filter
 
-* Enable pre-filtering Patchman results, see [example.toml](config.example.toml) for details.
+* Enable pre-filtering Patchman results, see [example.toml](config.example.toml)
+  for details.
 
 ## 1.11.0 - 2024-10-16 Menu Styling
 
@@ -15,7 +18,8 @@
 
 ## 1.10.2 - 2024-09-03 Log Volume Fix
 
-* The 1.10.0 version unfortunately introduced a large unnecessary log volume change.
+* The 1.10.0 version unfortunately introduced a large unnecessary log volume
+  change.
 
 ## 1.10.1 - 2024-08-29 Graylog Labels
 
@@ -31,24 +35,23 @@
 
 ## 1.9.0 - 2024-07-10 Tracing IDs
 
-* Using `tuwat -otelUrl stdout` or `TUWAT_OTEL_URL=stdout` now enables
-  tracing output on stdout.
+* Using `tuwat -otelUrl stdout` or `TUWAT_OTEL_URL=stdout` now enables tracing
+  output on stdout.
 * Add spans/traces to logs to enable correlation
-* Cleanup file paths in logging for visibility by stripping the
-  build path.
+* Cleanup file paths in logging for visibility by stripping the build path.
 * Remove error logging keys containing `<nil>` strings.
 
 ## 1.8.0 - 2024-06-05 Icinga2 Host ACKs
 
-* Downtimes and acknowledgements as well as disabling notifications
-  for a host will also disable those for the services on this host.
-  This differs from `icinga` and `nagios`, as they allow actions
-  like `Schedule downtime for this host` vs. `allow downtime for
+* Downtimes and acknowledgements as well as disabling notifications for a host
+  will also disable those for the services on this host. This differs from
+  `icinga` and `nagios`, as they allow actions like
+  `Schedule downtime for this host` vs. `allow downtime for
   this host and all services`.
 * Potentially breaking: Change logging system from `zap` to stdlib
-  `slog`.  In case the logs are parsed using external systems, the
-  logs are now in a different format.
-  This was done to reduce the overall amount of dependencies.
+  `slog`. In case the logs are parsed using external systems, the logs are now
+  in a different format. This was done to reduce the overall amount of
+  dependencies.
 
 ## 1.7.0 - 2024-04-29 Negative Times
 
@@ -57,9 +60,9 @@
 
 ## 1.6.0 - 2024-02-21 GitLab MR groups
 
-* Allow GitLab Groups to be configured for pulling merge requests.
-  This has the advantage of needing to specify fewer single projects
-  and also ignores archived projects by default.
+* Allow GitLab Groups to be configured for pulling merge requests. This has the
+  advantage of needing to specify fewer single projects and also ignores
+  archived projects by default.
 * Fix application crash on certain network timeouts.
 
 ## 1.5.2 - 2024-02-20
@@ -73,13 +76,12 @@
 
 ## 1.5.0 - 2024-02-19 backend mode
 
-* Add `alertmanager` API, e.g. `/api/alertmanager/v2/status` for
-  use as API project.
-  Note that this is an experimental feature and should not be relied
+* Add `alertmanager` API, e.g. `/api/alertmanager/v2/status` for use as API
+  project. Note that this is an experimental feature and should not be relied
   upon.
 * Add negative matchers: `!=` and `!~`
-* Use [semver](https://semver.org/) for versioning tuwat.  This allows
-  tuwat to be used as a library.
+* Use [semver](https://semver.org/) for versioning tuwat. This allows tuwat to
+  be used as a library.
 
 ## v1.4 - 2024-01-11 light mode
 
@@ -93,7 +95,7 @@
 
 * Fix rule matching from `v1.1` which made every rule match everything.
 * `tuwat` now listens to every network instead of only `localhost`
-  for the web port.  The management port still only binds to `localhost`.
+  for the web port. The management port still only binds to `localhost`.
 * The `icinga2` adapter now adds host groups to services.
 * Add more documentation regarding rules and dashboards.
 
@@ -101,12 +103,12 @@
 
 * Add a `when` rule to be able to match on when the alert happened.
 * Add more expressive rules, making it possible to express a
-  `greater than` on numerical values.  See `README` for details.
+  `greater than` on numerical values. See `README` for details.
 * Breaking configuration changes:
-  * The `what` rules are now combined via `AND` with label rules.
-    This streamlines the behaviour, making it behave like the label
-    rules themselves.  It also makes it possible e.g. to express that
-    a rule matcher only applies when the alert is old.
+    * The `what` rules are now combined via `AND` with label rules. This
+      streamlines the behaviour, making it behave like the label rules
+      themselves. It also makes it possible e.g. to express that a rule matcher
+      only applies when the alert is old.
 
 ## v1.0 - 2023-10-23 Maintenance
 
@@ -130,12 +132,12 @@
 * UX change: Full row for items now clickable for details
 * Adds possibility of having multiple dashboards/rule-sets
 * Breaking configuration changes:
-  * OAuth2 configuration is now a subsection named `OAuth2Creds`
-  * BasicAuth Username now configured with key `Username` instead of `User`
-    for all connectors.
+    * OAuth2 configuration is now a subsection named `OAuth2Creds`
+    * BasicAuth Username now configured with key `Username` instead of `User`
+      for all connectors.
 * Breaking behavioural changes:
-  * If observability depends on the label `thing` for websocket connections,
-    this has been renamed to `client`.
+    * If observability depends on the label `thing` for websocket connections,
+      this has been renamed to `client`.
 
 ## v0.16 - 2023-06-12 Resource Consumption
 
@@ -143,8 +145,8 @@
   `Projects = []`
 * Fixes connection leak in nagios-api connector
 * Breaking Configuration Changes:
-  * Change parsing of rules, so that label matchers are combined with `AND`
-    instead of `OR`.
+    * Change parsing of rules, so that label matchers are combined with `AND`
+      instead of `OR`.
 
 ## v0.15 - 2023-05-26 GitLab MR flood
 
@@ -158,8 +160,9 @@
 
 Breaking Changes:
 
-* actuator endpoints now on different port, no longer on main port (`8988` by default)
-  * http://127.0.0.1:8987/actuator/health (`/info`, `/prometheus`)
+* actuator endpoints now on different port, no longer on main port (`8988` by
+  default)
+    * http://127.0.0.1:8987/actuator/health (`/info`, `/prometheus`)
 
 ## v0.13 - 2023-05-11 Multiple Users
 
@@ -174,25 +177,25 @@ Breaking Changes:
 
 * Add a new GitHub collector showing open issues/pull requests
 * Breaking Configuration Changes:
-  * `GND_ENVIRONMENT` env var renamed to `TUWAT_ENVIRONMENT`
-  * `GND_INSTANCE` env var renamed to `TUWAT_INSTANCE`
-  * `GND_ADDR` env var renamed to `TUWAT_ADDR`
-  * `-mode dev|prod` removed in favour of `TUWAT_TEMPLATEDIR` and
-    `TUWAT_STATICDIR` env vars.
+    * `GND_ENVIRONMENT` env var renamed to `TUWAT_ENVIRONMENT`
+    * `GND_INSTANCE` env var renamed to `TUWAT_INSTANCE`
+    * `GND_ADDR` env var renamed to `TUWAT_ADDR`
+    * `-mode dev|prod` removed in favour of `TUWAT_TEMPLATEDIR` and
+      `TUWAT_STATICDIR` env vars.
 * Added `TUWAT_CONF` env var for specifying the configuration file
 
 ## v0.10 - 2023-02-10 Minimize Collections
 
-* Do not collect, if there is no-one subscribed to the dashboard to
-  avoid cpu/network activity
+* Do not collect, if there is no-one subscribed to the dashboard to avoid
+  cpu/network activity
 * Propagate telemetry information to sources
 
 ## v0.9 - 2022-10-31 Open Source
 
 * Open the source under a 3-Clause BSD License
 * Preparations for releasing on GitHub
-* Rename project from a temporary `gonagdash` to a hopefully less
-  temporary `tuwat`.
+* Rename project from a temporary `gonagdash` to a hopefully less temporary
+  `tuwat`.
 * Revise output on `tuwat -version`
 
 ## v0.8 - 2022-10-24 Silencing
@@ -228,5 +231,5 @@ Stream changes to the browser via Websockets.
 
 ## v0.1 - 2022-09-24 Initial Release
 
-Initial Release of Tuwat providing a basic non-working Dashboard for
-Nagios, Icinga 2, Patchman, Alertmanager and GitLab MRs.
+Initial Release of Tuwat providing a basic non-working Dashboard for Nagios,
+Icinga 2, Patchman, Alertmanager and GitLab MRs.

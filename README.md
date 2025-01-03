@@ -2,12 +2,12 @@
 
 ## What is the tuwat Dashboard?
 
-Tuwat is a replacement for the venerable [Nagdash] which had been adapted
-time and time again to provide accessors for an evolving infrastructure.
+Tuwat is a replacement for the venerable [Nagdash] which had been adapted time
+and time again to provide accessors for an evolving infrastructure.
 
 The driving mindset for Tuwat (in German "tu was", meaning "do something")
-is to show actionable items.  This is a  slight departure of [Nagdash],
-which shows only Nagios `Hosts`/`Services`.
+is to show actionable items. This is a slight departure of [Nagdash], which
+shows only Nagios `Hosts`/`Services`.
 
 [Nagdash]: https://github.com/lozzd/Nagdash
 
@@ -48,8 +48,8 @@ Available styles:
 The main configuration can contain `Rules`, but if multiple rule-sets/dashboards
 are needed, dashboards can be added to a folder.
 
-The `-dashboards` flag can be used to specify the folder, by default it looks
-at `/etc/tuwat.d`.
+The `-dashboards` flag can be used to specify the folder, by default it looks at
+`/etc/tuwat.d`.
 
 The files have to end with `.toml`, the basename will be used as dashboard name.
 
@@ -86,16 +86,15 @@ export TUWAT_TEMPLATEDIR= TUWAT_STATICDIR=
 
 * Open http://localhost:8988
 
-Setting `TUWAT_TEMPLATEDIR` and `TUWAT_STATICDIR` to empty will
-automatically use the development directories (`pkg/web/templates`
-and `pkg/web/static` respectively).
-Not declaring the template/static directory means that the
+Setting `TUWAT_TEMPLATEDIR` and `TUWAT_STATICDIR` to empty will automatically
+use the development directories (`pkg/web/templates` and `pkg/web/static`
+respectively). Not declaring the template/static directory means that the
 versions bundled into the binary are used.
 
 ### Adding a new collector
 
-* See `pkg/connectors/example` for a very basic example on how a connector
-  is implemented.
+* See `pkg/connectors/example` for a very basic example on how a connector is
+  implemented.
 
 ### JavaScript Development
 

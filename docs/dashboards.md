@@ -2,8 +2,8 @@
 
 ## Single Dashboard
 
-To only show a single dashboard, simply add all configuration
-and rules in the main `config.toml`.
+To only show a single dashboard, simply add all configuration and rules in the
+main `config.toml`.
 
 ### Example
 
@@ -20,15 +20,13 @@ Repos = ['synyx/tuwat', 'synyx/buchungsstreber']
 Tag = 'gh'
 ```
 
-
 ### Dashboard types
 
 There are two kinds of dashboards:
 
-* `mode = "exclude"`: The normal kind of dashboard.  Each rule
-  will filter the matching items from the board.
-* `mode = "include"`: Only items matching the rules are shown
-  on the board.
+* `mode = "exclude"`: The normal kind of dashboard. Each rule will filter the
+  matching items from the board.
+* `mode = "include"`: Only items matching the rules are shown on the board.
 
 ```toml
 [main]
@@ -37,9 +35,10 @@ mode = "include"
 
 ## Multiple Dashboards
 
-To have multiple dashboards, split the configuration into a main config in `config.toml` and create a folder containing the
-rule files for additional dashboards. These dashboards will appear in the navigation bar named like the corresponding files.
-
+To have multiple dashboards, split the configuration into a main config in
+`config.toml` and create a folder containing the rule files for additional
+dashboards. These dashboards will appear in the navigation bar named like the
+corresponding files.
 
 ### Example
 
