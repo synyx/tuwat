@@ -1,8 +1,6 @@
 module github.com/synyx/tuwat
 
-go 1.22.7
-
-toolchain go1.23.2
+go 1.23
 
 require (
 	github.com/BurntSushi/toml v1.4.0
