@@ -52,7 +52,7 @@ func TestCache(t *testing.T) {
 	}
 
 	clockMock.Add(20 * time.Minute)
-	_, err = cache.get(ctx, f)
+	_, _ = cache.get(ctx, f)
 	time.Sleep(20 * time.Millisecond)
 
 	_, err = cache.get(ctx, f)

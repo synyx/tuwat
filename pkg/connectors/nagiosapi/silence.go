@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -60,11 +61,14 @@ func (c *Connector) post(ctx context.Context, endpoint string, content map[strin
 
 	var response response
 	err = decoder.Decode(&response)
+	// in error case: the `content` map is overloaded with an error string
 	if err != nil {
-		return err
-	}
-	if !response.Success {
-		// TODO(jo): the `content` map is overloaded with an error string
+		var response errorResponse
+		err = decoder.Decode(&response)
+		if err != nil {
+			return err
+		}
+		return errors.Join(err, errors.New(response.Content))
 	}
 
 	return nil

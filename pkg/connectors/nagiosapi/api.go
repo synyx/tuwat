@@ -5,6 +5,11 @@ type response struct {
 	Success bool            `json:"success"`
 }
 
+type errorResponse struct {
+	Content string `json:"content"`
+	Success bool   `json:"success"`
+}
+
 type host struct {
 	NotificationsEnabled       string             `json:"notifications_enabled"`
 	CurrentState               string             `json:"current_state"`
