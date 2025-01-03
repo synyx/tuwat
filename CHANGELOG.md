@@ -1,6 +1,8 @@
 # Releases
 
-## 1.12.2 - 2025-01-03 New Year
+## 1.12.3 - 2025-01-03 New Year
+
+* Maintenance release, updating dependencies.
 
 ## 1.12.1 - 2024-10-17 Patchman Slowness
 
