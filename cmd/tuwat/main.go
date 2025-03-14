@@ -43,7 +43,7 @@ func main() {
 	acc.Register("aggregation", aggregation.NewAggregatorHealthCheck(aggregator))
 
 	go web.Handle(appCtx, cfg, webHandler, alertmanagerApi)
-	go aggregator.Run(appCtx)
+	go aggregator.Run(appCtx, cfg)
 	go acc.Run(appCtx)
 	go actuator.Handle(appCtx, cfg)
 

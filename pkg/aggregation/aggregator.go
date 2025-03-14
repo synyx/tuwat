@@ -5,6 +5,8 @@ import (
 	"fmt"
 	html "html/template"
 	"log/slog"
+	"maps"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,9 +25,10 @@ import (
 )
 
 type Aggregate struct {
-	CheckTime time.Time
-	Alerts    []Alert
-	Blocked   []BlockedAlert
+	CheckTime     time.Time
+	Alerts        []Alert
+	GroupedAlerts []AlertGroup
+	Blocked       []BlockedAlert
 }
 
 type Alert struct {
@@ -39,6 +42,12 @@ type Alert struct {
 	Links   []html.HTML
 	Labels  map[string]string
 	Silence connectors.SilencerFunc
+}
+
+type AlertGroup struct {
+	Where  string
+	Tag    string
+	Alerts []Alert
 }
 
 type BlockedAlert struct {
@@ -132,14 +141,14 @@ func (a *Aggregator) active() bool {
 	return true
 }
 
-func (a *Aggregator) Run(ctx context.Context) {
+func (a *Aggregator) Run(ctx context.Context, cfg *config.Config) {
 	ticker := a.clock.Ticker(a.interval)
 	defer ticker.Stop()
 
 	slog.InfoContext(ctx, "Collecting on Start")
 	collect := make(chan result, 20)
 	go a.collect(ctx, collect)
-	go a.collectAggregate(ctx, collect)
+	go a.collectAggregate(ctx, cfg, collect)
 
 	active := true
 	for {
@@ -159,14 +168,14 @@ func (a *Aggregator) Run(ctx context.Context) {
 
 			collect := make(chan result, 20)
 			go a.collect(ctx, collect)
-			go a.collectAggregate(ctx, collect)
+			go a.collectAggregate(ctx, cfg, collect)
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
-func (a *Aggregator) collectAggregate(ctx context.Context, collect <-chan result) {
+func (a *Aggregator) collectAggregate(ctx context.Context, cfg *config.Config, collect <-chan result) {
 	ctx, cancel := context.WithTimeout(ctx, a.interval)
 	defer cancel()
 
@@ -186,7 +195,7 @@ outer:
 	}
 
 	for _, dashboard := range a.dashboards {
-		a.aggregate(ctx, dashboard, results)
+		a.aggregate(ctx, cfg, dashboard, results)
 	}
 }
 
@@ -243,7 +252,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	close(collect)
 }
 
-func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard, results []result) {
+func (a *Aggregator) aggregate(ctx context.Context, cfg *config.Config, dashboard *config.Dashboard, results []result) {
 	slog.InfoContext(ctx, "Aggregating results", slog.String("dashboard", dashboard.Name), slog.Int("count", len(results)))
 
 	a.cmu.RLock()
@@ -307,9 +316,15 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		}
 	}
 
-	sort.Slice(alerts, func(i, j int) bool {
-		return alerts[i].When < alerts[j].When
-	})
+	var alertGroups []AlertGroup
+	if cfg.GroupAlerts {
+		alertGroups = groupAlerts(alerts)
+		alerts = []Alert{}
+	} else {
+		sort.Slice(alerts, func(i, j int) bool {
+			return alerts[i].When < alerts[j].When
+		})
+	}
 
 	sort.Slice(blockedAlerts, func(i, j int) bool {
 		return blockedAlerts[i].When < blockedAlerts[j].When
@@ -318,13 +333,44 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 	a.amu.Lock()
 	a.CheckTime = a.clock.Now()
 	a.current[dashboard.Name] = Aggregate{
-		CheckTime: a.CheckTime,
-		Alerts:    alerts,
-		Blocked:   blockedAlerts,
+		CheckTime:     a.CheckTime,
+		Alerts:        alerts,
+		GroupedAlerts: alertGroups,
+		Blocked:       blockedAlerts,
 	}
 	a.amu.Unlock()
 
 	a.notify(ctx)
+}
+
+func groupAlerts(alerts []Alert) []AlertGroup {
+	alertMap := make(map[string]AlertGroup)
+	for _, alert := range alerts {
+		group := alert.Where + alert.Tag
+		if val, ok := alertMap[group]; ok {
+			newAlerts := append(val.Alerts, alert)
+			val.Alerts = newAlerts
+			alertMap[group] = val
+		} else {
+			alertMap[group] = AlertGroup{
+				Where:  alert.Where,
+				Tag:    alert.Tag,
+				Alerts: []Alert{alert},
+			}
+		}
+	}
+
+	for _, alertGroup := range alertMap {
+		sort.Slice(alertGroup.Alerts, func(i, j int) bool {
+			return alertGroup.Alerts[i].When < alertGroup.Alerts[j].When
+		})
+	}
+
+	alertGroups := slices.Collect(maps.Values(alertMap))
+	sort.Slice(alertGroups, func(i, j int) bool {
+		return alertGroups[i].Alerts[0].When < alertGroups[j].Alerts[0].When
+	})
+	return alertGroups
 }
 
 func (a *Aggregator) Alerts(dashboardName string) Aggregate {
@@ -477,6 +523,14 @@ all:
 			if a.Id == alertId {
 				alert = a
 				break all
+			}
+		}
+		for _, g := range a.current[dashboard.Name].GroupedAlerts {
+			for _, a := range g.Alerts {
+				if a.Id == alertId {
+					alert = a
+					break all
+				}
 			}
 		}
 	}
