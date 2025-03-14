@@ -75,23 +75,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
-		state := connectors.Unknown
-		if sourceAlert.Status.State == stateUnprocessed {
-			state = connectors.Unknown
-		} else if sourceAlert.Status.State == stateActive && severity == "" {
-			state = connectors.Warning
-		} else if sourceAlert.Status.State == stateActive && severity == severityWarning {
-			state = connectors.Warning
-		} else if sourceAlert.Status.State == stateActive && severity == severityCritical {
-			state = connectors.Critical
-		} else if sourceAlert.Status.State == stateActive && severity == severityError {
-			state = connectors.Critical
-		} else {
-			slog.ErrorContext(ctx, "Cannot parse: Unknown state",
-				slog.Any("state", sourceAlert.Status.State),
-				slog.Any("severity", severity),
-			)
-		}
+		state := stateFromSourceAlert(ctx, sourceAlert, severity)
 
 		last, err := time.Parse("2006-01-02T15:04:05Z07", sourceAlert.StartsAt)
 		if err != nil {
@@ -142,6 +126,27 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	}
 
 	return alerts, nil
+}
+
+func stateFromSourceAlert(ctx context.Context, sourceAlert alert, severity string) connectors.State {
+	state := connectors.Unknown
+	if sourceAlert.Status.State == stateUnprocessed {
+		state = connectors.Unknown
+	} else if sourceAlert.Status.State == stateActive && severity == "" {
+		state = connectors.Warning
+	} else if sourceAlert.Status.State == stateActive && severity == severityWarning {
+		state = connectors.Warning
+	} else if sourceAlert.Status.State == stateActive && severity == severityCritical {
+		state = connectors.Critical
+	} else if sourceAlert.Status.State == stateActive && severity == severityError {
+		state = connectors.Critical
+	} else {
+		slog.ErrorContext(ctx, "Cannot parse: Unknown state",
+			slog.Any("state", sourceAlert.Status.State),
+			slog.Any("severity", severity),
+		)
+	}
+	return state
 }
 
 func (c *Connector) String() string {

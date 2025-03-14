@@ -74,7 +74,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Type":     "Host",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
-			State:       connectors.State(host.State),
+			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
 			Links: []html.HTML{
@@ -115,7 +115,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Type":       "Service",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
-			State:       connectors.State(service.State),
+			State:       fromServiceState(service.State),
 			Description: service.DisplayName,
 			Details:     service.LastCheckResult.Output,
 			Links: []html.HTML{
@@ -208,4 +208,20 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 
 	return nil, fmt.Errorf("failed to get, unknown status code: %d", res.StatusCode)
+}
+
+func fromHostState(state int) connectors.State {
+	switch state {
+	case 0:
+		return connectors.OK
+	case 1:
+		return connectors.Critical
+	case 2:
+		return connectors.Critical
+	}
+	return connectors.Unknown
+}
+
+func fromServiceState(state int) connectors.State {
+	return connectors.State(state)
 }

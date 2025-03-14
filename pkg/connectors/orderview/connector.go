@@ -46,15 +46,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	for _, sourceAlert := range sourceAlerts {
 
-		var state connectors.State
-		switch sourceAlert.State {
-		case 2:
-			state = connectors.Critical
-		case 1:
-			state = connectors.Warning
-		default:
-			state = connectors.Unknown
-		}
+		state := fromSourceState(sourceAlert.State)
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -118,4 +110,15 @@ func (c *Connector) get(ctx context.Context, endpoint string) (*http.Response, e
 	}
 
 	return res, nil
+}
+
+func fromSourceState(state int) connectors.State {
+	switch state {
+	case 2:
+		return connectors.Critical
+	case 1:
+		return connectors.Warning
+	default:
+		return connectors.Unknown
+	}
 }

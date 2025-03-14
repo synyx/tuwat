@@ -64,7 +64,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 					"Type":     "Host",
 				},
 				Start:       time.Unix(stateChange, 0),
-				State:       connectors.State(state),
+				State:       fromHostState(state),
 				Description: "Host down",
 				Details:     host.PluginOutput,
 				Links: []html.HTML{
@@ -103,7 +103,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 					"Type":     "Service",
 				},
 				Start:       time.Unix(stateChange, 0),
-				State:       connectors.State(state),
+				State:       fromServiceState(state),
 				Description: serviceName,
 				Details:     service.PluginOutput,
 				Links: []html.HTML{
@@ -149,4 +149,24 @@ func (c *Connector) collectHosts(ctx context.Context) (map[string]host, error) {
 	}
 
 	return response.Content, nil
+}
+
+func fromHostState(state int64) connectors.State {
+	switch state {
+	case 0:
+		return connectors.OK
+	case 1:
+		// assumption: 0 = Don't use aggressive host checking (default)
+		// this means we should treat this as OK, however, be cautious.
+		return connectors.Warning
+	case 2:
+		return connectors.Critical
+	case 3:
+		return connectors.Critical
+	}
+	return connectors.Unknown
+}
+
+func fromServiceState(state int64) connectors.State {
+	return connectors.State(state)
 }

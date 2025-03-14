@@ -88,18 +88,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			}
 		}
 
-		state := connectors.Unknown
-		description := "Host Updates"
-		if host.SecurityUpdateCount > 0 {
-			state = connectors.Critical
-			description = fmt.Sprintf("Host Security Updates missing: %d", host.SecurityUpdateCount)
-		} else if host.BugfixUpdateCount > 0 {
-			state = connectors.Warning
-			description = fmt.Sprintf("Host Bugfix Updates missing: %d", host.BugfixUpdateCount)
-		} else if host.RebootRequired {
-			state = connectors.Warning
-			description = "Host Reboot Required"
-		}
+		state, description := fromHostState(host)
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -253,4 +242,20 @@ func (c *Connector) get(ctx context.Context, endpoint string) (io.ReadCloser, er
 	}
 
 	return res.Body, nil
+}
+
+func fromHostState(host host) (connectors.State, string) {
+	state := connectors.Unknown
+	description := "Host Updates"
+	if host.SecurityUpdateCount > 0 {
+		state = connectors.Critical
+		description = fmt.Sprintf("Host Security Updates missing: %d", host.SecurityUpdateCount)
+	} else if host.BugfixUpdateCount > 0 {
+		state = connectors.Warning
+		description = fmt.Sprintf("Host Bugfix Updates missing: %d", host.BugfixUpdateCount)
+	} else if host.RebootRequired {
+		state = connectors.Warning
+		description = "Host Reboot Required"
+	}
+	return state, description
 }
