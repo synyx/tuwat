@@ -88,7 +88,7 @@ func aggregate(a *Aggregator, t *testing.T) Aggregate {
 		t.Fatal("Make sure nr == number in mock Collect()", results)
 	}
 
-	a.aggregate(ctx, a.dashboards["Home"], results)
+	a.aggregate(ctx, nil, a.dashboards["Home"], results)
 
 	return a.current["Home"]
 }

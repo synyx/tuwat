@@ -103,6 +103,15 @@ func (h *alertmanagerHandler) alerts(w http.ResponseWriter, r *http.Request) {
 
 			gettableAlerts = append(gettableAlerts, mapAlert(dashboard.Name, aggregate, alert, "active"))
 		}
+		for _, alertGroup := range aggregate.GroupedAlerts {
+			for _, alert := range alertGroup.Alerts {
+				if alert.Status == "green" {
+					continue
+				}
+
+				gettableAlerts = append(gettableAlerts, mapAlert(dashboard.Name, aggregate, alert, "active"))
+			}
+		}
 		for _, alert := range aggregate.Blocked {
 			if alert.Status == "green" {
 				continue
