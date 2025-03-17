@@ -20,9 +20,30 @@ func TestAggregation(t *testing.T) {
 		},
 	}
 
+	cfg := &config.Config{}
+
 	a := aggregator(config.Excluding, filter)
-	aggregation := aggregate(a, t)
+	aggregation := aggregate(a, t, cfg)
 	if len(aggregation.Alerts) != 2 {
+		t.Error("invalid shown", aggregation)
+	}
+}
+
+func TestGroupedAggregation(t *testing.T) {
+	filter := config.Rule{
+		Description: "Ignore MRs",
+		Labels: map[string]config.RuleMatcher{
+			"Hostname": config.ParseRuleMatcher("~= gitlab"),
+		},
+	}
+
+	cfg := &config.Config{
+		GroupAlerts: true,
+	}
+
+	a := aggregator(config.Excluding, filter)
+	aggregation := aggregate(a, t, cfg)
+	if len(aggregation.GroupedAlerts) != 1 {
 		t.Error("invalid shown", aggregation)
 	}
 }
@@ -37,8 +58,10 @@ func TestWhen(t *testing.T) {
 		},
 	}
 
+	cfg := &config.Config{}
+
 	a := aggregator(config.Excluding, filter)
-	aggregation := aggregate(a, t)
+	aggregation := aggregate(a, t, cfg)
 	if len(aggregation.Blocked) != 1 {
 		t.Error("invalid blocked", aggregation.Blocked)
 	}
@@ -66,7 +89,7 @@ func aggregator(mode config.DashboardMode, filters ...config.Rule) *Aggregator {
 	return NewAggregator(cfg, connector.clock)
 }
 
-func aggregate(a *Aggregator, t *testing.T) Aggregate {
+func aggregate(a *Aggregator, t *testing.T, cfg *config.Config) Aggregate {
 	collect := make(chan result)
 	var results []result
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -88,7 +111,7 @@ func aggregate(a *Aggregator, t *testing.T) Aggregate {
 		t.Fatal("Make sure nr == number in mock Collect()", results)
 	}
 
-	a.aggregate(ctx, nil, a.dashboards["Home"], results)
+	a.aggregate(ctx, cfg, a.dashboards["Home"], results)
 
 	return a.current["Home"]
 }
