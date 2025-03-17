@@ -67,6 +67,7 @@ type Aggregator struct {
 	amu           *sync.RWMutex // Protecting current Aggregate
 	current       map[string]Aggregate
 	dashboards    map[string]*config.Dashboard
+	groupAlerts   bool
 
 	lastAccess atomic.Value
 
@@ -94,11 +95,12 @@ func init() {
 func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 
 	a := &Aggregator{
-		interval:   cfg.Interval,
-		connectors: cfg.Connectors,
-		whereTempl: cfg.WhereTemplate,
-		current:    make(map[string]Aggregate),
-		dashboards: cfg.Dashboards,
+		interval:    cfg.Interval,
+		connectors:  cfg.Connectors,
+		whereTempl:  cfg.WhereTemplate,
+		current:     make(map[string]Aggregate),
+		dashboards:  cfg.Dashboards,
+		groupAlerts: cfg.GroupAlerts,
 
 		registrations: sync.Map{},
 		cmu:           new(sync.RWMutex),
@@ -141,14 +143,14 @@ func (a *Aggregator) active() bool {
 	return true
 }
 
-func (a *Aggregator) Run(ctx context.Context, cfg *config.Config) {
+func (a *Aggregator) Run(ctx context.Context) {
 	ticker := a.clock.Ticker(a.interval)
 	defer ticker.Stop()
 
 	slog.InfoContext(ctx, "Collecting on Start")
 	collect := make(chan result, 20)
 	go a.collect(ctx, collect)
-	go a.collectAggregate(ctx, cfg, collect)
+	go a.collectAggregate(ctx, collect)
 
 	active := true
 	for {
@@ -168,14 +170,14 @@ func (a *Aggregator) Run(ctx context.Context, cfg *config.Config) {
 
 			collect := make(chan result, 20)
 			go a.collect(ctx, collect)
-			go a.collectAggregate(ctx, cfg, collect)
+			go a.collectAggregate(ctx, collect)
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
-func (a *Aggregator) collectAggregate(ctx context.Context, cfg *config.Config, collect <-chan result) {
+func (a *Aggregator) collectAggregate(ctx context.Context, collect <-chan result) {
 	ctx, cancel := context.WithTimeout(ctx, a.interval)
 	defer cancel()
 
@@ -195,7 +197,7 @@ outer:
 	}
 
 	for _, dashboard := range a.dashboards {
-		a.aggregate(ctx, cfg, dashboard, results)
+		a.aggregate(ctx, dashboard, results)
 	}
 }
 
@@ -252,7 +254,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	close(collect)
 }
 
-func (a *Aggregator) aggregate(ctx context.Context, cfg *config.Config, dashboard *config.Dashboard, results []result) {
+func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard, results []result) {
 	slog.InfoContext(ctx, "Aggregating results", slog.String("dashboard", dashboard.Name), slog.Int("count", len(results)))
 
 	a.cmu.RLock()
@@ -317,7 +319,7 @@ func (a *Aggregator) aggregate(ctx context.Context, cfg *config.Config, dashboar
 	}
 
 	var alertGroups []AlertGroup
-	if cfg.GroupAlerts {
+	if a.groupAlerts {
 		alertGroups = groupAlerts(alerts)
 		alerts = []Alert{}
 	} else {

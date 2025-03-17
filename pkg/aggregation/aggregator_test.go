@@ -20,10 +20,8 @@ func TestAggregation(t *testing.T) {
 		},
 	}
 
-	cfg := &config.Config{}
-
-	a := aggregator(config.Excluding, filter)
-	aggregation := aggregate(a, t, cfg)
+	a := aggregator(config.Excluding, false, filter)
+	aggregation := aggregate(a, t)
 	if len(aggregation.Alerts) != 2 {
 		t.Error("invalid shown", aggregation)
 	}
@@ -37,12 +35,8 @@ func TestGroupedAggregation(t *testing.T) {
 		},
 	}
 
-	cfg := &config.Config{
-		GroupAlerts: true,
-	}
-
-	a := aggregator(config.Excluding, filter)
-	aggregation := aggregate(a, t, cfg)
+	a := aggregator(config.Excluding, true, filter)
+	aggregation := aggregate(a, t)
 	if len(aggregation.GroupedAlerts) != 1 {
 		t.Error("invalid shown", aggregation)
 	}
@@ -58,10 +52,8 @@ func TestWhen(t *testing.T) {
 		},
 	}
 
-	cfg := &config.Config{}
-
-	a := aggregator(config.Excluding, filter)
-	aggregation := aggregate(a, t, cfg)
+	a := aggregator(config.Excluding, false, filter)
+	aggregation := aggregate(a, t)
 	if len(aggregation.Blocked) != 1 {
 		t.Error("invalid blocked", aggregation.Blocked)
 	}
@@ -70,7 +62,7 @@ func TestWhen(t *testing.T) {
 	}
 }
 
-func aggregator(mode config.DashboardMode, filters ...config.Rule) *Aggregator {
+func aggregator(mode config.DashboardMode, groupAlerts bool, filters ...config.Rule) *Aggregator {
 	cfg, _ := config.NewConfiguration()
 	log.Initialize(cfg)
 
@@ -86,10 +78,12 @@ func aggregator(mode config.DashboardMode, filters ...config.Rule) *Aggregator {
 		},
 	}
 
+	cfg.GroupAlerts = groupAlerts
+
 	return NewAggregator(cfg, connector.clock)
 }
 
-func aggregate(a *Aggregator, t *testing.T, cfg *config.Config) Aggregate {
+func aggregate(a *Aggregator, t *testing.T) Aggregate {
 	collect := make(chan result)
 	var results []result
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -111,7 +105,7 @@ func aggregate(a *Aggregator, t *testing.T, cfg *config.Config) Aggregate {
 		t.Fatal("Make sure nr == number in mock Collect()", results)
 	}
 
-	a.aggregate(ctx, cfg, a.dashboards["Home"], results)
+	a.aggregate(ctx, a.dashboards["Home"], results)
 
 	return a.current["Home"]
 }
