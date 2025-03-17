@@ -74,7 +74,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Type":     "Host",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
-			State:       connectors.State(host.State),
+			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
 			Links: []html.HTML{
@@ -115,7 +115,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Type":       "Service",
 			},
 			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
-			State:       connectors.State(service.State),
+			State:       fromServiceState(service.State),
 			Description: service.DisplayName,
 			Details:     service.LastCheckResult.Output,
 			Links: []html.HTML{
@@ -208,4 +208,25 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	}
 
 	return nil, fmt.Errorf("failed to get, unknown status code: %d", res.StatusCode)
+}
+
+// see: https://icinga.com/docs/icinga-2/latest/doc/03-monitoring-basics/#check-result-state-mapping
+func fromHostState(state int) connectors.State {
+	switch state {
+	case 0: // OK
+		fallthrough
+	case 1: // WARNING
+		// both OK and WARNING mean that the host generally is considered UP.
+		return connectors.OK
+	case 2: // CRITICAL
+		fallthrough
+	case 3: // UNKNOWN
+		// bot CRITICAL and UNKNOWN are considered DOWN for hosts by icinga2.
+		return connectors.Critical
+	}
+	return connectors.Unknown
+}
+
+func fromServiceState(state int) connectors.State {
+	return connectors.State(state)
 }

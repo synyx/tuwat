@@ -51,10 +51,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
-		state := connectors.Critical
-		if issue.DueDate == time.Now().Format("2006-01-02") {
-			state = connectors.Warning
-		}
+		state := fromSourceIssue(issue)
 
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -124,4 +121,12 @@ func (c *Connector) collectIssues(ctx context.Context) ([]issue, error) {
 	}
 
 	return response.Issues, nil
+}
+
+func fromSourceIssue(issue issue) connectors.State {
+	state := connectors.Critical
+	if issue.DueDate == time.Now().Format("2006-01-02") {
+		state = connectors.Warning
+	}
+	return state
 }
