@@ -20,9 +20,24 @@ func TestAggregation(t *testing.T) {
 		},
 	}
 
-	a := aggregator(config.Excluding, filter)
+	a := aggregator(config.Excluding, false, filter)
 	aggregation := aggregate(a, t)
 	if len(aggregation.Alerts) != 2 {
+		t.Error("invalid shown", aggregation)
+	}
+}
+
+func TestGroupedAggregation(t *testing.T) {
+	filter := config.Rule{
+		Description: "Ignore MRs",
+		Labels: map[string]config.RuleMatcher{
+			"Hostname": config.ParseRuleMatcher("~= gitlab"),
+		},
+	}
+
+	a := aggregator(config.Excluding, true, filter)
+	aggregation := aggregate(a, t)
+	if len(aggregation.GroupedAlerts) != 1 {
 		t.Error("invalid shown", aggregation)
 	}
 }
@@ -37,7 +52,7 @@ func TestWhen(t *testing.T) {
 		},
 	}
 
-	a := aggregator(config.Excluding, filter)
+	a := aggregator(config.Excluding, false, filter)
 	aggregation := aggregate(a, t)
 	if len(aggregation.Blocked) != 1 {
 		t.Error("invalid blocked", aggregation.Blocked)
@@ -47,7 +62,7 @@ func TestWhen(t *testing.T) {
 	}
 }
 
-func aggregator(mode config.DashboardMode, filters ...config.Rule) *Aggregator {
+func aggregator(mode config.DashboardMode, groupAlerts bool, filters ...config.Rule) *Aggregator {
 	cfg, _ := config.NewConfiguration()
 	log.Initialize(cfg)
 
@@ -62,6 +77,8 @@ func aggregator(mode config.DashboardMode, filters ...config.Rule) *Aggregator {
 			Filter: filters,
 		},
 	}
+
+	cfg.GroupAlerts = groupAlerts
 
 	return NewAggregator(cfg, connector.clock)
 }

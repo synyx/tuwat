@@ -5,6 +5,8 @@ import (
 	"fmt"
 	html "html/template"
 	"log/slog"
+	"maps"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,9 +25,10 @@ import (
 )
 
 type Aggregate struct {
-	CheckTime time.Time
-	Alerts    []Alert
-	Blocked   []BlockedAlert
+	CheckTime     time.Time
+	Alerts        []Alert
+	GroupedAlerts []AlertGroup
+	Blocked       []BlockedAlert
 }
 
 type Alert struct {
@@ -39,6 +42,12 @@ type Alert struct {
 	Links   []html.HTML
 	Labels  map[string]string
 	Silence connectors.SilencerFunc
+}
+
+type AlertGroup struct {
+	Where  string
+	Tag    string
+	Alerts []Alert
 }
 
 type BlockedAlert struct {
@@ -58,6 +67,7 @@ type Aggregator struct {
 	amu           *sync.RWMutex // Protecting current Aggregate
 	current       map[string]Aggregate
 	dashboards    map[string]*config.Dashboard
+	groupAlerts   bool
 
 	lastAccess atomic.Value
 
@@ -85,11 +95,12 @@ func init() {
 func NewAggregator(cfg *config.Config, clock clock.Clock) *Aggregator {
 
 	a := &Aggregator{
-		interval:   cfg.Interval,
-		connectors: cfg.Connectors,
-		whereTempl: cfg.WhereTemplate,
-		current:    make(map[string]Aggregate),
-		dashboards: cfg.Dashboards,
+		interval:    cfg.Interval,
+		connectors:  cfg.Connectors,
+		whereTempl:  cfg.WhereTemplate,
+		current:     make(map[string]Aggregate),
+		dashboards:  cfg.Dashboards,
+		groupAlerts: cfg.GroupAlerts,
 
 		registrations: sync.Map{},
 		cmu:           new(sync.RWMutex),
@@ -307,9 +318,15 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		}
 	}
 
-	sort.Slice(alerts, func(i, j int) bool {
-		return alerts[i].When < alerts[j].When
-	})
+	var alertGroups []AlertGroup
+	if a.groupAlerts {
+		alertGroups = groupAlerts(alerts)
+		alerts = []Alert{}
+	} else {
+		sort.Slice(alerts, func(i, j int) bool {
+			return alerts[i].When < alerts[j].When
+		})
+	}
 
 	sort.Slice(blockedAlerts, func(i, j int) bool {
 		return blockedAlerts[i].When < blockedAlerts[j].When
@@ -318,13 +335,44 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 	a.amu.Lock()
 	a.CheckTime = a.clock.Now()
 	a.current[dashboard.Name] = Aggregate{
-		CheckTime: a.CheckTime,
-		Alerts:    alerts,
-		Blocked:   blockedAlerts,
+		CheckTime:     a.CheckTime,
+		Alerts:        alerts,
+		GroupedAlerts: alertGroups,
+		Blocked:       blockedAlerts,
 	}
 	a.amu.Unlock()
 
 	a.notify(ctx)
+}
+
+func groupAlerts(alerts []Alert) []AlertGroup {
+	alertMap := make(map[string]AlertGroup)
+	for _, alert := range alerts {
+		group := alert.Where + alert.Tag
+		if val, ok := alertMap[group]; ok {
+			newAlerts := append(val.Alerts, alert)
+			val.Alerts = newAlerts
+			alertMap[group] = val
+		} else {
+			alertMap[group] = AlertGroup{
+				Where:  alert.Where,
+				Tag:    alert.Tag,
+				Alerts: []Alert{alert},
+			}
+		}
+	}
+
+	for _, alertGroup := range alertMap {
+		sort.Slice(alertGroup.Alerts, func(i, j int) bool {
+			return alertGroup.Alerts[i].When < alertGroup.Alerts[j].When
+		})
+	}
+
+	alertGroups := slices.Collect(maps.Values(alertMap))
+	sort.Slice(alertGroups, func(i, j int) bool {
+		return alertGroups[i].Alerts[0].When < alertGroups[j].Alerts[0].When
+	})
+	return alertGroups
 }
 
 func (a *Aggregator) Alerts(dashboardName string) Aggregate {
@@ -477,6 +525,14 @@ all:
 			if a.Id == alertId {
 				alert = a
 				break all
+			}
+		}
+		for _, g := range a.current[dashboard.Name].GroupedAlerts {
+			for _, a := range g.Alerts {
+				if a.Id == alertId {
+					alert = a
+					break all
+				}
 			}
 		}
 	}

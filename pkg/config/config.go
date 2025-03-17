@@ -43,6 +43,7 @@ type Config struct {
 	OtelUrl        string
 	Instance       string
 	PrintVersion   bool
+	GroupAlerts    bool
 	Connectors     []connectors.Connector
 	WhereTemplate  *template.Template
 	Interval       time.Duration
@@ -67,6 +68,7 @@ type mainConfig struct {
 	WhereTemplate string `toml:"where"`
 	Interval      string `toml:"interval"`
 	Style         string `toml:"style"`
+	GroupAlerts   bool   `toml:"group_alerts"`
 }
 
 type mainDashboardConfig struct {
@@ -193,6 +195,7 @@ func (cfg *Config) defaultConfiguration() rootConfig {
 
 	rootConfig.Main.Interval = "1m"
 	rootConfig.Main.Style = "dark"
+	rootConfig.Main.GroupAlerts = false
 
 	return rootConfig
 }
@@ -212,6 +215,7 @@ func (cfg *Config) loadConfigFile(file string, rootConfig *rootConfig) error {
 
 func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	cfg.Style = rootConfig.Main.Style
+	cfg.GroupAlerts = rootConfig.Main.GroupAlerts
 
 	// Add connectors
 	for _, connectorConfig := range rootConfig.Alertmanagers {

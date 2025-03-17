@@ -15,28 +15,57 @@
     </thead>
     <tbody>
     {{range .Content.Alerts}}
-    <tr>
-        <td>
-            {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
-        </td>
-        <td class="status {{.Status}}">
-            <details>
-                <summary>
-                    {{.What}}
-                    {{range .Links}}
-                        {{.}}
-                    {{end}}
-                </summary>
-                <div class="content">
-                    <div>{{.Details}}</div>
-                    <pre>{{json .Labels}}</pre>
-                </div>
-            </details>
-        </td>
-        <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
-    </tr>
+        <tr>
+            <td>
+                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            </td>
+            <td class="status {{.Status}}">
+                <details>
+                    <summary>
+                        {{.What}}
+                        {{range .Links}}
+                            {{.}}
+                        {{end}}
+                    </summary>
+                    <div class="content">
+                        <div>{{.Details}}</div>
+                        <pre>{{json .Labels}}</pre>
+                    </div>
+                </details>
+            </td>
+            <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+        </tr>
     {{end}}
     </tbody>
+    {{range .Content.GroupedAlerts}}
+    <tbody>
+        <tr>
+            <td rowspan="{{len .Alerts}}">
+                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            </td>
+        {{range $i, $alert := .Alerts}}
+            {{if $i }}
+        <tr>
+            {{end}}
+            <td class="status {{$alert.Status}}">
+                <details>
+                    <summary>
+                        {{$alert.What}}
+                        {{range $alert.Links}}
+                            {{.}}
+                        {{end}}
+                    </summary>
+                    <div class="content">
+                        <div>{{$alert.Details}}</div>
+                        <pre>{{json $alert.Labels}}</pre>
+                    </div>
+                </details>
+            </td>
+            <td align="right"><time datetime="{{$alert.When.Seconds}}S">{{niceDuration $alert.When}}</time></td>
+        </tr>
+        {{end}}
+    </tbody>
+    {{end}}
 </table>
 
 <h3 class="filtered">
