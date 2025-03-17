@@ -151,17 +151,23 @@ func (c *Connector) collectHosts(ctx context.Context) (map[string]host, error) {
 	return response.Content, nil
 }
 
+// see https://assets.nagios.com/downloads/nagioscore/docs/nagioscore/4/en/hostchecks.html
+// Host State Determination
 func fromHostState(state int64) connectors.State {
 	switch state {
-	case 0:
+	case 0: // OK
 		return connectors.OK
-	case 1:
+	case 1: // WARNING
 		// assumption: 0 = Don't use aggressive host checking (default)
 		// this means we should treat this as OK, however, be cautious.
 		return connectors.Warning
-	case 2:
-		return connectors.Critical
-	case 3:
+	case 2: // CRITICAL
+		fallthrough
+	case 3: // UNKNOWN
+		// within nagios the DOWN state can map to different states (DOWN,
+		// UNREACHABLE) based on host dependencies.  As tuwat does not model
+		// alert dependencies currently, both UNREACHABLE (All parents are
+		// either DOWN or UNREACHABLE) and DOWN map to critical.
 		return connectors.Critical
 	}
 	return connectors.Unknown
