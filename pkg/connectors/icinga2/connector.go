@@ -210,13 +210,18 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	return nil, fmt.Errorf("failed to get, unknown status code: %d", res.StatusCode)
 }
 
+// see: https://icinga.com/docs/icinga-2/latest/doc/03-monitoring-basics/#check-result-state-mapping
 func fromHostState(state int) connectors.State {
 	switch state {
-	case 0:
+	case 0: // OK
+		fallthrough
+	case 1: // WARNING
+		// both OK and WARNING mean that the host generally is considered UP.
 		return connectors.OK
-	case 1:
-		return connectors.Critical
-	case 2:
+	case 2: // CRITICAL
+		fallthrough
+	case 3: // UNKNOWN
+		// bot CRITICAL and UNKNOWN are considered DOWN for hosts by icinga2.
 		return connectors.Critical
 	}
 	return connectors.Unknown
