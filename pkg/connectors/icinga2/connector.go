@@ -217,7 +217,9 @@ func fromHostState(state int) connectors.State {
 		fallthrough
 	case 1: // WARNING
 		// both OK and WARNING mean that the host generally is considered UP.
-		return connectors.OK
+		// However, what the API delivers and what the check result codes are
+		// seem to differ.
+		return connectors.Critical
 	case 2: // CRITICAL
 		fallthrough
 	case 3: // UNKNOWN
