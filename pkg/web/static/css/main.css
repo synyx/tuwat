@@ -16,6 +16,7 @@ h3 {
 }
 
 table, td {
+    border: none;
     border-collapse: collapse;
     padding: 3px;
     font-size: 1.1em;
@@ -25,15 +26,21 @@ table {
     border-spacing: 0;
     background: #242222;
     border: 1px solid transparent;
-    border-collapse: collapse;
+    border-collapse: separate;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
 
-table tbody {
+table .alert_group {
     vertical-align: top;
-    border: 1px solid black;
+    border-collapse: collapse;
+    border-top: 1px solid black;
+}
+
+table .first_of_group {
+    border-collapse: collapse;
+    border-top: 1px solid black;
 }
 
 th {
