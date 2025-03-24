@@ -36,11 +36,9 @@
             <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
         </tr>
     {{end}}
-    </tbody>
     {{range .Content.GroupedAlerts}}
-    <tbody>
         <tr>
-            <td rowspan="{{len .Alerts}}">
+            <td rowspan="{{len .Alerts}}" class="alert_group">
                 {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
             </td>
         {{range $i, $alert := .Alerts}}
@@ -61,11 +59,11 @@
                     </div>
                 </details>
             </td>
-            <td align="right"><time datetime="{{$alert.When.Seconds}}S">{{niceDuration $alert.When}}</time></td>
+            <td align="right" {{if not $i}}class="first_of_group"{{end}}><time datetime="{{$alert.When.Seconds}}S">{{niceDuration $alert.When}}</time></td>
         </tr>
         {{end}}
-    </tbody>
     {{end}}
+    </tbody>
 </table>
 
 <h3 class="filtered">
