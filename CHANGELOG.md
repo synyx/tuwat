@@ -1,5 +1,11 @@
 # Releases
 
+## 1.13.0 - 2025-03-24 Alert Groups
+
+* Alerts can now be grouped via `group_alerts = true`
+  This only affects the view.
+* Hosts in DOWN state will now be marked as CRITICAL for Icinga2/Nagios.
+
 ## 1.12.3 - 2025-01-03 New Year
 
 * Maintenance release, updating dependencies.
