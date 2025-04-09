@@ -65,6 +65,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			continue
 		}
 
+		var links []html.HTML
+		if host.NotesUrl != "" {
+			links = append(links, html.HTML("<a href=\""+host.NotesUrl+"\" target=\"_blank\" alt=\"Runbook\">📖</a>"))
+		}
+		links = append(links, html.HTML("<a href=\""+c.config.DashboardURL+"/dashboard#!/monitoring/host/show?host="+host.DisplayName+"\" target=\"_blank\" alt=\"Home\">🏠</a>"))
+
 		sec, dec := math.Modf(host.LastStateChange)
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -77,9 +83,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
-			Links: []html.HTML{
-				html.HTML("<a href=\"" + c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + host.DisplayName + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
-			},
+			Links:       []html.HTML{},
 		}
 		alert.Silence = c.createSilencer(alert)
 		alerts = append(alerts, alert)
