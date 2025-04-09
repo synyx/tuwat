@@ -31,6 +31,16 @@ func TestIcinga2Connector(t *testing.T) {
 	} else {
 		t.Error("service should be labeled with host groups ")
 	}
+
+	runbookFound := false
+	for _, link := range alerts[1].Links {
+		if strings.Contains(string(link), "Runbook") {
+			runbookFound = true
+		}
+	}
+	if !runbookFound {
+		t.Error("Runbook should have been found")
+	}
 }
 
 func TestIcinga2AckPropagation(t *testing.T) {
@@ -438,7 +448,7 @@ const icinga2MockServiceResponse = `
         "next_check": 1664024171.514693,
         "next_update": 1664024471.703129,
         "notes": "",
-        "notes_url": "",
+        "notes_url": "https://example.com",
         "original_attributes": null,
         "package": "_etc",
         "paused": false,
