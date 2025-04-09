@@ -104,6 +104,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			hostgroups = host.Host.Groups
 		}
 
+		var links []html.HTML
+		if service.NotesUrl != "" {
+			links = append(links, html.HTML("<a href=\""+service.NotesUrl+"\" target=\"_blank\" alt=\"Runbook\">📖</a>"))
+		}
+		links = append(links, html.HTML("<a href=\""+c.config.DashboardURL+"/dashboard#!/monitoring/host/show?host="+service.HostName+"&service="+service.Name+"\" target=\"_blank\" alt=\"Home\">🏠</a>"))
+
 		sec, dec := math.Modf(service.LastStateChange)
 		alert := connectors.Alert{
 			Labels: map[string]string{
@@ -118,9 +124,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       fromServiceState(service.State),
 			Description: service.DisplayName,
 			Details:     service.LastCheckResult.Output,
-			Links: []html.HTML{
-				html.HTML("<a href=\"" + c.config.DashboardURL + "/dashboard#!/monitoring/host/show?host=" + service.HostName + "&service=" + service.Name + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
-			},
+			Links:       links,
 		}
 
 		alert.Silence = c.createSilencer(alert)

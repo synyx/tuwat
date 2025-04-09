@@ -39,6 +39,7 @@ type service struct {
 	MaxCheckAttempts    int         `json:"max_check_attempts"`
 	CheckAttempt        int         `json:"check_attempt"`
 	Groups              []string    `json:"groups"`
+	NotesUrl            string      `json:"notes_url"`
 }
 
 type checkResult struct {
