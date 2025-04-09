@@ -1,6 +1,6 @@
 # Releases
 
-## 1.14.0 - XXX
+## 1.14.0 - 2025-04-09 Icinga2 Runbooks
 
 * The Icinga 2 connector now generates `Runbook` links when using the
   `note_url` field.
