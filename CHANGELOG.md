@@ -1,5 +1,10 @@
 # Releases
 
+## 1.14.0 - XXX
+
+* The Icinga 2 connector now generates `Runbook` links when using the
+  `note_url` field.
+
 ## 1.13.0 - 2025-03-24 Alert Groups
 
 * Alerts can now be grouped via `group_alerts = true`
