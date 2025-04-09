@@ -83,7 +83,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
-			Links:       []html.HTML{},
+			Links:       links,
 		}
 		alert.Silence = c.createSilencer(alert)
 		alerts = append(alerts, alert)
