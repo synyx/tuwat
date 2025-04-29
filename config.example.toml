@@ -73,3 +73,15 @@ Tag = 'demo'
 #TimeRange = 600 # query timerange in seconds
 #Username = "example3f5bb1632f40bde25d315d53bdec83e"
 #Password = "token"
+#
+#[[wizio]]
+#Tag = 'wizio'
+#URL = "https://your-api.app.wiz.io"
+#StatusFilter = ["OPEN", "IN_PROGRESS"]
+#SeverityFilter = ["CRITICAL", "HIGH"]
+#NumberOfIssues = 20
+#[wizio.OAuth2Creds]
+#ClientID = "example-12143412"
+#ClientSecret = "secretsecret"
+#TokenURL = "https://auth.app.wiz.io/oauth/token"
+#Endpoapi.eu13intParams = {"audience" =  ["wiz-api"]}

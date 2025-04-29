@@ -18,8 +18,11 @@ type Connector struct {
 }
 
 type Config struct {
-	Tag string
+	Tag            string
+	StatusFilter   []string
+	SeverityFilter []string
 	common.HTTPConfig
+	NumberOfIssues int
 }
 
 func NewConnector(cfg *Config) *Connector {
@@ -42,13 +45,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		descr := "Issue: " + node.SourceRules[0].Name
 		alert := connectors.Alert{
 			Labels: map[string]string{
-				"Entity":      node.EntitySnapshot.Name,
-				"EntityType":  node.EntitySnapshot.Type,
-				"Controlname": node.Control.Name,
-				"Status":      node.Status,
-				"Severity":    node.Severity,
-				"Source":      c.config.URL,
-				"Hostname":    "wiz.io", // TODO hack for now
+				"Entity":     node.EntitySnapshot.Name,
+				"EntityType": node.EntitySnapshot.Type,
+				"Status":     node.Status,
+				"Severity":   node.Severity,
+				"Source":     c.config.URL,
+				"Hostname":   "wiz.io", // TODO hack for now
 			},
 			Start:       node.CreatedAt,
 			State:       mapState(node.Severity),
@@ -181,16 +183,22 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 				}
 			 }
     `
+
+	numberOfIssues := c.config.NumberOfIssues
+	if numberOfIssues == 0 {
+		numberOfIssues = 10
+	}
+
 	query := struct {
 		Query     string                 `json:"query"`
 		Variables map[string]interface{} `json:"variables"`
 	}{
 		Query: graphqlQuery,
 		Variables: map[string]interface{}{
-			"first": 10,
+			"first": numberOfIssues,
 			"filterBy": map[string]interface{}{
-				"status": []string{"OPEN", "IN_PROGRESS"},
-				//"severity": []string{"CRITICAL", "HIGH"},
+				"status":   c.config.StatusFilter,
+				"severity": c.config.SeverityFilter,
 			},
 			"orderBy": map[string]interface{}{
 				"direction": "DESC",
@@ -255,7 +263,9 @@ func mapState(severity string) connectors.State {
 	case "MEDIUM":
 		return connectors.Warning
 	case "LOW":
-		return connectors.Warning // TODO Do we want to output Low Issues?
+		return connectors.Warning
+	case "INFORMATION":
+		return connectors.Warning
 	default:
 		return connectors.Unknown
 	}
