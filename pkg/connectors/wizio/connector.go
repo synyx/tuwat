@@ -39,19 +39,21 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	var alerts []connectors.Alert
 
 	for _, node := range issueResponse.Data.IssuesV2.Nodes {
-		descr := "Issue: " + node.Control.Name
+		descr := "Issue: " + node.SourceRules[0].Name
 		alert := connectors.Alert{
 			Labels: map[string]string{
-				"Entity":     node.EntitySnapshot.Name,
-				"EntityType": node.EntitySnapshot.Type,
-				"Status":     node.Status,
-				//"Assignee":  mr.Assignee.Name,
-				"Source": c.config.URL,
+				"Entity":      node.EntitySnapshot.Name,
+				"EntityType":  node.EntitySnapshot.Type,
+				"Controlname": node.Control.Name,
+				"Status":      node.Status,
+				"Severity":    node.Severity,
+				"Source":      c.config.URL,
+				"Hostname":    "wiz.io", // TODO hack for now
 			},
 			Start:       node.CreatedAt,
 			State:       mapState(node.Severity),
 			Description: descr,
-			// Details:     details,
+			Details:     node.SourceRules[0].Description,
 			//Links: []html.HTML{
 			//	html.HTML("<a href=\"" + mr.WebUrl + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
 			//},
@@ -98,6 +100,11 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 						}
 						status
 						severity
+						entity {  
+							id  
+							name  
+							type  
+						}
 						entitySnapshot {
 							id
 							type
@@ -112,6 +119,60 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 							name
 							url
 						}
+
+					  	sourceRules {
+							__typename
+							... on Control {
+								id
+								name
+								description
+								resolutionRecommendation
+								risks
+								securitySubCategories {
+									title
+									category {
+										name
+										framework {
+											name
+										}
+									}
+								}
+							}
+							... on CloudEventRule {
+								id
+								name
+								description
+								sourceType
+								type
+								risks
+								securitySubCategories {
+									title
+									category {
+										name
+										framework {
+											name
+										}
+									}
+								}
+							}
+							... on CloudConfigurationRule {
+								 id
+								 name
+								 description
+								 remediationInstructions
+								 serviceType
+								 risks
+								 securitySubCategories {
+									title
+									category {
+										name
+										framework {
+											name
+										}
+									}
+								 }
+							}
+						  }
 					}
 					pageInfo {
 						hasNextPage
@@ -127,6 +188,14 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 		Query: graphqlQuery,
 		Variables: map[string]interface{}{
 			"first": 10,
+			"filterBy": map[string]interface{}{
+				"status": []string{"OPEN", "IN_PROGRESS"},
+				//"severity": []string{"CRITICAL", "HIGH"},
+			},
+			"orderBy": map[string]interface{}{
+				"direction": "DESC",
+				"field":     "SEVERITY",
+			},
 		},
 	}
 

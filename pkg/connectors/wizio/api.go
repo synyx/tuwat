@@ -21,6 +21,7 @@ type node struct {
 	CreatedAt      time.Time      `json:"createdAt"`
 	UpdatedAt      time.Time      `json:"updatedAt"`
 	Control        control        `json:"control"`
+	Entity         entity         `json:"entity"`
 	EntitySnapshot entitySnapShot `json:"entitySnapshot"`
 	Project        project        `json:"project"`
 	SourceRules    []sourceRule   `json:"sourceRules"`
@@ -28,6 +29,12 @@ type node struct {
 
 type control struct {
 	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type entity struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
 	Name string `json:"name"`
 }
 
@@ -46,5 +53,8 @@ type project struct {
 }
 
 type sourceRule struct {
-	Name string `json:"name"`
+	TypeName    string `json:"__typeName"`
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
