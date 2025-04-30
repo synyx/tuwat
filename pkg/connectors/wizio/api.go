@@ -15,16 +15,17 @@ type issuesV2 struct {
 }
 
 type node struct {
-	Id             string         `json:"id"`
-	Status         string         `json:"status"`
-	Severity       string         `json:"severity"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	UpdatedAt      time.Time      `json:"updatedAt"`
-	Control        control        `json:"control"`
-	Entity         entity         `json:"entity"`
-	EntitySnapshot entitySnapShot `json:"entitySnapshot"`
-	Project        project        `json:"project"`
-	SourceRules    []sourceRule   `json:"sourceRules"`
+	Id             string          `json:"id"`
+	Status         string          `json:"status"`
+	Severity       string          `json:"severity"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	Control        control         `json:"control"`
+	Entity         entity          `json:"entity"`
+	EntitySnapshot entitySnapShot  `json:"entitySnapshot"`
+	ServiceTickets []serviceTicket `json:"serviceTickets"`
+	Project        project         `json:"project"`
+	SourceRules    []sourceRule    `json:"sourceRules"`
 }
 
 type control struct {
@@ -48,6 +49,11 @@ type entitySnapShot struct {
 	KubernetesClusterId     string `json:"kubernetesClusterId"`
 	KubernetesClusterName   string `json:"kubernetesClusterName"`
 	KubernetesNamespaceName string `json:"kubernetesNamespaceName"`
+}
+
+type serviceTicket struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 type project struct {
