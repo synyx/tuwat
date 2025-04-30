@@ -20,23 +20,9 @@ type node struct {
 	Severity       string          `json:"severity"`
 	CreatedAt      time.Time       `json:"createdAt"`
 	UpdatedAt      time.Time       `json:"updatedAt"`
-	Control        control         `json:"control"`
-	Entity         entity          `json:"entity"`
 	EntitySnapshot entitySnapShot  `json:"entitySnapshot"`
 	ServiceTickets []serviceTicket `json:"serviceTickets"`
-	Project        project         `json:"project"`
 	SourceRules    []sourceRule    `json:"sourceRules"`
-}
-
-type control struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type entity struct {
-	Id   string `json:"id"`
-	Type string `json:"type"`
-	Name string `json:"name"`
 }
 
 type entitySnapShot struct {
@@ -44,9 +30,6 @@ type entitySnapShot struct {
 	Type                    string `json:"type"`
 	Name                    string `json:"name"`
 	Status                  string `json:"status"`
-	CloudPlatform           string `json:"cloudPlatform"`
-	Region                  string `json:"region"`
-	KubernetesClusterId     string `json:"kubernetesClusterId"`
 	KubernetesClusterName   string `json:"kubernetesClusterName"`
 	KubernetesNamespaceName string `json:"kubernetesNamespaceName"`
 }
@@ -54,11 +37,6 @@ type entitySnapShot struct {
 type serviceTicket struct {
 	Name string `json:"name"`
 	Url  string `json:"url"`
-}
-
-type project struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
 }
 
 type sourceRule struct {

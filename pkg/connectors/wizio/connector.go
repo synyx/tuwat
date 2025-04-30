@@ -47,6 +47,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		namespace := node.EntitySnapshot.KubernetesNamespaceName
 
 		labels := map[string]string{
+			"IssueId":    node.Id,
 			"Entity":     node.EntitySnapshot.Name,
 			"EntityType": node.EntitySnapshot.Type,
 			"Status":     node.Status,
@@ -111,99 +112,32 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 				) { 
 					nodes {
 						id
-						control {
-							id 
-							name
-						}
 						createdAt 
 						updatedAt
-						dueAt
 						project {
 							id
 							name
-							slug
-							businessUnit
-							riskProfile {
-								businessImpact
-							}
 						}
 						status
 						severity
-						entity {  
-							id  
-							name  
-							type  
-						}
 						entitySnapshot {
 							id
 							type
 							name
-							status 
-							cloudPlatform
-							region
-							kubernetesClusterId
+							status
 							kubernetesClusterName
 							kubernetesNamespaceName
 						}
 						note
 						serviceTickets {
-							externalId
 							name
 							url
 						}
-
 					  	sourceRules {
 							__typename
-							... on Control {
-								id
-								name
-								description
-								resolutionRecommendation
-								risks
-								securitySubCategories {
-									title
-									category {
-										name
-										framework {
-											name
-										}
-									}
-								}
-							}
-							... on CloudEventRule {
-								id
-								name
-								description
-								sourceType
-								type
-								risks
-								securitySubCategories {
-									title
-									category {
-										name
-										framework {
-											name
-										}
-									}
-								}
-							}
-							... on CloudConfigurationRule {
-								 id
-								 name
-								 description
-								 remediationInstructions
-								 serviceType
-								 risks
-								 securitySubCategories {
-									title
-									category {
-										name
-										framework {
-											name
-										}
-									}
-								 }
-							}
+							id
+							name
+							description
 						  }
 					}
 					pageInfo {
