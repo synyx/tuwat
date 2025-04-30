@@ -50,7 +50,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Status":     node.Status,
 				"Severity":   node.Severity,
 				"Source":     c.config.URL,
-				"Hostname":   "wiz.io", // TODO hack for now
+				"Cluster":    node.EntitySnapshot.KubernetesClusterName,
+				"Namespace":  node.EntitySnapshot.KubernetesNamespaceName,
 			},
 			Start:       node.CreatedAt,
 			State:       mapState(node.Severity),
@@ -114,6 +115,9 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 							status 
 							cloudPlatform
 							region
+							kubernetesClusterId
+							kubernetesClusterName
+							kubernetesNamespaceName
 						}
 						note
 						serviceTickets {
@@ -223,7 +227,6 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 
 	var issues issuesResponse
 	err = decoder.Decode(&issues)
-	slog.InfoContext(ctx, "Decoded response", issues)
 	if err != nil {
 		slog.ErrorContext(ctx, "Cannot parse",
 			slog.String("url", c.config.URL+from),

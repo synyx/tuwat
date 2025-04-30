@@ -39,12 +39,15 @@ type entity struct {
 }
 
 type entitySnapShot struct {
-	Id            string `json:"id"`
-	Type          string `json:"type"`
-	Name          string `json:"name"`
-	Status        string `json:"status"`
-	CloudPlatform string `json:"cloudPlatform"`
-	Region        string `json:"region"`
+	Id                      string `json:"id"`
+	Type                    string `json:"type"`
+	Name                    string `json:"name"`
+	Status                  string `json:"status"`
+	CloudPlatform           string `json:"cloudPlatform"`
+	Region                  string `json:"region"`
+	KubernetesClusterId     string `json:"kubernetesClusterId"`
+	KubernetesClusterName   string `json:"kubernetesClusterName"`
+	KubernetesNamespaceName string `json:"kubernetesNamespaceName"`
 }
 
 type project struct {

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/synyx/tuwat/pkg/connectors/wizio"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -26,6 +25,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/orderview"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
 	"github.com/synyx/tuwat/pkg/connectors/redmine"
+	"github.com/synyx/tuwat/pkg/connectors/wizio"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
