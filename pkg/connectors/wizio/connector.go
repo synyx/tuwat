@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
+	html "html/template"
 	"io"
 	"log/slog"
 	"net/http"
@@ -42,24 +43,36 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	var alerts []connectors.Alert
 
 	for _, node := range issueResponse.Data.IssuesV2.Nodes {
-		descr := "Issue: " + node.SourceRules[0].Name
+		description := node.SourceRules[0].Name
+		namespace := node.EntitySnapshot.KubernetesNamespaceName
+
+		labels := map[string]string{
+			"Entity":     node.EntitySnapshot.Name,
+			"EntityType": node.EntitySnapshot.Type,
+			"Status":     node.Status,
+			"Severity":   node.Severity,
+			"Source":     c.config.URL,
+			"Cluster":    node.EntitySnapshot.KubernetesClusterName,
+			"Namespace":  namespace,
+			"Type":       "Issue",
+		}
+
+		if namespace == "" {
+			labels["Hostname"] = node.EntitySnapshot.Name
+		}
+
+		// This weburl includes the state filter for issues shown in the background filter
+		webUrl := "https://app.wiz.io/issues#%7E%28filters%7E%28status%7E%28equals%7E%28%7E%27OPEN%7E%27IN_PROGRESS%29%29%29%7Eissue%7E%27" + node.Id + "%29"
+
 		alert := connectors.Alert{
-			Labels: map[string]string{
-				"Entity":     node.EntitySnapshot.Name,
-				"EntityType": node.EntitySnapshot.Type,
-				"Status":     node.Status,
-				"Severity":   node.Severity,
-				"Source":     c.config.URL,
-				"Cluster":    node.EntitySnapshot.KubernetesClusterName,
-				"Namespace":  node.EntitySnapshot.KubernetesNamespaceName,
-			},
+			Labels:      labels,
 			Start:       node.CreatedAt,
 			State:       mapState(node.Severity),
-			Description: descr,
+			Description: description,
 			Details:     node.SourceRules[0].Description,
-			//Links: []html.HTML{
-			//	html.HTML("<a href=\"" + mr.WebUrl + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
-			//},
+			Links: []html.HTML{
+				html.HTML("<a href=\"" + webUrl + "\" target=\"_blank\" alt=\"Home\">🏠</a>"),
+			},
 		}
 		alerts = append(alerts, alert)
 	}
