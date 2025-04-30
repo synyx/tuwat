@@ -71,6 +71,13 @@ func (c *Connector) String() string {
 	return fmt.Sprintf("Wiz.io Issues (%s)", c.config.URL)
 }
 
+// collectIssues builds requests issues from wiz.io via graphQL query
+//
+// see https://win.wiz.io/reference/quickstart for a quick reference
+// see https://win.wiz.io/reference/issues-query for the issues api
+// see https://docs.wiz.io/docs/how-actions-and-automation-rules-work#issues
+//
+//	for an overview of possible fields, as the template fields seem to be equivalent to the graphql fields
 func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) {
 	// TODO
 	graphqlQuery := `

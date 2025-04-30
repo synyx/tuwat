@@ -76,12 +76,12 @@ Tag = 'demo'
 #
 #[[wizio]]
 #Tag = 'wizio'
-#URL = "https://your-api.app.wiz.io"
+#URL = "https://your-api.app.wiz.io" # This can be dependent on your region
 #StatusFilter = ["OPEN", "IN_PROGRESS"]
 #SeverityFilter = ["CRITICAL", "HIGH"]
-#NumberOfIssues = 20
-#[wizio.OAuth2Creds]
+#NumberOfIssues = 20 # This is actually the number of issues per page, but there is currently no pagination implemented
+#[wizio.OAuth2Creds] # https://win.wiz.io/reference/generate-a-token-cognito
 #ClientID = "example-12143412"
 #ClientSecret = "secretsecret"
 #TokenURL = "https://auth.app.wiz.io/oauth/token"
-#Endpoapi.eu13intParams = {"audience" =  ["wiz-api"]}
+#EndpointParams = {"audience" =  ["wiz-api"]} # This is mandatory for the auth.app.wiz.io
