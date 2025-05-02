@@ -24,6 +24,7 @@ Connectors for
 * [Patchman]
 * Past due [Redmine] tickets
 * Static example showing alert types
+* [wiz.io] Issues
 
 [Alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
 [GitLab]: https://www.gitlab.com
@@ -33,6 +34,7 @@ Connectors for
 [Nagios API]: https://github.com/zorkian/nagios-api
 [Patchman]: https://github.com/furlongm/patchman
 [Redmine]: https://redmine.org/
+[wiz.io]: https://www.wiz.io/
 
 ## Configuration
 

@@ -1,5 +1,9 @@
 # Releases
 
+## 1.15.0 - 2025-05-02 wiz.io
+
+* New wiz.io connector.
+
 ## 1.14.0 - 2025-04-09 Icinga2 Runbooks
 
 * The Icinga 2 connector now generates `Runbook` links when using the
