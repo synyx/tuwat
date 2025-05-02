@@ -84,4 +84,3 @@ Tag = 'demo'
 #ClientID = "example-12143412"
 #ClientSecret = "secretsecret"
 #TokenURL = "https://auth.app.wiz.io/oauth/token"
-#EndpointParams = {"audience" =  ["wiz-api"]} # This is mandatory for the auth.app.wiz.io

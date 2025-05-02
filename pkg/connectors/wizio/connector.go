@@ -27,6 +27,17 @@ type Config struct {
 }
 
 func NewConnector(cfg *Config) *Connector {
+	// wiz.io requires the audience to be set. We only oerwrite it if Oauth2Creds are present and the audience is empty
+	if cfg.OAuth2Creds.EndpointParams == nil {
+		cfg.OAuth2Creds.EndpointParams = map[string][]string{}
+	}
+	if cfg.OAuth2Creds.EndpointParams["audience"] == nil {
+		cfg.OAuth2Creds.EndpointParams["audience"] = []string{"wiz-api"}
+	}
+
+	if cfg.NumberOfIssues == 0 {
+		cfg.NumberOfIssues = 10
+	}
 	return &Connector{*cfg, cfg.HTTPConfig.Client()}
 }
 
@@ -99,7 +110,6 @@ func (c *Connector) String() string {
 //
 //	for an overview of possible fields, as the template fields seem to be equivalent to the graphql fields
 func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) {
-	// TODO
 	graphqlQuery := `
 		query IssuesTable(
 			$filterBy: IssueFilters $first: Int $after: String $orderBy: IssueOrder
@@ -148,18 +158,13 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 			 }
     `
 
-	numberOfIssues := c.config.NumberOfIssues
-	if numberOfIssues == 0 {
-		numberOfIssues = 10
-	}
-
 	query := struct {
 		Query     string                 `json:"query"`
 		Variables map[string]interface{} `json:"variables"`
 	}{
 		Query: graphqlQuery,
 		Variables: map[string]interface{}{
-			"first": numberOfIssues,
+			"first": c.config.NumberOfIssues,
 			"filterBy": map[string]interface{}{
 				"status":   c.config.StatusFilter,
 				"severity": c.config.SeverityFilter,
