@@ -25,6 +25,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/orderview"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
 	"github.com/synyx/tuwat/pkg/connectors/redmine"
+	"github.com/synyx/tuwat/pkg/connectors/wizio"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -93,6 +94,7 @@ type rootConfig struct {
 	Orderview     []orderview.Config       `toml:"orderview"`
 	Example       []example.Config         `toml:"example"`
 	Graylogs      []graylog.Config         `toml:"graylog"`
+	Wizio         []wizio.Config           `toml:"wizio"`
 }
 
 func NewConfiguration() (config *Config, err error) {
@@ -247,6 +249,9 @@ func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	}
 	for _, connectorConfig := range rootConfig.Graylogs {
 		cfg.Connectors = append(cfg.Connectors, graylog.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.Wizio {
+		cfg.Connectors = append(cfg.Connectors, wizio.NewConnector(&connectorConfig))
 	}
 
 	// Add template for

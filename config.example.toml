@@ -73,3 +73,14 @@ Tag = 'demo'
 #TimeRange = 600 # query timerange in seconds
 #Username = "example3f5bb1632f40bde25d315d53bdec83e"
 #Password = "token"
+#
+#[[wizio]]
+#Tag = 'wizio'
+#URL = "https://your-api.app.wiz.io" # This can be dependent on your region
+#StatusFilter = ["OPEN", "IN_PROGRESS"]
+#SeverityFilter = ["CRITICAL", "HIGH"]
+#NumberOfIssues = 20 # This is actually the number of issues per page, but there is currently no pagination implemented
+#[wizio.OAuth2Creds] # https://win.wiz.io/reference/generate-a-token-cognito
+#ClientID = "example-12143412"
+#ClientSecret = "secretsecret"
+#TokenURL = "https://auth.app.wiz.io/oauth/token"
