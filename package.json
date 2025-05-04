@@ -4,13 +4,13 @@
   "description": "Tuwat Operations Dashboard",
   "private": true,
   "dependencies": {
-    "@hotwired/turbo": "^8.0.13",
-    "reconnecting-websocket": "^4.4.0"
+    "@hotwired/turbo": "8.0.13",
+    "reconnecting-websocket": "4.4.0"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.39.0"
+    "@rollup/plugin-node-resolve": "16.0.1",
+    "@rollup/plugin-terser": "0.4.4",
+    "rollup": "4.40.1"
   },
   "scripts": {
     "watch": "rollup -c --watch",
