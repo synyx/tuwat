@@ -55,15 +55,15 @@ snapshot:
 archives:
   - <<:
       name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-      # Additonally packaged files
+      # Additionally packaged files
       files:
         - LICENSE
         - README*
         - CHANGELOG*
         - config.example.toml
     id: nix
-    builds: [ linux, darwin ]
-    format: tar.gz
+    ids: [ linux, darwin ]
+    formats: ['tar.gz']
 
 dockers:
   - image_templates:
