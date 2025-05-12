@@ -43,6 +43,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v2.1.0
+
+      - name: Install BOM generator
+        uses: anchore/sbom-action/download-syft@v0.7.0
+
       # Finally run the release
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
@@ -51,3 +57,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-checksums: ./dist/checksums.txt
