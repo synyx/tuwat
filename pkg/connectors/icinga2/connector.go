@@ -58,9 +58,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if !host.EnableNotifications {
 			ignoredHosts[host.DisplayName] = true
 			continue
-		} else if host.DowntimeDepth > 0 {
-			ignoredHosts[host.DisplayName] = true
-			continue
 		} else if host.State == 0 {
 			continue
 		}
@@ -71,7 +68,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 		links = append(links, html.HTML("<a href=\""+c.config.DashboardURL+"/dashboard#!/monitoring/host/show?host="+host.DisplayName+"\" target=\"_blank\" alt=\"Home\">🏠</a>"))
 
-		sec, dec := math.Modf(host.LastStateChange)
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname": host.DisplayName,
@@ -79,7 +75,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"groups":   strings.Join(host.Groups, ","),
 				"Type":     "Host",
 			},
-			Start:       time.Unix(int64(sec), int64(dec*(1e9))),
+			Start:       parseTime(host.LastStateChange),
 			State:       fromHostState(host.State),
 			Description: "Host down",
 			Details:     host.Output,
@@ -96,8 +92,6 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		} else if service.Acknowledgement > 0 {
 			continue
 		} else if !service.EnableNotifications {
-			continue
-		} else if service.DowntimeDepth > 0 {
 			continue
 		} else if service.State == 0 {
 			continue
@@ -118,6 +112,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		alert := connectors.Alert{
 			Labels: map[string]string{
 				"Hostname":   service.HostName,
+				"Service":    service.Name,
 				"Zone":       service.Zone,
 				"Source":     c.config.URL,
 				"groups":     strings.Join(service.Groups, ","),
@@ -239,4 +234,9 @@ func fromHostState(state int) connectors.State {
 
 func fromServiceState(state int) connectors.State {
 	return connectors.State(state)
+}
+
+func parseTime(timeField float64) time.Time {
+	sec, dec := math.Modf(timeField)
+	return time.Unix(int64(sec), int64(dec*(1e9)))
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
 	"github.com/synyx/tuwat/pkg/connectors/redmine"
 	"github.com/synyx/tuwat/pkg/connectors/wizio"
+	"github.com/synyx/tuwat/pkg/ruleengine"
 )
 
 var fVersion = flag.Bool("version", false, "Print version")
@@ -55,14 +56,7 @@ type Config struct {
 type Dashboard struct {
 	Name   string
 	Mode   DashboardMode
-	Filter []Rule
-}
-
-type Rule struct {
-	Description string
-	What        RuleMatcher
-	When        RuleMatcher
-	Labels      map[string]RuleMatcher
+	Filter []ruleengine.Rule
 }
 
 type mainConfig struct {
@@ -317,23 +311,23 @@ func (cfg *Config) loadDashboardConfig(file string) error {
 	return err
 }
 
-func parseRule(r map[string]interface{}) Rule {
-	labels := make(map[string]RuleMatcher)
+func parseRule(r map[string]interface{}) ruleengine.Rule {
+	labels := make(map[string]ruleengine.RuleMatcher)
 	if labelFilters, ok := r["label"]; ok {
 		for n, l := range labelFilters.(map[string]interface{}) {
-			labels[n] = ParseRuleMatcher(l.(string))
+			labels[n] = ruleengine.ParseRuleMatcher(l.(string))
 		}
 	}
-	var what RuleMatcher
+	var what ruleengine.RuleMatcher
 	if w, ok := r["what"]; ok {
-		what = ParseRuleMatcher(w.(string))
+		what = ruleengine.ParseRuleMatcher(w.(string))
 	}
-	var when RuleMatcher
+	var when ruleengine.RuleMatcher
 	if w, ok := r["when"]; ok {
-		when = ParseRuleMatcher(w.(string))
+		when = ruleengine.ParseRuleMatcher(w.(string))
 	}
 
-	br := Rule{
+	br := ruleengine.Rule{
 		Description: r["description"].(string),
 		What:        what,
 		When:        when,

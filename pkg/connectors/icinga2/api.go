@@ -46,3 +46,21 @@ type service struct {
 type checkResult struct {
 	Output string `json:"output"`
 }
+
+type Downtime struct {
+	Active      bool    `json:"active"`
+	Author      string  `json:"author"`
+	Comment     string  `json:"comment"`
+	StartTime   float64 `json:"start_time"`
+	EndTime     float64 `json:"end_time"`
+	HostName    string  `json:"host_name"`
+	ServiceName string  `json:"service_name"`
+}
+
+type downtimeAttrs struct {
+	Downtime Downtime `json:"attrs"`
+}
+
+type DowntimeResponse struct {
+	Results []downtimeAttrs `json:"results"`
+}

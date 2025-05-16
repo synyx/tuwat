@@ -1,12 +1,12 @@
-export function toggleFilteredStatus() {
-    const toggleButton = document.getElementById("toggle-filtered-alerts");
-    const filteredTable = document.getElementById("filtered-table");
+export function toggleFilteredStatus(button, table) {
+    const toggleButton = document.getElementById(button);
+    const filteredTable = document.getElementById(table);
 
     toggleButton.addEventListener("click", () => {
         filteredTable.classList.toggle("hidden");
         const filteredAreShown = !filteredTable.classList.contains("hidden");
         toggleButton.innerText = filteredAreShown ? "Hide" : "Show";
-        localStorage.setItem("filteredAreShown", filteredAreShown.toString());
+        localStorage.setItem(button+"AreShown", filteredAreShown.toString());
         if (filteredAreShown) {
             filteredTable.scrollIntoView();
         }
@@ -17,12 +17,12 @@ export function toggleFilteredStatus() {
 
         event.detail.render = function (streamElement) {
             fallbackToDefaultActions(streamElement)
-            toggleFilteredStatus();
+            toggleFilteredStatus(button, table);
         }
     }
     document.addEventListener("turbo:before-stream-render", reRegisterToggleFilteredStatus);
 
-    if (localStorage.getItem("filteredAreShown") === "true") {
+    if (localStorage.getItem(button+"AreShown") === "true") {
         filteredTable.classList.remove("hidden");
         toggleButton.innerText = "Show";
     }

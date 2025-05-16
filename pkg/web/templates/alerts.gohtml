@@ -67,6 +67,45 @@
 </table>
 
 <h3 class="filtered">
+    Downtimes ({{ len .Content.Downtimes }})
+    <button id="toggle-downtimed-alerts">Show</button>
+</h3>
+<table id="downtimed-table" class="widetable filtered hidden">
+    <thead>
+    <tr>
+        <th width="30%">Where</th>
+        <th width="65%">What</th>
+        <th width="5%">When</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Content.Downtimes}}
+        <tr>
+            <td>
+                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            </td>
+            <td class="status {{.Status}}">
+                <details>
+                    <summary>
+                        {{.What}}
+                        <span><i>({{.Reason}})</i></span>
+                        {{range .Links}}
+                            {{.}}
+                        {{end}}
+                    </summary>
+                    <div class="content">
+                        <div>{{.Details}}</div>
+                        <pre>{{json .Labels}}</pre>
+                    </div>
+                </details>
+            </td>
+            <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+
+<h3 class="filtered">
     Filtered Alerts ({{ len .Content.Blocked }})
     <button id="toggle-filtered-alerts">Show</button>
 </h3>
