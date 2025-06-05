@@ -2,6 +2,7 @@ FROM gcr.io/distroless/static-debian11
 
 WORKDIR /go
 COPY ./tuwat /tuwat
+USER 1000
 EXPOSE 8988
 ENTRYPOINT ["/tuwat"]
 
