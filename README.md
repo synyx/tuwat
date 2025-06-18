@@ -9,6 +9,8 @@ The driving mindset for Tuwat (in German "tu was", meaning "do something")
 is to show actionable items. This is a slight departure of [Nagdash], which
 shows only Nagios `Hosts`/`Services`.
 
+![tuwat-cleaned.png](docs/tuwat-cleaned.png)
+
 [Nagdash]: https://github.com/lozzd/Nagdash
 
 ## Features
