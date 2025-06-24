@@ -1,4 +1,4 @@
-package config
+package ruleengine
 
 import (
 	"math"

@@ -7,12 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 func TestIcinga2Connector(t *testing.T) {
-	connector, mockServer := testConnector(icinga2MockHostResponse, icinga2MockServiceResponse)
+	connector, mockServer := testConnector(map[string]string{
+		"/host":    icinga2MockHostResponse,
+		"/service": icinga2MockServiceResponse,
+	})
 	defer func() { mockServer.Close() }()
 
 	alerts, err := connector.Collect(context.Background())
@@ -45,7 +47,10 @@ func TestIcinga2Connector(t *testing.T) {
 
 func TestIcinga2AckPropagation(t *testing.T) {
 	hostJson := strings.ReplaceAll(icinga2MockHostResponse, "\"acknowledgement\": 0", "\"acknowledgement\": 1")
-	connector, mockServer := testConnector(hostJson, icinga2MockServiceResponse)
+	connector, mockServer := testConnector(map[string]string{
+		"/host":    hostJson,
+		"/service": icinga2MockServiceResponse,
+	})
 	defer func() { mockServer.Close() }()
 
 	alerts, err := connector.Collect(context.Background())
@@ -58,13 +63,13 @@ func TestIcinga2AckPropagation(t *testing.T) {
 	}
 }
 
-func testConnector(hostJson, serviceJson string) (connectors.Connector, *httptest.Server) {
+func testConnector(endpoints map[string]string) (*Connector, *httptest.Server) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
-		if strings.Contains(req.URL.Path, "/host") {
-			_, _ = res.Write([]byte(hostJson))
-		} else if strings.Contains(req.URL.Path, "/service") {
-			_, _ = res.Write([]byte(serviceJson))
+		for endpoint, body := range endpoints {
+			if strings.Contains(req.URL.Path, endpoint) {
+				_, _ = res.Write([]byte(body))
+			}
 		}
 	}))
 
