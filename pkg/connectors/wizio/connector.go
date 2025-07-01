@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/synyx/tuwat/pkg/connectors"
-	"github.com/synyx/tuwat/pkg/connectors/common"
 	html "html/template"
 	"io"
 	"log/slog"
 	"net/http"
+
+	"github.com/synyx/tuwat/pkg/connectors"
+	"github.com/synyx/tuwat/pkg/connectors/common"
 )
 
 type Connector struct {
@@ -67,6 +68,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Cluster":    node.EntitySnapshot.KubernetesClusterName,
 			"Namespace":  namespace,
 			"Type":       "Issue",
+			"Project":    node.Project.Name,
 		}
 
 		if namespace == "" {

@@ -23,6 +23,7 @@ type node struct {
 	EntitySnapshot entitySnapShot  `json:"entitySnapshot"`
 	ServiceTickets []serviceTicket `json:"serviceTickets"`
 	SourceRules    []sourceRule    `json:"sourceRules"`
+	Project        project         `json:"project"`
 }
 
 type entitySnapShot struct {
@@ -44,4 +45,9 @@ type sourceRule struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type project struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
