@@ -62,6 +62,22 @@ func TestWhen(t *testing.T) {
 	}
 }
 
+func TestWhat(t *testing.T) {
+	filter := config.Rule{
+		Description: "Non-Escalated",
+		What:        config.ParseRuleMatcher("Update foo"),
+		Labels: map[string]config.RuleMatcher{
+			"Type": config.ParseRuleMatcher("PullRequest"),
+		},
+	}
+
+	a := aggregator(config.Excluding, false, filter)
+	aggregation := aggregate(a, t)
+	if len(aggregation.Blocked) != 1 {
+		t.Error("invalid blocked", aggregation.Blocked)
+	}
+}
+
 func aggregator(mode config.DashboardMode, groupAlerts bool, filters ...config.Rule) *Aggregator {
 	cfg, _ := config.NewConfiguration()
 	log.Initialize(cfg)

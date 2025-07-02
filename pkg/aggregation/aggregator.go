@@ -469,12 +469,11 @@ func (a *Aggregator) allow(dashboard *config.Dashboard, alert Alert) string {
 // matchAlertWithReason will match anything which does match against any of the
 // configured rules.
 func (a *Aggregator) matchAlertWithReason(dashboard *config.Dashboard, alert Alert) string {
-nextRule:
 	for _, rule := range dashboard.Filter {
 		matchers := make(map[string]config.RuleMatcher)
 
 		// if it's a rule working on top level concepts:
-		if rule.What != nil && rule.What.MatchString(alert.What) {
+		if rule.What != nil {
 			// `what` contains a description what is being alerted and should be a
 			// human understandable description.  The rule simply matches against
 			// that.
@@ -492,8 +491,8 @@ nextRule:
 		for l, r := range rule.Labels {
 			if x, ok := alert.Labels[l]; !ok {
 				// if the label does not exist on the alert, it cannot match
-				// thus skip this rule and try the next one
-				continue nextRule
+				// thus it does not match.
+				matchers[x] = config.FalseMatcher()
 			} else {
 				matchers[x] = r
 			}
