@@ -125,3 +125,13 @@ func (n notMatcher) MatchString(s string) bool {
 func not(m RuleMatcher) RuleMatcher {
 	return &notMatcher{m}
 }
+
+func FalseMatcher() *falseMatcher {
+	return &falseMatcher{}
+}
+
+type falseMatcher struct{}
+
+func (f falseMatcher) MatchString(_ string) bool {
+	return false
+}
