@@ -9,6 +9,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
@@ -58,6 +60,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		description := node.SourceRules[0].Name
 		namespace := node.EntitySnapshot.KubernetesNamespaceName
 
+		var projects []string
+		for _, p := range node.Projects {
+			projects = append(projects, p.Name)
+		}
+		slices.Sort(projects)
+
 		labels := map[string]string{
 			"IssueId":    node.Id,
 			"Entity":     node.EntitySnapshot.Name,
@@ -68,7 +76,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Cluster":    node.EntitySnapshot.KubernetesClusterName,
 			"Namespace":  namespace,
 			"Type":       "Issue",
-			"Project":    node.Project.Name,
+			"Projects":   strings.Join(projects, ","),
 		}
 
 		if namespace == "" {
@@ -126,7 +134,7 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 						id
 						createdAt 
 						updatedAt
-						project {
+						projects {
 							id
 							name
 						}
