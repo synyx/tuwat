@@ -148,7 +148,14 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 							kubernetesClusterName
 							kubernetesNamespaceName
 						}
-						note
+						notes {
+							text
+						    createdAt
+						    user {
+							    id
+							    name
+						    }
+						}
 						serviceTickets {
 							name
 							url
