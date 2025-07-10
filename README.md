@@ -2,12 +2,14 @@
 
 ## What is the tuwat Dashboard?
 
-Tuwat is a replacement for the venerable [Nagdash] which had been adapted time
-and time again to provide accessors for an evolving infrastructure.
+A full screen alert viewer intended for NOC/monitoring screens.
+See [history.md](docs/history.md) for a wider view.
 
 The driving mindset for Tuwat (in German "tu was", meaning "do something")
 is to show actionable items. This is a slight departure of [Nagdash], which
 shows only Nagios `Hosts`/`Services`.
+
+![tuwat-cleaned.png](docs/tuwat-cleaned.png)
 
 [Nagdash]: https://github.com/lozzd/Nagdash
 
