@@ -17,18 +17,30 @@ For a history of tuwat itself, see the [`CHANGELOG.md`](../CHANGELOG.md).
 
 ```mermaid
 flowchart LR
-    Nag-Lite[Nag-Lite\n2004]
-    NagLite[NagLite\n2008]
-    naglite[naglite\n2010]
-    naglight[naglight\n2010]
-    naglite2[naglite2\n2010]
-    Naglite3[Naglite3\n2011]
-    icinga2-naglite4[icinga2 naglite4\n2018]
-    Nagdash[Nagdash\n2012]
-    CactiView[CactiView\n2009]
-    tuwat[tuwat\n2022]
-    sNaglite[sNaglite\n2017]
-    synyx-Nagdash[synyx Nagdash\n2016]
+    Nag-Lite[Nag-Lite
+             2004]
+    NagLite[NagLite
+            2008]
+    naglite[naglite
+            2010]
+    naglight[naglight
+             2010]
+    naglite2[naglite2
+             2010]
+    Naglite3[Naglite3
+             2011]
+    icinga2-naglite4[icinga2 naglite4
+                     2018]
+    Nagdash[Nagdash
+            2012]
+    CactiView[CactiView
+              2009]
+    tuwat[tuwat
+          2022]
+    sNaglite[sNaglite
+             2017]
+    synyx-Nagdash[synyx Nagdash
+                  2016]
     
     Nag-Lite ----> NagLite
     NagLite ----> naglite2
