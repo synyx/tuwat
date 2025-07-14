@@ -13,7 +13,7 @@ tuwat was created to fill a few holes in Nagdash.
 
 For a history of tuwat itself, see the [`CHANGELOG.md`](../CHANGELOG.md).
 
-## Forks and Versions and Adaptions
+## Where does tuwat come from
 
 ```mermaid
 flowchart LR
