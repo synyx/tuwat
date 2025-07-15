@@ -1,5 +1,9 @@
 # Releases
 
+## 1.16.0 - 2025-07-15 wiz.io projects
+
+* Add projects as label to wiz.io alerts
+
 ## 1.15.0 - 2025-05-02 wiz.io
 
 * New wiz.io connector.
