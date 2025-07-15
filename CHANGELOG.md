@@ -5,6 +5,8 @@
 * Add projects as label to wiz.io alerts
 * Fix filtering for `Where`.  Previously it was not possible to combine `where`
   and `label` filters.
+* Revise documentation to be less referential to `Nagdash`, however, more
+  documentation on where tuwat is based on was added.
 
 ## 1.15.0 - 2025-05-02 wiz.io
 
