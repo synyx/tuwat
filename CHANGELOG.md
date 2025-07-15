@@ -3,6 +3,8 @@
 ## 1.16.0 - 2025-07-15 wiz.io projects
 
 * Add projects as label to wiz.io alerts
+* Fix filtering for `Where`.  Previously it was not possible to combine `where`
+  and `label` filters.
 
 ## 1.15.0 - 2025-05-02 wiz.io
 
