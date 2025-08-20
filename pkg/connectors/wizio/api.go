@@ -27,12 +27,13 @@ type node struct {
 }
 
 type entitySnapShot struct {
-	Id                      string `json:"id"`
-	Type                    string `json:"type"`
-	Name                    string `json:"name"`
-	Status                  string `json:"status"`
-	KubernetesClusterName   string `json:"kubernetesClusterName"`
-	KubernetesNamespaceName string `json:"kubernetesNamespaceName"`
+	Id                      string            `json:"id"`
+	Type                    string            `json:"type"`
+	Name                    string            `json:"name"`
+	Status                  string            `json:"status"`
+	KubernetesClusterName   string            `json:"kubernetesClusterName"`
+	KubernetesNamespaceName string            `json:"kubernetesNamespaceName"`
+	Tags                    map[string]string `json:"tags"`
 }
 
 type serviceTicket struct {
