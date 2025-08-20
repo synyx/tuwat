@@ -8,6 +8,7 @@ import (
 	html "html/template"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"slices"
 	"strings"
@@ -59,6 +60,11 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	for _, node := range issueResponse.Data.IssuesV2.Nodes {
 		description := node.SourceRules[0].Name
 		namespace := node.EntitySnapshot.KubernetesNamespaceName
+		if namespace == "" {
+			if n, ok := node.EntitySnapshot.Tags["kustomize.toolkit.fluxcd.io/namespace"]; ok {
+				namespace = n
+			}
+		}
 
 		var projects []string
 		for _, p := range node.Projects {
@@ -66,7 +72,9 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		}
 		slices.Sort(projects)
 
-		labels := map[string]string{
+		labels := map[string]string{}
+		maps.Copy(labels, node.EntitySnapshot.Tags)
+		maps.Copy(labels, map[string]string{
 			"IssueId":    node.Id,
 			"Entity":     node.EntitySnapshot.Name,
 			"EntityType": node.EntitySnapshot.Type,
@@ -77,7 +85,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Namespace":  namespace,
 			"Type":       "Issue",
 			"Projects":   strings.Join(projects, ","),
-		}
+		})
 
 		if namespace == "" {
 			labels["Hostname"] = node.EntitySnapshot.Name
@@ -147,6 +155,7 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 							status
 							kubernetesClusterName
 							kubernetesNamespaceName
+							tags
 						}
 						notes {
 							text
