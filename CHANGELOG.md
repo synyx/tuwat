@@ -1,5 +1,9 @@
 # Releases
 
+## 1.16.1 - 2025-08-20 wiz.io k8s
+
+* Revise k8s namespace detection for wiz.io
+
 ## 1.16.0 - 2025-07-15 wiz.io projects
 
 * Add projects as label to wiz.io alerts
