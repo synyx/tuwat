@@ -28,7 +28,7 @@ type Config struct {
 	Tag     string
 	Cluster string
 
-	DeadMansSwitch bool `toml:"DeadMansSwitch" default:"true"`
+	IgnoreMissingDeadMansSwitch bool
 }
 
 func NewConnector(cfg *Config) *Connector {
@@ -52,7 +52,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	var alerts []connectors.Alert
 
-	if c.config.DeadMansSwitch && len(sourceAlerts) == 0 {
+	if !c.config.IgnoreMissingDeadMansSwitch && len(sourceAlerts) == 0 {
 		u, _ := url.Parse(c.config.URL)
 
 		alert := connectors.Alert{
