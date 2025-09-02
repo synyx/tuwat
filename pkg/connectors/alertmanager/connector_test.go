@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/BurntSushi/toml"
+
 	"github.com/synyx/tuwat/pkg/connectors"
 	"github.com/synyx/tuwat/pkg/connectors/common"
 )
@@ -39,6 +41,18 @@ func TestConnector(t *testing.T) {
 
 	if alerts == nil || len(alerts) != 3 {
 		t.Error("There should be alerts")
+	}
+}
+
+func TestDefaultConfig(t *testing.T) {
+	confText := `Tag = "test"`
+	conf := Config{}
+	if _, err := toml.Decode(confText, &conf); err != nil {
+		t.Fatal(err)
+	}
+
+	if conf.IgnoreMissingDeadMansSwitch != false {
+		t.Error("Ignoring the Dead Man's Switch should be an active decision")
 	}
 }
 

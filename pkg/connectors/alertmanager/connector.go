@@ -24,13 +24,18 @@ type Connector struct {
 }
 
 type Config struct {
+	common.HTTPConfig
 	Tag     string
 	Cluster string
-	common.HTTPConfig
+
+	IgnoreMissingDeadMansSwitch bool
 }
 
 func NewConnector(cfg *Config) *Connector {
-	c := &Connector{config: *cfg, client: cfg.HTTPConfig.Client()}
+	c := &Connector{
+		config: *cfg,
+		client: cfg.HTTPConfig.Client(),
+	}
 
 	return c
 }
@@ -47,7 +52,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 
 	var alerts []connectors.Alert
 
-	if len(sourceAlerts) == 0 {
+	if !c.config.IgnoreMissingDeadMansSwitch && len(sourceAlerts) == 0 {
 		u, _ := url.Parse(c.config.URL)
 
 		alert := connectors.Alert{
