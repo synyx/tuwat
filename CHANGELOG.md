@@ -1,5 +1,11 @@
 # Releases
 
+## 1.17.0 - 2025-09-02 Dead Man's Switch
+
+* This removes the assumption, that all Alertmanagers have a Dead Man's Switch.
+  This seems only to be the case in Kubernetes environments.
+* Use new configuration `IgnoreMissingDeadMansSwitch = true` to enable that.
+
 ## 1.16.1 - 2025-08-20 wiz.io k8s
 
 * Revise k8s namespace detection for wiz.io
