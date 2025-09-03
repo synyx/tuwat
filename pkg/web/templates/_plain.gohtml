@@ -1,0 +1,32 @@
+{{define "base"}}
+    {{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>
+            Tuwat{{with .Dashboard}} - {{.}}{{end}}
+        </title>
+
+        <link rel="stylesheet" href="/static/css/main.css"/>
+        <link rel="stylesheet" href="/static/css/{{.Style}}.css"/>
+        <meta http-equiv="refresh" content="60; url=/alerts"/>
+    </head>
+    <body>
+    <nav id="menu">
+        <span><a href="/" data-turbo="false">Home</a></span>
+        {{range .Dashboards}}
+            {{if .Name}}
+                <span><a href="/alerts/{{.Name}}" data-turbo="false">{{.Name}}</a></span>
+            {{end}}
+        {{end}}
+    </nav>
+    <main id="app">
+        <section id="content-container" class="container">
+            {{template "content" .}}
+        </section>
+    </main>
+
+    </body>
+    </html>
+{{end}}

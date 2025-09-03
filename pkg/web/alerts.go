@@ -21,13 +21,13 @@ func (h *WebHandler) alerts(w http.ResponseWriter, req *http.Request) {
 	aggregate := h.aggregator.Alerts(dashboardName)
 
 	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
-		renderer := h.partialRenderer(req, dashboardName, "alerts.gohtml")
+		renderer := h.partialRenderer(req, dashboardName, "_stream.gohtml", "alerts.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
 	} else if isTextUserAgent(req.Header.Get("User-Agent")) {
-		renderer := h.baseRenderer(req, dashboardName, "alerts_plain.gohtml")
+		renderer := h.baseRenderer(req, dashboardName, "_plain.gohtml", "alerts_plain.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
 	} else {
-		renderer := h.baseRenderer(req, dashboardName, "alerts.gohtml")
+		renderer := h.baseRenderer(req, dashboardName, "_base.gohtml", "alerts.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
 	}
 }

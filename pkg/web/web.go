@@ -108,8 +108,7 @@ func (h *WebHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
 
-func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
-	templateFiles := append([]string{"_base.gohtml"}, patterns...)
+func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, templateFiles ...string) renderFunc {
 	templateDefinition := "base"
 
 	funcs := html.FuncMap{
@@ -139,8 +138,7 @@ func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, patte
 	}
 }
 
-func (h *WebHandler) partialRenderer(req *http.Request, dashboardName string, patterns ...string) renderFunc {
-	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
+func (h *WebHandler) partialRenderer(req *http.Request, dashboardName string, templateFiles ...string) renderFunc {
 	templateDefinition := "base"
 
 	funcs := html.FuncMap{
