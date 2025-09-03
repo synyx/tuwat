@@ -23,10 +23,30 @@ func (h *WebHandler) alerts(w http.ResponseWriter, req *http.Request) {
 	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
 		renderer := h.partialRenderer(req, dashboardName, "alerts.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
+	} else if isTextUserAgent(req.Header.Get("User-Agent")) {
+		renderer := h.baseRenderer(req, dashboardName, "alerts_plain.gohtml")
+		renderer(w, 200, webContent{Content: aggregate})
 	} else {
 		renderer := h.baseRenderer(req, dashboardName, "alerts.gohtml")
 		renderer(w, 200, webContent{Content: aggregate})
 	}
+}
+
+var textAgents = [...]string{
+	"Emacs",  // URL/Emacs Emacs/30.2 (TTY; x86_64-redhat-linux-gnu)
+	"ELinks", // ELinks/0.15.0 (textmode; Linux 5.x.x x86_64; 80x24-2)
+	"w3m",    // w3m/0.5.3+git20210102
+	"Lynx",   // Lynx/2.8.9rel.1 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.1.1f
+	"curl",   // curl/7.68.0
+}
+
+func isTextUserAgent(userAgent string) bool {
+	for _, ua := range textAgents {
+		if strings.Contains(userAgent, ua) {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *WebHandler) wsalerts(s *websocket.Conn) {

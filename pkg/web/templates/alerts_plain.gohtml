@@ -1,0 +1,55 @@
+{{define "content"}}
+{{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
+<h3>
+    Alerts
+    <time id="last_refresh" datetime="{{.Content.CheckTime.Format "2006-01-02T15:04:05Z07:00"}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
+</h3>
+
+<table class="widetable">
+    <thead>
+    <tr>
+        <th width="30%">Where</th>
+        <th width="65%">What</th>
+        <th width="5%">When</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Content.Alerts}}
+        <tr>
+            <td>
+                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            </td>
+            <td class="status {{.Status}}">
+                <details>
+                    <summary>
+                        {{.What}}
+                    </summary>
+                </details>
+            </td>
+            <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+        </tr>
+    {{end}}
+    {{range .Content.GroupedAlerts}}
+        <tr>
+            <td rowspan="{{len .Alerts}}" class="alert_group">
+                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            </td>
+        {{range $i, $alert := .Alerts}}
+            {{if $i }}
+        <tr>
+            {{end}}
+            <td class="status {{$alert.Status}}">
+                <details>
+                    <summary>
+                        {{$alert.What}}
+                    </summary>
+                </details>
+            </td>
+            <td align="right" {{if not $i}}class="first_of_group"{{end}}><time datetime="{{$alert.When.Seconds}}S">{{niceDuration $alert.When}}</time></td>
+        </tr>
+        {{end}}
+    {{end}}
+    </tbody>
+</table>
+
+{{end}}
