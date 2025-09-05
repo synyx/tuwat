@@ -1,54 +1,45 @@
 {{define "content"}}
 {{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
 <h3>
-    Alerts
-    <time id="last_refresh" datetime="{{.Content.CheckTime.Format "2006-01-02T15:04:05Z07:00"}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
+    Alerts {{.Content.CheckTime.Format "15:04:05"}}
 </h3>
 
-<table class="widetable">
+<table>
     <thead>
     <tr>
-        <th width="30%">Where</th>
-        <th width="65%">What</th>
-        <th width="5%">When</th>
+        <th>Where</th>
+        <th>What</th>
+        <th>When</th>
     </tr>
     </thead>
     <tbody>
     {{range .Content.Alerts}}
         <tr>
             <td>
-                <font color="{{.Status}}">{{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span></font>
+                <font color="{{.Status}}">{{.Where}}</font>&nbsp;{{.Tag}}
             </td>
             <td class="status {{.Status}}">
-                <details>
-                    <summary>
-                        <font color="{{.Status}}">{{.What}}</font>
-                    </summary>
-                </details>
+                <font color="{{.Status}}">{{.What}}</font>
             </td>
             <td align="right">
-                <time datetime="{{.When.Seconds}}S"><font color="{{.Status}}">{{niceDuration .When}}</font></time>
+                <font color="{{.Status}}">{{niceDuration .When}}</font>
             </td>
         </tr>
     {{end}}
     {{range .Content.GroupedAlerts}}
         <tr>
-            <td rowspan="{{len .Alerts}}" class="alert_group">
-                {{.Where}} <span class="tag {{.Tag}}">{{.Tag}}</span>
+            <td rowspan="{{len .Alerts}}">
+                {{.Where}}&nbsp;{{.Tag}}
             </td>
         {{range $i, $alert := .Alerts}}
             {{if $i }}
         <tr>
             {{end}}
-            <td class="status {{$alert.Status}}">
-                <details>
-                    <summary>
-                        <font color="{{$alert.Status}}">{{$alert.What}}</font>
-                    </summary>
-                </details>
+            <td>
+                <font color="{{$alert.Status}}">{{$alert.What}}</font>
             </td>
-            <td align="right" {{if not $i}}class="first_of_group"{{end}}>
-                <time datetime="{{$alert.When.Seconds}}S"><font color="{{$alert.Status}}">{{niceDuration $alert.When}}</font></time>
+            <td>
+                <font color="{{$alert.Status}}">{{niceDuration $alert.When}}</font>
             </td>
         </tr>
         {{end}}

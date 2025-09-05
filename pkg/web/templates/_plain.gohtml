@@ -8,23 +8,19 @@
             Tuwat{{with .Dashboard}} - {{.}}{{end}}
         </title>
 
-        <link rel="stylesheet" href="/static/css/main.css"/>
-        <link rel="stylesheet" href="/static/css/{{.Style}}.css"/>
-        <meta http-equiv="refresh" content="10"/>
+        <meta http-equiv="refresh" content="60"/>
     </head>
-    <body bgcolor="black">
+    <body>
     <nav id="menu">
-        <span><a href="/" data-turbo="false">Home</a></span>
+        <span><a href="/">Home</a></span>
         {{range .Dashboards}}
             {{if .Name}}
-                <span><a href="/alerts/{{.Name}}" data-turbo="false">{{.Name}}</a></span>
+                <span><a href="/alerts/{{.Name}}">{{.Name}}</a></span>
             {{end}}
         {{end}}
     </nav>
     <main id="app">
-        <section id="content-container" class="container">
-            {{template "content" .}}
-        </section>
+        {{template "content" .}}
     </main>
 
     </body>
