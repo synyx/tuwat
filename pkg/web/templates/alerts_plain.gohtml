@@ -1,0 +1,50 @@
+{{define "content"}}
+{{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
+<h3>
+    Alerts {{.Content.CheckTime.Format "15:04:05"}}
+</h3>
+
+<table>
+    <thead>
+    <tr>
+        <th>Where</th>
+        <th>What</th>
+        <th>When</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Content.Alerts}}
+        <tr>
+            <td>
+                <font color="{{.Status}}">{{.Where}}</font>&nbsp;{{.Tag}}
+            </td>
+            <td class="status {{.Status}}">
+                <font color="{{.Status}}">{{.What}}</font>
+            </td>
+            <td align="right">
+                <font color="{{.Status}}">{{niceDuration .When}}</font>
+            </td>
+        </tr>
+    {{end}}
+    {{range .Content.GroupedAlerts}}
+        <tr>
+            <td rowspan="{{len .Alerts}}">
+                {{.Where}}&nbsp;{{.Tag}}
+            </td>
+        {{range $i, $alert := .Alerts}}
+            {{if $i }}
+        <tr>
+            {{end}}
+            <td>
+                <font color="{{$alert.Status}}">{{$alert.What}}</font>
+            </td>
+            <td>
+                <font color="{{$alert.Status}}">{{niceDuration $alert.When}}</font>
+            </td>
+        </tr>
+        {{end}}
+    {{end}}
+    </tbody>
+</table>
+
+{{end}}

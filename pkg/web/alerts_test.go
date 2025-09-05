@@ -19,7 +19,7 @@ func TestRendering(t *testing.T) {
 	agg := aggregation.NewAggregator(cfg, clock.NewMock())
 	wh := NewWebHandler(cfg, agg)
 
-	renderer := wh.baseRenderer(req, "test", "alerts.gohtml")
+	renderer := wh.baseRenderer(req, "test", "_base.gohtml", "alerts.gohtml")
 	alerts := []aggregation.Alert{
 		{
 			Id:      "asdf",

@@ -19,7 +19,7 @@ func (h *WebHandler) silence(w http.ResponseWriter, req *http.Request) {
 
 	if req.Header.Get("Accept") == "text/vnd.turbo-stream.html" {
 		dashboardName := common.GetField(req, 0)
-		renderer := h.partialRenderer(req, "alerts.gohtml")
+		renderer := h.partialRenderer(req, "_stream.gohtml", "alerts.gohtml")
 		aggregate := h.aggregator.Alerts(dashboardName)
 		renderer(w, 200, webContent{Content: aggregate})
 	} else if req.ProtoAtLeast(1, 1) {
