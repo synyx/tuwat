@@ -1,5 +1,19 @@
 # Releases
 
+## 1.18.0 - 2025-09-08 Text Browser
+
+* To also allow text browser users to profit from tuwat, it has gained the
+  feature to distinguish clients without CSS/JavaScript.  It will output
+  a plain HTML page, without fluff.
+* The following text clients are recognized:
+  * Emacs EWW
+  * Elinks
+  * w3m
+  * curl
+* Use eww/elinks for color.
+* To revert to the original behaviour, even if using a textual browser, simply
+  use a User-Agent header faking a normal browser.
+
 ## 1.17.0 - 2025-09-02 Dead Man's Switch
 
 * This removes the assumption, that all Alertmanagers have a Dead Man's Switch.
