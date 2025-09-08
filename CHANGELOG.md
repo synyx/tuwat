@@ -9,6 +9,7 @@
   * Emacs EWW
   * Elinks
   * w3m
+  * Lynx
   * curl
 * Use eww/elinks for color.
 * To revert to the original behaviour, even if using a textual browser, simply
