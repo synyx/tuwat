@@ -3,18 +3,18 @@ package wizio
 import "time"
 
 type issuesResponse struct {
-	Data issueData `json:"data"`
+	Data issuesData `json:"data"`
 }
-type issueData struct {
+type issuesData struct {
 	IssuesV2 issuesV2 `json:"issuesV2"`
 }
 
 type issuesV2 struct {
-	TotalCount int         `json:"totalCount"`
-	Nodes      []issueNode `json:"nodes"`
+	TotalCount int     `json:"totalCount"`
+	Nodes      []issue `json:"nodes"`
 }
 
-type issueNode struct {
+type issue struct {
 	Id             string          `json:"id"`
 	Status         string          `json:"status"`
 	Severity       string          `json:"severity"`
@@ -59,3 +59,43 @@ const (
 	Ascending  orderDirection = "ASC"
 	Descending orderDirection = "DESC"
 )
+
+type issueOrderField string
+
+const (
+	Id                  issueOrderField = "ID"
+	Severity            issueOrderField = "SEVERITY"
+	CreatedAt           issueOrderField = "CREATED_AT"
+	ResolvedAt          issueOrderField = "RESOLVED_AT"
+	StatusChangedAt     issueOrderField = "STATUS_CHANGED_AT"
+	ThreatLastGroupedAt issueOrderField = "THREAT_LAST_GROUPED_AT"
+)
+
+type issueOrder struct {
+	Direction orderDirection  `json:"direction"`
+	Field     issueOrderField `json:"field"`
+}
+
+type issueStatus string
+
+const (
+	Open       issueStatus = "OPEN"
+	InProgress issueStatus = "IN_PROGRESS"
+	Resolved   issueStatus = "RESOLVED"
+	Rejected   issueStatus = "REJECTED"
+)
+
+type severity string
+
+const (
+	Informational severity = "INFORMATIONAL"
+	Low           severity = "LOW"
+	Medium        severity = "MEDIUM"
+	High          severity = "HIGH"
+	Critical      severity = "CRITICAL"
+)
+
+type issueFilters struct {
+	Status   []issueStatus `json:"status"`
+	Severity []severity    `json:"severity"`
+}

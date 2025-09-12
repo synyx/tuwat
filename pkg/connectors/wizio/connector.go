@@ -24,8 +24,8 @@ type Connector struct {
 
 type Config struct {
 	Tag            string
-	StatusFilter   []string
-	SeverityFilter []string
+	StatusFilter   []issueStatus
+	SeverityFilter []severity
 	common.HTTPConfig
 	NumberOfIssues int
 }
@@ -191,13 +191,13 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 		Query: graphqlQuery,
 		Variables: map[string]interface{}{
 			"first": c.config.NumberOfIssues,
-			"filterBy": map[string]interface{}{
-				"status":   c.config.StatusFilter,
-				"severity": c.config.SeverityFilter,
+			"filterBy": issueFilters{
+				Status:   c.config.StatusFilter,
+				Severity: c.config.SeverityFilter,
 			},
-			"orderBy": map[string]interface{}{
-				"direction": "DESC",
-				"field":     "SEVERITY",
+			"orderBy": issueOrder{
+				Direction: Descending,
+				Field:     Severity,
 			},
 		},
 	}
@@ -248,17 +248,17 @@ func (c *Connector) get(ctx context.Context, endpoint string, query string) (io.
 	return res.Body, nil
 }
 
-func mapState(severity string) connectors.State {
-	switch severity {
-	case "CRITICAL":
+func mapState(severityStr string) connectors.State {
+	switch severity(severityStr) {
+	case Critical:
 		return connectors.Critical
-	case "HIGH":
+	case High:
 		return connectors.Warning
-	case "MEDIUM":
+	case Medium:
 		return connectors.Warning
-	case "LOW":
+	case Low:
 		return connectors.Warning
-	case "INFORMATION":
+	case Informational:
 		return connectors.Warning
 	default:
 		return connectors.Unknown
