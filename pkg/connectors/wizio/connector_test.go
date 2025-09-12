@@ -12,9 +12,28 @@ import (
 )
 
 func TestConnector(t *testing.T) {
+	alerts := testCollection(t, mockResponse)
+
+	if alerts == nil || len(alerts) != 2 {
+		t.Error("There should be 2 alerts")
+	}
+}
+
+func TestThreat(t *testing.T) {
+	alerts := testCollection(t, mockThreatResponse)
+
+	if alerts == nil || len(alerts) != 1 {
+		t.Error("There should be 1 alert")
+	}
+}
+
+func testCollection(t *testing.T, response string) []connectors.Alert {
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
-		_, _ = res.Write([]byte(mockResponse))
+		_, err := res.Write([]byte(response))
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer func() { testServer.Close() }()
 
@@ -31,9 +50,7 @@ func TestConnector(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if alerts == nil || len(alerts) != 2 {
-		t.Error("There should be 2 alerts")
-	}
+	return alerts
 }
 
 func TestDecode(t *testing.T) {
@@ -381,3 +398,66 @@ const mockResponse = `
   }
 }
 `
+
+const mockThreatResponse = `
+{
+  "data": {
+    "issuesV2": {
+      "nodes": [
+        {
+          "id": "dc14fcff-549d-5d3c-906d-f505ac5b5964",
+          "createdAt": "2025-09-05T14:54:42.829455Z",
+          "updatedAt": "2025-09-05T14:58:28.023204Z",
+          "projects": [
+            {
+              "id": "17c260a0-aa6d-5246-86c8-e24b700b3ca1",
+              "name": "SysOps"
+            },
+            {
+              "id": "bde2f9cf-9275-5e6b-9fa0-e274c57c5641",
+              "name": "Contargo"
+            },
+            {
+              "id": "caf67dbd-2f43-5144-a086-ae62689734b2",
+              "name": "Stage"
+            }
+          ],
+          "status": "OPEN",
+          "severity": "HIGH",
+          "entitySnapshot": {
+            "id": "b0c8f29e-5a4a-5182-b53a-c003a527c23c",
+            "type": "VIRTUAL_MACHINE",
+            "name": "vm-3",
+            "status": null,
+            "kubernetesClusterName": "customer-stage",
+            "kubernetesNamespaceName": "",
+            "tags": {}
+          },
+          "notes": [
+            {
+              "text": "Threat Bewertet",
+              "createdAt": "2025-09-10T12:08:26.942477Z",
+              "user": {
+                "id": "entraid_user",
+                "name": "Buch, Jonathan"
+              }
+            }
+          ],
+          "serviceTickets": null,
+          "sourceRules": [
+            {
+              "__typename": "CloudEventRule",
+              "id": "cer-correlation-id-287",
+              "name": "Multiple runtime detections on a resource in a short period of time",
+              "description": "Multiple runtime detections were triggered on the same resource in a short period of time. This can indicate the execution of a malicious tool or a script on the resource."
+            }
+          ]
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "ey"
+      }
+    }
+  }
+}`
