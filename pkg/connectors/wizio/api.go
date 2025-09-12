@@ -59,32 +59,3 @@ const (
 	Ascending  orderDirection = "ASC"
 	Descending orderDirection = "DESC"
 )
-
-type threatCenterItemOrderField string
-
-const (
-	PublishedAt threatCenterItemOrderField = "PUBLISHED_AT"
-	PinnedAt    threatCenterItemOrderField = "PINNED_AT"
-)
-
-type threatCenterOrder struct {
-	Direction orderDirection             `json:"direction"`
-	Field     threatCenterItemOrderField `json:"field"`
-}
-
-type threatCenterItem struct {
-	Id             string          `json:"id"`
-	Status         string          `json:"status"`
-	Severity       string          `json:"severity"`
-	CreatedAt      time.Time       `json:"createdAt"`
-	UpdatedAt      time.Time       `json:"updatedAt"`
-	EntitySnapshot entitySnapShot  `json:"entitySnapshot"`
-	ServiceTickets []serviceTicket `json:"serviceTickets"`
-	SourceRules    []sourceRule    `json:"sourceRules"`
-	Projects       []project       `json:"projects"`
-}
-
-type threatCenterItems struct {
-	TotalCount  int                `json:"totalCount"`
-	ThreatNodes []threatCenterItem `json:"nodes"`
-}
