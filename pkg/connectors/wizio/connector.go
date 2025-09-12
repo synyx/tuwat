@@ -24,8 +24,8 @@ type Connector struct {
 
 type Config struct {
 	Tag            string
-	StatusFilter   []string
-	SeverityFilter []string
+	StatusFilter   []issueStatus
+	SeverityFilter []severity
 	common.HTTPConfig
 	NumberOfIssues int
 }
@@ -83,7 +83,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Source":     c.config.URL,
 			"Cluster":    node.EntitySnapshot.KubernetesClusterName,
 			"Namespace":  namespace,
-			"Type":       "Issue",
+			"Type":       node.Type.String(),
 			"Projects":   strings.Join(projects, ","),
 		})
 
@@ -105,7 +105,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		alert := connectors.Alert{
 			Labels:      labels,
 			Start:       node.CreatedAt,
-			State:       mapState(node.Severity),
+			State:       mapState(node),
 			Description: description,
 			Details:     node.SourceRules[0].Description,
 			Links:       links,
@@ -130,7 +130,10 @@ func (c *Connector) String() string {
 func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) {
 	graphqlQuery := `
 		query IssuesTable(
-			$filterBy: IssueFilters $first: Int $after: String $orderBy: IssueOrder
+			$filterBy: IssueFilters
+			$first: Int
+			$after: String
+			$orderBy: IssueOrder
 			) {
 				issuesV2(
 					filterBy: $filterBy
@@ -140,6 +143,7 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 				) { 
 					nodes {
 						id
+						type
 						createdAt 
 						updatedAt
 						projects {
@@ -174,7 +178,7 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 							id
 							name
 							description
-						  }
+						}
 					}
 					pageInfo {
 						hasNextPage
@@ -191,13 +195,13 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
 		Query: graphqlQuery,
 		Variables: map[string]interface{}{
 			"first": c.config.NumberOfIssues,
-			"filterBy": map[string]interface{}{
-				"status":   c.config.StatusFilter,
-				"severity": c.config.SeverityFilter,
+			"filterBy": issueFilters{
+				Status:   c.config.StatusFilter,
+				Severity: c.config.SeverityFilter,
 			},
-			"orderBy": map[string]interface{}{
-				"direction": "DESC",
-				"field":     "SEVERITY",
+			"orderBy": issueOrder{
+				Direction: Descending,
+				Field:     Severity,
 			},
 		},
 	}
@@ -248,17 +252,45 @@ func (c *Connector) get(ctx context.Context, endpoint string, query string) (io.
 	return res.Body, nil
 }
 
-func mapState(severity string) connectors.State {
-	switch severity {
-	case "CRITICAL":
+func mapState(issue issue) connectors.State {
+	switch issue.Type {
+	case ThreatDetectionType:
+		return mapThreatState(issue.Severity)
+	case IssueType:
+		return mapIssueState(issue.Severity)
+	default:
+		return mapIssueState(issue.Severity)
+	}
+}
+
+func mapIssueState(severityStr string) connectors.State {
+	switch severity(severityStr) {
+	case Critical:
 		return connectors.Critical
-	case "HIGH":
+	case High:
 		return connectors.Warning
-	case "MEDIUM":
+	case Medium:
 		return connectors.Warning
-	case "LOW":
+	case Low:
 		return connectors.Warning
-	case "INFORMATION":
+	case Informational:
+		return connectors.Warning
+	default:
+		return connectors.Unknown
+	}
+}
+
+func mapThreatState(severityStr string) connectors.State {
+	switch severity(severityStr) {
+	case Critical:
+		return connectors.Critical
+	case High:
+		return connectors.Critical
+	case Medium:
+		return connectors.Critical
+	case Low:
+		return connectors.Warning
+	case Informational:
 		return connectors.Warning
 	default:
 		return connectors.Unknown
