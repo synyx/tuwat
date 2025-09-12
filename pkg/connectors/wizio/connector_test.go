@@ -25,6 +25,14 @@ func TestThreat(t *testing.T) {
 	if alerts == nil || len(alerts) != 1 {
 		t.Error("There should be 1 alert")
 	}
+
+	threat := alerts[0]
+	if threat.Labels["Type"] != "ThreatDetection" {
+		t.Error("It should be recognized as threat")
+	}
+	if threat.State != connectors.Critical {
+		t.Error("Threat should be critical, where normal issue would be only warning")
+	}
 }
 
 func testCollection(t *testing.T, response string) []connectors.Alert {
@@ -42,6 +50,8 @@ func testCollection(t *testing.T, response string) []connectors.Alert {
 		HTTPConfig: common.HTTPConfig{
 			URL: testServer.URL,
 		},
+		StatusFilter:   []issueStatus{"OPEN", "IN_PROGRESS"},
+		SeverityFilter: []severity{"CRITICAL", "HIGH", "MEDIUM", "LOW"},
 	}
 
 	var connector connectors.Connector = NewConnector(&cfg)
@@ -68,6 +78,7 @@ const mockResponse = `
       "nodes": [
         {
           "id": "0b33b35a-55e4-45c7-a918-98ec2c271b4c",
+          "type": "ISSUE",
           "control": null,
           "createdAt": "2025-01-01T14:06:30.100429Z",
           "updatedAt": "2025-01-03T14:21:45.596548Z",
@@ -406,6 +417,7 @@ const mockThreatResponse = `
       "nodes": [
         {
           "id": "dc14fcff-549d-5d3c-906d-f505ac5b5964",
+          "type": "THREAT_DETECTION",
           "createdAt": "2025-09-05T14:54:42.829455Z",
           "updatedAt": "2025-09-05T14:58:28.023204Z",
           "projects": [
@@ -435,11 +447,11 @@ const mockThreatResponse = `
           },
           "notes": [
             {
-              "text": "Threat Bewertet",
+              "text": "Threat was evaluated",
               "createdAt": "2025-09-10T12:08:26.942477Z",
               "user": {
                 "id": "entraid_user",
-                "name": "Buch, Jonathan"
+                "name": "Bob The Builder"
               }
             }
           ],

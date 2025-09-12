@@ -16,6 +16,7 @@ type issuesV2 struct {
 
 type issue struct {
 	Id             string          `json:"id"`
+	Type           issueType       `json:"type"`
 	Status         string          `json:"status"`
 	Severity       string          `json:"severity"`
 	CreatedAt      time.Time       `json:"createdAt"`
@@ -51,6 +52,24 @@ type sourceRule struct {
 type project struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type issueType string
+
+const (
+	ThreatDetectionType issueType = "THREAT_DETECTION"
+	IssueType           issueType = "ISSUE"
+)
+
+func (t issueType) String() string {
+	switch t {
+	case ThreatDetectionType:
+		return "ThreatDetection"
+	case IssueType:
+		return "Issue"
+	default:
+		return string(t)
+	}
 }
 
 type orderDirection string
