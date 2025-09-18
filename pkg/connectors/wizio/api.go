@@ -3,19 +3,20 @@ package wizio
 import "time"
 
 type issuesResponse struct {
-	Data data `json:"data"`
+	Data issuesData `json:"data"`
 }
-type data struct {
+type issuesData struct {
 	IssuesV2 issuesV2 `json:"issuesV2"`
 }
 
 type issuesV2 struct {
-	TotalCount int    `json:"totalCount"`
-	Nodes      []node `json:"nodes"`
+	TotalCount int     `json:"totalCount"`
+	Nodes      []issue `json:"nodes"`
 }
 
-type node struct {
+type issue struct {
 	Id             string          `json:"id"`
+	Type           issueType       `json:"type"`
 	Status         string          `json:"status"`
 	Severity       string          `json:"severity"`
 	CreatedAt      time.Time       `json:"createdAt"`
@@ -51,4 +52,69 @@ type sourceRule struct {
 type project struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type issueType string
+
+const (
+	ThreatDetectionType issueType = "THREAT_DETECTION"
+	IssueType           issueType = "ISSUE"
+)
+
+func (t issueType) String() string {
+	switch t {
+	case ThreatDetectionType:
+		return "ThreatDetection"
+	case IssueType:
+		return "Issue"
+	default:
+		return string(t)
+	}
+}
+
+type orderDirection string
+
+const (
+	Ascending  orderDirection = "ASC"
+	Descending orderDirection = "DESC"
+)
+
+type issueOrderField string
+
+const (
+	Id                  issueOrderField = "ID"
+	Severity            issueOrderField = "SEVERITY"
+	CreatedAt           issueOrderField = "CREATED_AT"
+	ResolvedAt          issueOrderField = "RESOLVED_AT"
+	StatusChangedAt     issueOrderField = "STATUS_CHANGED_AT"
+	ThreatLastGroupedAt issueOrderField = "THREAT_LAST_GROUPED_AT"
+)
+
+type issueOrder struct {
+	Direction orderDirection  `json:"direction"`
+	Field     issueOrderField `json:"field"`
+}
+
+type issueStatus string
+
+const (
+	Open       issueStatus = "OPEN"
+	InProgress issueStatus = "IN_PROGRESS"
+	Resolved   issueStatus = "RESOLVED"
+	Rejected   issueStatus = "REJECTED"
+)
+
+type severity string
+
+const (
+	Informational severity = "INFORMATIONAL"
+	Low           severity = "LOW"
+	Medium        severity = "MEDIUM"
+	High          severity = "HIGH"
+	Critical      severity = "CRITICAL"
+)
+
+type issueFilters struct {
+	Status   []issueStatus `json:"status"`
+	Severity []severity    `json:"severity"`
 }
