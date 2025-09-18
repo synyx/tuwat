@@ -1,5 +1,9 @@
 # Releases
 
+## 1.19.0 - 2025-09-18 wiz.io Threats
+
+* wiz.io: Enhance visibility of threats.
+
 ## 1.18.0 - 2025-09-08 Text Browser
 
 * To also allow text browser users to profit from tuwat, it has gained the
