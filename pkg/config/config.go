@@ -19,6 +19,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/example"
 	"github.com/synyx/tuwat/pkg/connectors/github"
 	"github.com/synyx/tuwat/pkg/connectors/gitlabmr"
+	"github.com/synyx/tuwat/pkg/connectors/grafana"
 	"github.com/synyx/tuwat/pkg/connectors/graylog"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
@@ -95,6 +96,7 @@ type rootConfig struct {
 	Example       []example.Config         `toml:"example"`
 	Graylogs      []graylog.Config         `toml:"graylog"`
 	Wizio         []wizio.Config           `toml:"wizio"`
+	Grafanas      []grafana.Config         `toml:"grafana"`
 }
 
 func NewConfiguration() (config *Config, err error) {
@@ -252,6 +254,9 @@ func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	}
 	for _, connectorConfig := range rootConfig.Wizio {
 		cfg.Connectors = append(cfg.Connectors, wizio.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.Grafanas {
+		cfg.Connectors = append(cfg.Connectors, grafana.NewConnector(&connectorConfig))
 	}
 
 	// Add template for
