@@ -1,5 +1,9 @@
 # Releases
 
+## 1.19.1 - 2025-09-29 Maintenance
+
+* Only dependency upgrades
+
 ## 1.19.0 - 2025-09-18 wiz.io Threats
 
 * wiz.io: Enhance visibility of threats.
