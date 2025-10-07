@@ -1,7 +1,8 @@
 FROM gcr.io/distroless/static-debian11
 
-WORKDIR /go
-COPY ./tuwat /tuwat
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/tuwat /
+
 EXPOSE 8988
 ENTRYPOINT ["/tuwat"]
 
