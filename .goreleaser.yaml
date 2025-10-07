@@ -37,15 +37,7 @@ builds:
     goos:
       - darwin
     goarch:
-      - amd64
       - arm64
-
-# For systems supporting universal binaries (hello Apple!) we ship a single binary
-universal_binaries:
-  - id: darwin
-    ids:
-      - darwin
-    replace: true
 
 # Configure how snapshots are versioned
 snapshot:
@@ -65,44 +57,19 @@ archives:
     ids: [ linux, darwin ]
     formats: ['tar.gz']
 
-dockers:
-  - image_templates:
-      - "synyx/tuwat:{{ .Version }}-amd64"
-    use: buildx
-    goos: linux
-    goarch: amd64
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.source={{ .GitURL }}"
-      - "--platform=linux/amd64"
-  - image_templates:
-      - "synyx/tuwat:{{ .Version }}-arm64"
-    use: buildx
-    goos: linux
-    goarch: arm64
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.source={{ .GitURL }}"
-      - "--platform=linux/arm64"
-
-docker_manifests:
-  - name_template: 'synyx/tuwat:{{ .Version }}'
-    image_templates:
-      - 'synyx/tuwat:{{ .Version }}-amd64'
-      - 'synyx/tuwat:{{ .Version }}-arm64'
-  # We also move the latest when publishing new images
-  - name_template: 'synyx/tuwat:latest'
-    image_templates:
-      - 'synyx/tuwat:{{ .Version }}-amd64'
-      - 'synyx/tuwat:{{ .Version }}-arm64'
+dockers_v2:
+  - images:
+      - "synyx/tuwat"
+    tags:
+      - "{{ .Version }}"
+      - "{{ if .IsNightly }}nightly{{ end }}"
+      - "{{ if not .IsNightly }}latest{{ end }}"
+    labels:
+      "org.opencontainers.image.created": "{{ .Date }}"
+      "org.opencontainers.image.name": "{{ .ProjectName }}"
+      "org.opencontainers.image.revision": "{{ .FullCommit }}"
+      "org.opencontainers.image.version": "{{ .Version }}"
+      "org.opencontainers.image.source": "{{ .GitURL }}"
 
 nfpms:
   - file_name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Arch }}'
