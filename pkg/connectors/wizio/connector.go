@@ -60,18 +60,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	for _, node := range issueResponse.Data.IssuesV2.Nodes {
 		description := node.SourceRules[0].Name
 		namespace := node.EntitySnapshot.KubernetesNamespaceName
-		if namespace == "" {
-			if n, ok := node.Entity.Properties["namespace"]; ok {
-				namespace = n
-			} else if n, ok := node.EntitySnapshot.Tags["kustomize.toolkit.fluxcd.io/namespace"]; ok {
-				namespace = n
-			}
+		if n, haveFallback := node.Entity.Properties["namespace"]; namespace == "" && haveFallback {
+			namespace = n
 		}
 		clusterName := node.EntitySnapshot.KubernetesClusterName
-		if clusterName == "" {
-			if n, ok := node.Entity.Properties["kubernetes_clusterName"]; ok {
-				clusterName = n
-			}
+		if n, haveFallback := node.Entity.Properties["kubernetes_clusterName"]; clusterName == "" && haveFallback {
+			clusterName = n
 		}
 
 		var projects []string
