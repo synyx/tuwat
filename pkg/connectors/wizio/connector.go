@@ -67,6 +67,10 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				namespace = n
 			}
 		}
+		clusterName := node.EntitySnapshot.KubernetesClusterName
+		if clusterName == "" {
+			if n, ok := node.Entity.Properties["kubernetes_clusterName"]; ok {
+				clusterName = n
 			}
 		}
 
@@ -85,7 +89,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Status":     node.Status,
 			"Severity":   node.Severity,
 			"Source":     c.config.URL,
-			"Cluster":    node.EntitySnapshot.KubernetesClusterName,
+			"Cluster":    clusterName,
 			"Namespace":  namespace,
 			"Type":       node.Type.String(),
 			"Projects":   strings.Join(projects, ","),
