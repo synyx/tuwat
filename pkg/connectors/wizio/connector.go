@@ -61,8 +61,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 		description := node.SourceRules[0].Name
 		namespace := node.EntitySnapshot.KubernetesNamespaceName
 		if namespace == "" {
-			if n, ok := node.EntitySnapshot.Tags["kustomize.toolkit.fluxcd.io/namespace"]; ok {
+			if n, ok := node.Entity.Properties["namespace"]; ok {
 				namespace = n
+			} else if n, ok := node.EntitySnapshot.Tags["kustomize.toolkit.fluxcd.io/namespace"]; ok {
+				namespace = n
+			}
+		}
 			}
 		}
 
