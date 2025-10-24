@@ -21,6 +21,7 @@ type issue struct {
 	Severity       string          `json:"severity"`
 	CreatedAt      time.Time       `json:"createdAt"`
 	UpdatedAt      time.Time       `json:"updatedAt"`
+	Entity         entity          `json:"entity"`
 	EntitySnapshot entitySnapShot  `json:"entitySnapshot"`
 	ServiceTickets []serviceTicket `json:"serviceTickets"`
 	SourceRules    []sourceRule    `json:"sourceRules"`
@@ -35,6 +36,10 @@ type entitySnapShot struct {
 	KubernetesClusterName   string            `json:"kubernetesClusterName"`
 	KubernetesNamespaceName string            `json:"kubernetesNamespaceName"`
 	Tags                    map[string]string `json:"tags"`
+}
+
+type entity struct {
+	Properties map[string]string `json:"properties"`
 }
 
 type serviceTicket struct {

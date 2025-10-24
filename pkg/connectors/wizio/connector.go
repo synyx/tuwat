@@ -60,10 +60,12 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	for _, node := range issueResponse.Data.IssuesV2.Nodes {
 		description := node.SourceRules[0].Name
 		namespace := node.EntitySnapshot.KubernetesNamespaceName
-		if namespace == "" {
-			if n, ok := node.EntitySnapshot.Tags["kustomize.toolkit.fluxcd.io/namespace"]; ok {
-				namespace = n
-			}
+		if n, haveFallback := node.Entity.Properties["namespace"]; namespace == "" && haveFallback {
+			namespace = n
+		}
+		clusterName := node.EntitySnapshot.KubernetesClusterName
+		if n, haveFallback := node.Entity.Properties["kubernetes_clusterName"]; clusterName == "" && haveFallback {
+			clusterName = n
 		}
 
 		var projects []string
@@ -81,17 +83,13 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Status":     node.Status,
 			"Severity":   node.Severity,
 			"Source":     c.config.URL,
-			"Cluster":    node.EntitySnapshot.KubernetesClusterName,
+			"Cluster":    clusterName,
 			"Namespace":  namespace,
 			"Type":       node.Type.String(),
 			"Projects":   strings.Join(projects, ","),
 		})
 
-		if namespace == "" {
-			labels["Hostname"] = node.EntitySnapshot.Name
-		}
-
-		// This weburl includes the state filter for issues shown in the background filter
+		// This URL includes the state filter for issues shown in the background filter
 		webUrl := "https://app.wiz.io/issues#%7E%28filters%7E%28status%7E%28equals%7E%28%7E%27OPEN%7E%27IN_PROGRESS%29%29%29%7Eissue%7E%27" + node.Id + "%29"
 
 		links := []html.HTML{
