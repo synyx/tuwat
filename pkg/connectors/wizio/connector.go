@@ -89,11 +89,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Projects":   strings.Join(projects, ","),
 		})
 
-		if namespace == "" {
-			labels["Hostname"] = node.EntitySnapshot.Name
-		}
-
-		// This weburl includes the state filter for issues shown in the background filter
+		// This URL includes the state filter for issues shown in the background filter
 		webUrl := "https://app.wiz.io/issues#%7E%28filters%7E%28status%7E%28equals%7E%28%7E%27OPEN%7E%27IN_PROGRESS%29%29%29%7Eissue%7E%27" + node.Id + "%29"
 
 		links := []html.HTML{
