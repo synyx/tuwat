@@ -276,14 +276,8 @@ func (h *WebHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 		data.Environment = h.environment
 		data.Style = h.style
 
-		buf := new(bytes.Buffer)
-
-		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
+		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
 			panic(errors.Join(TemplateError, err))
-		}
-
-		if _, err = w.Write(buf.Bytes()); err != nil {
-			panic(errors.Join(DisconnectError, err))
 		}
 	}
 }
