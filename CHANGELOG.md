@@ -1,5 +1,9 @@
 # Releases
 
+## 1.20.1 - 2025-10-24 Maintenance
+
+* Only dependency upgrades
+
 ## 1.20.0 - 2025-10-24 wiz.io Namespaces
 
 * The recognition which Kubernetes Namespace contained an issue is now more
