@@ -15,6 +15,8 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
@@ -37,6 +39,9 @@ type WebHandler struct {
 	environment string
 	style       string
 	dashboards  map[string]*config.Dashboard
+
+	templateCache map[string]*html.Template
+	cacheMutex    sync.RWMutex
 }
 
 type webContent struct {
@@ -69,6 +74,7 @@ func NewWebHandler(cfg *config.Config, aggregator *aggregation.Aggregator) *WebH
 		handler.fs = os.DirFS(dir)
 	} else {
 		handler.fs, _ = fs.Sub(templates, "templates")
+		handler.templateCache = make(map[string]*html.Template)
 	}
 
 	handler.routes = []common.Route{
@@ -106,17 +112,56 @@ func (h *WebHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
+func (h *WebHandler) cachedTemplate(templateDefinition string, templateFiles ...string) (*html.Template, error) {
+	// If caching is disabled, always parse templates
+	if h.templateCache == nil {
+		return h.parseTemplate(templateDefinition, templateFiles...)
+	}
 
-func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, templateFiles ...string) renderFunc {
-	templateDefinition := "base"
+	key := templateDefinition + ":" + strings.Join(templateFiles, ",")
 
+	// Try to read from cache
+	h.cacheMutex.RLock()
+	tmpl, exists := h.templateCache[key]
+	h.cacheMutex.RUnlock()
+	if exists {
+		return tmpl, nil
+	}
+
+	// Cache miss
+	h.cacheMutex.Lock()
+	defer h.cacheMutex.Unlock()
+
+	// Double-check, might race between dropping the read-lock and acquiring the write-lock
+	if tmpl, exists := h.templateCache[key]; exists {
+		return tmpl, nil
+	}
+
+	// Cache only if parsing succeeded
+	tmpl, err := h.parseTemplate(templateDefinition, templateFiles...)
+	if err != nil {
+		return nil, err
+	}
+
+	h.templateCache[key] = tmpl
+	return tmpl, nil
+}
+
+func (h *WebHandler) parseTemplate(templateDefinition string, templateFiles ...string) (*html.Template, error) {
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
 		"json":         formatJson,
 	}
 	tmpl := html.New(templateDefinition).Funcs(funcs)
-	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	return tmpl.ParseFS(h.fs, templateFiles...)
+}
+
+type renderFunc func(w http.ResponseWriter, statusCode int, data webContent)
+
+func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, templateFiles ...string) renderFunc {
+	templateDefinition := "base"
+
+	tmpl, err := h.cachedTemplate(templateDefinition, templateFiles...)
 	if err != nil {
 		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
 		panic(err)
@@ -141,12 +186,7 @@ func (h *WebHandler) baseRenderer(req *http.Request, dashboardName string, templ
 func (h *WebHandler) partialRenderer(req *http.Request, dashboardName string, templateFiles ...string) renderFunc {
 	templateDefinition := "base"
 
-	funcs := html.FuncMap{
-		"niceDuration": niceDuration,
-		"json":         formatJson,
-	}
-	tmpl := html.New(templateDefinition).Funcs(funcs)
-	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	tmpl, err := h.cachedTemplate(templateDefinition, templateFiles...)
 	if err != nil {
 		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
 		panic(err)
@@ -173,12 +213,7 @@ func (h *WebHandler) sseRenderer(w http.ResponseWriter, req *http.Request, patte
 	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition := "content-container"
 
-	funcs := html.FuncMap{
-		"niceDuration": niceDuration,
-		"json":         formatJson,
-	}
-	tmpl := html.New(templateDefinition).Funcs(funcs)
-	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	tmpl, err := h.cachedTemplate(templateDefinition, templateFiles...)
 	if err != nil {
 		slog.ErrorContext(req.Context(), "compiling template failed", slog.Any("error", err))
 		return func(data webContent) error {
@@ -256,12 +291,7 @@ func (h *WebHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	templateFiles := append([]string{"_stream.gohtml"}, patterns...)
 	templateDefinition := "content-container"
 
-	funcs := html.FuncMap{
-		"niceDuration": niceDuration,
-		"json":         formatJson,
-	}
-	tmpl := html.New(templateDefinition).Funcs(funcs)
-	tmpl, err := tmpl.ParseFS(h.fs, templateFiles...)
+	tmpl, err := h.cachedTemplate(templateDefinition, templateFiles...)
 	if err != nil {
 		panic(errors.Join(TemplateError, err))
 	}
@@ -276,14 +306,8 @@ func (h *WebHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 		data.Environment = h.environment
 		data.Style = h.style
 
-		buf := new(bytes.Buffer)
-
-		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
+		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
 			panic(errors.Join(TemplateError, err))
-		}
-
-		if _, err = w.Write(buf.Bytes()); err != nil {
-			panic(errors.Join(DisconnectError, err))
 		}
 	}
 }
