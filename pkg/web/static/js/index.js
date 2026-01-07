@@ -2,8 +2,6 @@ import * as Turbo from '@hotwired/turbo';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { toggleFilteredStatus } from "./toggle-filtered";
 
-toggleFilteredStatus();
-
 class SSEConn {
     constructor(socketUrl) {
         this.socketUrl = socketUrl;
@@ -127,6 +125,8 @@ fallback.connect();
 conn.connect();
 
 document.addEventListener("DOMContentLoaded", function () {
+    toggleFilteredStatus();
+
     console.log('Adding handler for manual disconnect.');
     const csEl = document.getElementById('connection-state');
     csEl.addEventListener("change", function () {
