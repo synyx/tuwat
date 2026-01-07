@@ -1,5 +1,9 @@
 # Releases
 
+## 1.20.3 - 2026-01-07 Maintenance
+
+* Only dependency upgrades
+
 ## 1.20.2 - 2025-10-10 OOM
 
 * Fix excessive memory usage when using many connections to tuwat
