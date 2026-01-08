@@ -306,8 +306,17 @@ func (h *WebHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 		data.Environment = h.environment
 		data.Style = h.style
 
-		if err := tmpl.ExecuteTemplate(w, templateDefinition, data); err != nil {
+		// Note: we need to buffer the fully rendered template, it needs to be sent
+		// in one go to the frontend, otherwise Hotwire will not be able to piece
+		// it together.
+		buf := new(bytes.Buffer)
+
+		if err := tmpl.ExecuteTemplate(buf, templateDefinition, data); err != nil {
 			panic(errors.Join(TemplateError, err))
+		}
+
+		if _, err = w.Write(buf.Bytes()); err != nil {
+			panic(errors.Join(DisconnectError, err))
 		}
 	}
 }
