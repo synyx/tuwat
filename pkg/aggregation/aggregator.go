@@ -213,10 +213,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 	a.cmu.RLock()
 	for _, c := range a.connectors {
 		slog.DebugContext(ctx, "Adding collection", slog.String("tag", c.Tag()))
-		wg.Add(1)
-		go func(c connectors.Connector) {
-			defer wg.Done()
-
+		wg.Go(func() {
 			alerts, err := c.Collect(ctx)
 
 			// Be graceful on errors accessing the handed-in channel
@@ -244,7 +241,7 @@ func (a *Aggregator) collect(ctx context.Context, collect chan<- result) {
 				err = fmt.Errorf("timeout delivering result %w", err)
 				break
 			}
-		}(c)
+		})
 	}
 	a.cmu.RUnlock()
 
