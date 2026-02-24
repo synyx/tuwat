@@ -1,5 +1,9 @@
 # Releases
 
+## 1.20.4 - 2026-02-24 Maintenance
+
+* Only dependency upgrades
+
 ## 1.20.3 - 2026-01-07 Maintenance
 
 * Only dependency upgrades
