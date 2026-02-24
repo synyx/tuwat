@@ -29,7 +29,6 @@ func newTracedMuxer() tracedMuxer {
 }
 
 func (t tracedMuxer) Handle(name, pattern string, handler http.Handler) {
-	handler = otelhttp.WithRouteTag(pattern, handler)
 	handler = otelhttp.NewHandler(handler, name)
 	t.handler.Handle(pattern, handler)
 }
