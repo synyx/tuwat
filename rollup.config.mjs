@@ -1,5 +1,4 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import terser from '@rollup/plugin-terser';
 
 export default {
   input: 'pkg/web/static/js/index.js',
@@ -7,7 +6,7 @@ export default {
       file: 'pkg/web/static/js/index.min.js',
       format: 'es',
       sourcemap: true,
-      plugins: [terser()]
+      plugins: []
   },
   plugins: [nodeResolve()]
 };
