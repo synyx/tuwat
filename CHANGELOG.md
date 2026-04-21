@@ -1,5 +1,10 @@
 # Releases
 
+## 1.21.0 - 2026-04-21 - Alert Time UX
+
+* Show alert time on mouseover in the `When` column
+* Show alert time in detail view labels
+
 ## 1.20.4 - 2026-02-24 Maintenance
 
 * Only dependency upgrades
