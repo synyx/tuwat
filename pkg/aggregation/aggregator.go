@@ -37,7 +37,7 @@ type Alert struct {
 	Tag     string
 	What    string
 	Details string
-	When    time.Duration
+	When    time.Time
 	Status  string
 	Links   []html.HTML
 	Labels  map[string]string
@@ -271,7 +271,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 				Tag:     r.tag,
 				What:    "Collection Failure on " + r.connector.String(),
 				Details: r.error.Error(),
-				When:    0 * time.Second,
+				When:    a.clock.Now(),
 				Status:  connectors.Critical.String(),
 			}
 			alerts = append(alerts, alert)
@@ -284,6 +284,8 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 					labels[k] = v
 				}
 			}
+
+			labels["When"] = al.Start.Format(time.RFC3339)
 
 			where := labels["Hostname"]
 			buf := new(strings.Builder)
@@ -298,7 +300,7 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 				Tag:     r.tag,
 				What:    al.Description,
 				Details: al.Details,
-				When:    a.clock.Now().Sub(al.Start),
+				When:    al.Start,
 				Status:  al.State.String(),
 				Links:   al.Links,
 				Labels:  labels,
@@ -324,12 +326,12 @@ func (a *Aggregator) aggregate(ctx context.Context, dashboard *config.Dashboard,
 		alerts = []Alert{}
 	} else {
 		sort.Slice(alerts, func(i, j int) bool {
-			return alerts[i].When < alerts[j].When
+			return alerts[i].When.After(alerts[j].When)
 		})
 	}
 
 	sort.Slice(blockedAlerts, func(i, j int) bool {
-		return blockedAlerts[i].When < blockedAlerts[j].When
+		return blockedAlerts[i].When.After(blockedAlerts[j].When)
 	})
 
 	a.amu.Lock()
@@ -364,13 +366,13 @@ func groupAlerts(alerts []Alert) []AlertGroup {
 
 	for _, alertGroup := range alertMap {
 		sort.Slice(alertGroup.Alerts, func(i, j int) bool {
-			return alertGroup.Alerts[i].When < alertGroup.Alerts[j].When
+			return alertGroup.Alerts[i].When.After(alertGroup.Alerts[j].When)
 		})
 	}
 
 	alertGroups := slices.Collect(maps.Values(alertMap))
 	sort.Slice(alertGroups, func(i, j int) bool {
-		return alertGroups[i].Alerts[0].When < alertGroups[j].Alerts[0].When
+		return alertGroups[i].Alerts[0].When.After(alertGroups[j].Alerts[0].When)
 	})
 	return alertGroups
 }
@@ -483,7 +485,7 @@ func (a *Aggregator) matchAlertWithReason(dashboard *config.Dashboard, alert Ale
 		if rule.When != nil {
 			// `when` is a duration, which is converted to seconds.  The rule simply matches against
 			// that.
-			seconds := strconv.FormatFloat(alert.When.Seconds(), 'f', 0, 64)
+			seconds := strconv.FormatFloat(a.timeSince(alert.When).Seconds(), 'f', 0, 64)
 			matchers[seconds] = rule.When
 		}
 
@@ -512,6 +514,10 @@ func (a *Aggregator) matchAlertWithReason(dashboard *config.Dashboard, alert Ale
 	}
 
 	return ""
+}
+
+func (a *Aggregator) timeSince(when time.Time) time.Duration {
+	return a.clock.Now().Sub(when)
 }
 
 func (a *Aggregator) Silence(ctx context.Context, alertId, user string) {

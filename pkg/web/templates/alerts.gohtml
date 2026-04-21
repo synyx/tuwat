@@ -2,7 +2,7 @@
 {{- /*gotype: github.com/synyx/tuwat/pkg/web.webContent*/ -}}
 <h3>
     Alerts
-    <time id="last_refresh" datetime="{{.Content.CheckTime.Format "2006-01-02T15:04:05Z07:00"}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
+    <time id="last_refresh" datetime="{{niceDateTime .Content.CheckTime}}">{{.Content.CheckTime.Format "15:04:05"}}</time>
 </h3>
 
 <table class="widetable">
@@ -33,7 +33,11 @@
                     </div>
                 </details>
             </td>
-            <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+            <td align="right">
+                <span title="{{niceDateTime .When}}">
+                    <time datetime="{{niceDateTime .When}}">{{niceDuration .When}}</time>
+                </span>
+            </td>
         </tr>
     {{end}}
     {{range .Content.GroupedAlerts}}
@@ -59,7 +63,11 @@
                     </div>
                 </details>
             </td>
-            <td align="right" {{if not $i}}class="first_of_group"{{end}}><time datetime="{{$alert.When.Seconds}}S">{{niceDuration $alert.When}}</time></td>
+            <td align="right" {{if not $i}}class="first_of_group"{{end}}>
+                <span title="{{niceDateTime $alert.When}}">
+                    <time datetime="{{niceDateTime $alert.When}}">{{niceDuration $alert.When}}</time>
+                </span>
+            </td>
         </tr>
         {{end}}
     {{end}}
@@ -99,7 +107,11 @@
                     </div>
                 </details>
             </td>
-            <td align="right"><time datetime="{{.When.Seconds}}S">{{niceDuration .When}}</time></td>
+            <td align="right">
+                <span title="{{niceDateTime .When}}">
+                    <time datetime="{{niceDateTime .When}}">{{niceDuration .When}}</time>
+                </span>
+            </td>
         </tr>
     {{end}}
     </tbody>
