@@ -2,8 +2,6 @@ import * as Turbo from '@hotwired/turbo';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { toggleFilteredStatus } from "./toggle-filtered";
 
-toggleFilteredStatus();
-
 class SSEConn {
     constructor(socketUrl) {
         this.socketUrl = socketUrl;
@@ -70,7 +68,12 @@ class FallbackConn {
         let conn = this;
         this.timerId = setTimeout(function reload() {
             if (conn.active) {
-                let lastRefresh = Date.parse(document.querySelector("#last_refresh").dateTime);
+                let lastRefreshNode = document.querySelector("#last_refresh");
+                let lastRefresh = Date.now();
+                if (lastRefreshNode) {
+                    lastRefresh = Date.parse(lastRefreshNode.dateTime);
+                }
+
                 if (Date.now() - lastRefresh > 90000) {
                     console.log("Force reloading, last refresh too old: " + (Date.now() - lastRefresh))
                     location.reload();
@@ -127,6 +130,8 @@ fallback.connect();
 conn.connect();
 
 document.addEventListener("DOMContentLoaded", function () {
+    toggleFilteredStatus();
+
     console.log('Adding handler for manual disconnect.');
     const csEl = document.getElementById('connection-state');
     csEl.addEventListener("change", function () {

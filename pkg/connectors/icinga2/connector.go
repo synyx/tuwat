@@ -200,6 +200,7 @@ func (c *Connector) get(endpoint string, ctx context.Context) (io.ReadCloser, er
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
 		return res.Body, nil
 	}
+	defer res.Body.Close()
 
 	if ct := res.Header.Get("Content-Type"); ct == "application/json" {
 		e := struct {

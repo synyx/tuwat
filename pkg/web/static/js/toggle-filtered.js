@@ -2,6 +2,10 @@ export function toggleFilteredStatus() {
     const toggleButton = document.getElementById("toggle-filtered-alerts");
     const filteredTable = document.getElementById("filtered-table");
 
+    if (!toggleButton) {
+        return;
+    }
+
     toggleButton.addEventListener("click", () => {
         filteredTable.classList.toggle("hidden");
         const filteredAreShown = !filteredTable.classList.contains("hidden");

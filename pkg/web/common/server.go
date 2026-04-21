@@ -34,7 +34,7 @@ func Serve(ctx context.Context, addr string, handler http.Handler) {
 		close(idleConnectionsClosed)
 	}()
 
-	slog.InfoContext(ctx, "Starting http server", slog.String("addr", addr))
+	slog.InfoContext(ctx, "Starting http server", slog.String("addr", "http://"+addr))
 
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		// Still try to start, application might still do useful work
