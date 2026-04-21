@@ -168,7 +168,7 @@ func mapAlert(dashboard string, aggregate aggregation.Aggregate, alert aggregati
 	ga := gettableAlert{
 		Annotations: labels,
 		Fingerprint: alert.Id,
-		StartsAt:    time.Now().Add(alert.When).Format(time.RFC3339),
+		StartsAt:    alert.When.Format(time.RFC3339),
 		UpdatedAt:   aggregate.CheckTime.Format(time.RFC3339),
 		EndsAt:      time.Now().Add(1 * time.Hour).Format(time.RFC3339),
 		Status: alertStatus{

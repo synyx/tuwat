@@ -150,6 +150,7 @@ func (h *WebHandler) cachedTemplate(templateDefinition string, templateFiles ...
 func (h *WebHandler) parseTemplate(templateDefinition string, templateFiles ...string) (*html.Template, error) {
 	funcs := html.FuncMap{
 		"niceDuration": niceDuration,
+		"niceDateTime": niceDateTime,
 		"json":         formatJson,
 	}
 	tmpl := html.New(templateDefinition).Funcs(funcs)
@@ -312,7 +313,8 @@ func (h *WebHandler) wsRenderer(s *websocket.Conn, patterns ...string) wsRenderF
 	}
 }
 
-func niceDuration(d time.Duration) string {
+func niceDuration(t time.Time) string {
+	d := time.Now().Sub(t)
 	if d > 2*time.Hour*24 {
 		return fmt.Sprintf("%.0fd", d.Hours()/24)
 	} else if d > 2*time.Hour {
@@ -324,6 +326,10 @@ func niceDuration(d time.Duration) string {
 	} else {
 		return d.String()
 	}
+}
+
+func niceDateTime(t time.Time) string {
+	return t.Format(time.RFC3339)
 }
 
 func formatJson(s any) string {
