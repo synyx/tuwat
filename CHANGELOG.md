@@ -1,5 +1,12 @@
 # Releases
 
+# 1.22.0 - 2026-06-29 Maintenance
+
+* OTEL `semconv` updated from `v1.10.0` to `v1.41.0`, see [non-normative]
+  OTEL documentation for details on upgrading.
+
+[non-normative]: https://opentelemetry.io/docs/specs/semconv/non-normative/
+
 ## 1.21.1 - 2026-06-18 Maintenance
 
 * Only dependency upgrades
