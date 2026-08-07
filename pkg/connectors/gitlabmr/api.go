@@ -3,6 +3,7 @@ package gitlabmr
 type mergeRequest struct {
 	Title      string     `json:"title"`
 	Labels     []string   `json:"labels"`
+	CreatedAt  string     `json:"created_at"`
 	UpdatedAt  string     `json:"updated_at"`
 	Author     person     `json:"author"`
 	Assignee   person     `json:"assignee"`
