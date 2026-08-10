@@ -45,7 +45,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 	var alerts []connectors.Alert
 
 	for _, mr := range mRs {
-		last, err := time.Parse(time.RFC3339, mr.UpdatedAt)
+		created, err := time.Parse(time.RFC3339, mr.CreatedAt)
 		if err != nil {
 			slog.ErrorContext(ctx, "Cannot parse", slog.Any("error", err))
 		}
@@ -62,7 +62,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Source":    c.config.URL,
 				"Type":      "PullRequest",
 			},
-			Start:       last,
+			Start:       created,
 			State:       connectors.Warning,
 			Description: descr,
 			Details:     details,
