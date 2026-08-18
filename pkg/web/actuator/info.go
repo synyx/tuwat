@@ -9,7 +9,7 @@ import (
 )
 
 type InfoHandler struct {
-	versionInfo *version.VersionInfo
+	versionInfo *version.ApplicationInfo
 }
 
 func NewInfoHandler() *InfoHandler {

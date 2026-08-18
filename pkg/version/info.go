@@ -2,7 +2,9 @@ package version
 
 import (
 	"fmt"
+	"path"
 	"runtime"
+	"runtime/debug"
 )
 
 // These are mostly set during compilation from linker flags
@@ -14,8 +16,8 @@ var (
 	releaseDate string
 )
 
-// VersionInfo is a rich representation of the version information which can also be readily serialized into a JSON representation
-type VersionInfo struct {
+// ApplicationInfo is a rich representation of the version information which can also be readily serialized into a JSON representation
+type ApplicationInfo struct {
 	Application string `json:"application"`
 	Version     string `json:"version"`
 	Revision    string `json:"revision,omitempty"`
@@ -25,14 +27,40 @@ type VersionInfo struct {
 	GoPlatform  string `json:"goPlatform"`
 }
 
-func (v VersionInfo) HumanReadable() string {
-	return fmt.Sprintf("%s v%s (release date: %s)", v.Application, v.Version, v.ReleaseDate)
+// HumanReadable prepares a string for human-readable version information, mostly for the applications' `-version`
+func (v *ApplicationInfo) HumanReadable() string {
+	// in-development
+	if v.Version == "dev" && v.Branch != "" {
+		return fmt.Sprintf("%s %s %s (%s, build date: %s)", v.Application, v.Version, v.Revision, v.Branch, v.ReleaseDate)
+	}
+	if v.Version == "dev" && v.Branch == "" {
+		return fmt.Sprintf("%s %s %s (build date: %s)", v.Application, v.Version, v.Revision, v.ReleaseDate)
+	}
+
+	if v.ReleaseDate != "" {
+		return fmt.Sprintf("%s %s (release date: %s)", v.Application, v.Version, v.ReleaseDate)
+	}
+
+	return fmt.Sprintf("%s %s", v.Application, v.Version)
 }
 
-var Info VersionInfo
+var Info ApplicationInfo
 
 func init() {
-	Info = VersionInfo{
+	if info, ok := debug.ReadBuildInfo(); ok {
+		version = pick(version, info.Main.Version)
+		application = pick(application, path.Base(info.Main.Path))
+		for _, setting := range info.Settings {
+			switch setting.Key {
+			case "vcs.revision":
+				revision = pick(revision, setting.Value)
+			case "vcs.time":
+				releaseDate = pick(releaseDate, setting.Value)
+			}
+		}
+	}
+
+	Info = ApplicationInfo{
 		Application: application,
 		Version:     version,
 		Revision:    revision,
@@ -41,4 +69,13 @@ func init() {
 		GoVersion:   runtime.Version(),
 		GoPlatform:  runtime.GOOS + "/" + runtime.GOARCH,
 	}
+}
+
+// pick picks the first NonZero value
+func pick(primary, fallback string) string {
+	if primary == "" {
+		return fallback
+	}
+
+	return primary
 }
