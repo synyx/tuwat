@@ -34,7 +34,7 @@
                 </details>
             </td>
             <td align="right">
-                <span title="{{niceDateTime .When}}">
+                <span class="local-time-popover" title="{{niceDateTime .When}}">
                     <time datetime="{{niceDateTime .When}}">{{niceDuration .When}}</time>
                 </span>
             </td>
@@ -64,7 +64,7 @@
                 </details>
             </td>
             <td align="right" {{if not $i}}class="first_of_group"{{end}}>
-                <span title="{{niceDateTime $alert.When}}">
+                <span class="local-time-popover" title="{{niceDateTime $alert.When}}">
                     <time datetime="{{niceDateTime $alert.When}}">{{niceDuration $alert.When}}</time>
                 </span>
             </td>
@@ -108,7 +108,7 @@
                 </details>
             </td>
             <td align="right">
-                <span title="{{niceDateTime .When}}">
+                <span class="local-time-popover" title="{{niceDateTime .When}}">
                     <time datetime="{{niceDateTime .When}}">{{niceDuration .When}}</time>
                 </span>
             </td>

@@ -1,6 +1,7 @@
 import * as Turbo from '@hotwired/turbo';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { toggleFilteredStatus } from "./toggle-filtered";
+import { localizeTimes } from "./local-time";
 
 class SSEConn {
     constructor(socketUrl) {
@@ -129,8 +130,14 @@ switch (eventSource) {
 fallback.connect();
 conn.connect();
 
+new MutationObserver(localizeTimes).observe(document.body, {
+    childList: true,
+    subtree: true,
+});
+
 document.addEventListener("DOMContentLoaded", function () {
     toggleFilteredStatus();
+    localizeTimes();
 
     console.log('Adding handler for manual disconnect.');
     const csEl = document.getElementById('connection-state');
