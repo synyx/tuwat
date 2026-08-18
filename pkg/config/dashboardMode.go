@@ -38,7 +38,7 @@ func (s DashboardMode) MarshalTOML() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (s *DashboardMode) UnmarshalTOML(data interface{}) (err error) {
+func (s *DashboardMode) UnmarshalTOML(data any) (err error) {
 	switch data.(string) {
 	case "including":
 		fallthrough

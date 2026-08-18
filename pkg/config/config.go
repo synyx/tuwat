@@ -78,25 +78,25 @@ type mainDashboardConfig struct {
 }
 
 type dashboardConfig struct {
-	Main  mainDashboardConfig      `toml:"main"`
-	Rules []map[string]interface{} `toml:"rule"`
+	Main  mainDashboardConfig `toml:"main"`
+	Rules []map[string]any    `toml:"rule"`
 }
 
 type rootConfig struct {
-	Main          mainConfig               `toml:"main"`
-	Rules         []map[string]interface{} `toml:"rule"`
-	Alertmanagers []alertmanager.Config    `toml:"alertmanager"`
-	GitlabMRs     []gitlabmr.Config        `toml:"gitlabmr"`
-	Icinga2s      []icinga2.Config         `toml:"icinga2"`
-	NagiosAPIs    []nagiosapi.Config       `toml:"nagiosapi"`
-	Patchmans     []patchman.Config        `toml:"patchman"`
-	GitHubIssues  []github.Config          `toml:"github"`
-	Redmines      []redmine.Config         `toml:"redmine"`
-	Orderview     []orderview.Config       `toml:"orderview"`
-	Example       []example.Config         `toml:"example"`
-	Graylogs      []graylog.Config         `toml:"graylog"`
-	Wizio         []wizio.Config           `toml:"wizio"`
-	Grafanas      []grafana.Config         `toml:"grafana"`
+	Main          mainConfig            `toml:"main"`
+	Rules         []map[string]any      `toml:"rule"`
+	Alertmanagers []alertmanager.Config `toml:"alertmanager"`
+	GitlabMRs     []gitlabmr.Config     `toml:"gitlabmr"`
+	Icinga2s      []icinga2.Config      `toml:"icinga2"`
+	NagiosAPIs    []nagiosapi.Config    `toml:"nagiosapi"`
+	Patchmans     []patchman.Config     `toml:"patchman"`
+	GitHubIssues  []github.Config       `toml:"github"`
+	Redmines      []redmine.Config      `toml:"redmine"`
+	Orderview     []orderview.Config    `toml:"orderview"`
+	Example       []example.Config      `toml:"example"`
+	Graylogs      []graylog.Config      `toml:"graylog"`
+	Wizio         []wizio.Config        `toml:"wizio"`
+	Grafanas      []grafana.Config      `toml:"grafana"`
 }
 
 func NewConfiguration() (config *Config, err error) {
@@ -322,10 +322,10 @@ func (cfg *Config) loadDashboardConfig(file string) error {
 	return err
 }
 
-func parseRule(r map[string]interface{}) Rule {
+func parseRule(r map[string]any) Rule {
 	labels := make(map[string]RuleMatcher)
 	if labelFilters, ok := r["label"]; ok {
-		for n, l := range labelFilters.(map[string]interface{}) {
+		for n, l := range labelFilters.(map[string]any) {
 			labels[n] = ParseRuleMatcher(l.(string))
 		}
 	}

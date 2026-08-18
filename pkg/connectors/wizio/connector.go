@@ -187,11 +187,11 @@ func (c *Connector) collectIssues(ctx context.Context) (*issuesResponse, error) 
     `
 
 	query := struct {
-		Query     string                 `json:"query"`
-		Variables map[string]interface{} `json:"variables"`
+		Query     string         `json:"query"`
+		Variables map[string]any `json:"variables"`
 	}{
 		Query: graphqlQuery,
-		Variables: map[string]interface{}{
+		Variables: map[string]any{
 			"first": c.config.NumberOfIssues,
 			"filterBy": issueFilters{
 				Status:   c.config.StatusFilter,

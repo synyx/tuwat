@@ -8,6 +8,7 @@ import (
 	html "html/template"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -114,9 +115,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 			"Namespace": namespace,
 			"Source":    c.config.URL,
 		}
-		for k, v := range sourceAlert.Labels {
-			tags[k] = v
-		}
+		maps.Copy(tags, sourceAlert.Labels)
 
 		alert := connectors.Alert{
 			Labels:      tags,

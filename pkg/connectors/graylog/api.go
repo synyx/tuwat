@@ -4,8 +4,8 @@ type eventsSearchParameters struct {
 	Query     string             `json:"query"`
 	Page      int                `json:"page"`
 	PerPage   int                `json:"per_page"`
-	Filter    eventsSearchFilter `json:"filter,omitempty"`
-	TimeRange timeRange          `json:"timerange,omitempty"`
+	Filter    eventsSearchFilter `json:"filter"`
+	TimeRange timeRange          `json:"timerange"`
 }
 
 type eventsSearchFilter struct {

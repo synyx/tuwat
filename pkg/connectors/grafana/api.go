@@ -5,7 +5,7 @@ package grafana
 
 type ruleResponse struct {
 	Status string        `json:"status"`
-	Data   ruleDiscovery `json:"data,omitempty"`
+	Data   ruleDiscovery `json:"data"`
 }
 
 type ruleDiscovery struct {

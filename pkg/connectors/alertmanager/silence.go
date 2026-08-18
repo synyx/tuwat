@@ -22,8 +22,8 @@ func (c *Connector) createSilencer(alert connectors.Alert) connectors.SilencerFu
 
 func (c *Connector) Silence(ctx context.Context, alert connectors.Alert, duration time.Duration, user string) error {
 
-	payload := map[string]interface{}{
-		"matchers": map[string]interface{}{
+	payload := map[string]any{
+		"matchers": map[string]any{
 			"name":    "uid",
 			"value":   alert.Labels["uid"],
 			"isRegex": false,
@@ -47,7 +47,7 @@ func (c *Connector) Silence(ctx context.Context, alert connectors.Alert, duratio
 	return err
 }
 
-func (c *Connector) post(ctx context.Context, endpoint string, content map[string]interface{}) error {
+func (c *Connector) post(ctx context.Context, endpoint string, content map[string]any) error {
 	buf := new(bytes.Buffer)
 	encoder := json.NewEncoder(buf)
 

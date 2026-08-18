@@ -8,6 +8,7 @@ import (
 	html "html/template"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"net/url"
 	"slices"
@@ -71,9 +72,7 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"EventType": alertToLabel(sourceAlert.Event.Alert),
 				"Hostname":  hostname.Hostname(),
 			}
-			for name, value := range sourceAlert.Event.GroupByFields {
-				labels[name] = value
-			}
+			maps.Copy(labels, sourceAlert.Event.GroupByFields)
 
 			details := ""
 			switch sourceAlert.Event.EventDefinitionType {
@@ -163,7 +162,7 @@ func (c *Connector) collectAlertEventsPage(ctx context.Context, page int, timeRa
 	return response, nil
 }
 
-func (c *Connector) post(ctx context.Context, endpoint string, body interface{}) (*http.Response, error) {
+func (c *Connector) post(ctx context.Context, endpoint string, body any) (*http.Response, error) {
 
 	slog.DebugContext(ctx, "getting alerts", slog.String("url", c.config.URL+endpoint))
 
