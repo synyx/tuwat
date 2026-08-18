@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/go-slog/otelslog"
+	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/embedded"
 	otelglobal "go.opentelemetry.io/otel/log/global"
@@ -71,11 +72,11 @@ type SlogLogger struct {
 
 func (s SlogLogger) Emit(ctx context.Context, record otellog.Record) {
 	fields := make([]slog.Attr, 0, record.AttributesLen())
-	record.WalkAttributes(func(v otellog.KeyValue) bool {
-		if v.Value.Kind() == otellog.KindEmpty {
+	record.WalkAttributes(func(v attribute.KeyValue) bool {
+		if v.Value.Type() == attribute.EMPTY {
 			return true
 		}
-		fields = append(fields, slog.Any(v.Key, v.Value))
+		fields = append(fields, slog.Any(string(v.Key), v.Value))
 		return true
 	})
 
@@ -96,11 +97,11 @@ func slogLevel(severity otellog.Severity) slog.Level {
 	return slog.Level(severity - 9)
 }
 
-func slogBody(value otellog.Value) string {
-	switch value.Kind() {
-	case otellog.KindString:
+func slogBody(value attribute.Value) string {
+	switch value.Type() {
+	case attribute.STRING:
 		return value.String()
-	case otellog.KindEmpty:
+	case attribute.EMPTY:
 		return ""
 	default:
 		return fmt.Sprintf("%v", value)
