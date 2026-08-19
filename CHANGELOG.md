@@ -1,6 +1,11 @@
 # Releases
 
-# 1.22.0 - 2026-06-29 Maintenance
+## 1.23.0 - 2026-08-19 UX
+
+* The GitLab MRs are now sorted by creation, not update Time
+* Mouseover of `When` now displays in local time, not in UTC
+
+## 1.22.0 - 2026-06-29 Maintenance
 
 * OTEL `semconv` updated from `v1.10.0` to `v1.41.0`, see [non-normative]
   OTEL documentation for details on upgrading.
