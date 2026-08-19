@@ -61,6 +61,8 @@ func (c *Connector) Collect(ctx context.Context) ([]connectors.Alert, error) {
 				"Assignee":  mr.Assignee.Name,
 				"Source":    c.config.URL,
 				"Type":      "PullRequest",
+				"UpdatedAt": mr.UpdatedAt,
+				"CreatedAt": mr.CreatedAt,
 			},
 			Start:       created,
 			State:       connectors.Warning,
