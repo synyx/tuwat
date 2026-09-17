@@ -22,6 +22,7 @@ import (
 	"github.com/synyx/tuwat/pkg/connectors/grafana"
 	"github.com/synyx/tuwat/pkg/connectors/graylog"
 	"github.com/synyx/tuwat/pkg/connectors/icinga2"
+	"github.com/synyx/tuwat/pkg/connectors/icingaweb2"
 	"github.com/synyx/tuwat/pkg/connectors/nagiosapi"
 	"github.com/synyx/tuwat/pkg/connectors/orderview"
 	"github.com/synyx/tuwat/pkg/connectors/patchman"
@@ -88,6 +89,7 @@ type rootConfig struct {
 	Alertmanagers []alertmanager.Config `toml:"alertmanager"`
 	GitlabMRs     []gitlabmr.Config     `toml:"gitlabmr"`
 	Icinga2s      []icinga2.Config      `toml:"icinga2"`
+	IcingaWeb2s   []icingaweb2.Config   `toml:"icingaweb2"`
 	NagiosAPIs    []nagiosapi.Config    `toml:"nagiosapi"`
 	Patchmans     []patchman.Config     `toml:"patchman"`
 	GitHubIssues  []github.Config       `toml:"github"`
@@ -230,6 +232,9 @@ func (cfg *Config) configureMain(rootConfig *rootConfig) (err error) {
 	}
 	for _, connectorConfig := range rootConfig.Icinga2s {
 		cfg.Connectors = append(cfg.Connectors, icinga2.NewConnector(&connectorConfig))
+	}
+	for _, connectorConfig := range rootConfig.IcingaWeb2s {
+		cfg.Connectors = append(cfg.Connectors, icingaweb2.NewConnector(&connectorConfig))
 	}
 	for _, connectorConfig := range rootConfig.NagiosAPIs {
 		cfg.Connectors = append(cfg.Connectors, nagiosapi.NewConnector(&connectorConfig))
